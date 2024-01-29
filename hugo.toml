@@ -1,4 +1,4 @@
-baseURL = 'https://baishya.netlify.app'
+baseURL = 'https://baishya.xyz'
 languageCode = 'en-us'
 title = 'Bayesian Blogs'
 theme        = "hello-friend-ng"
