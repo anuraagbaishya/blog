@@ -1,19 +1,135 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
     <channel>
         <title>Posts on Bayesian Blogs</title>
-        <link>https://example.org/posts/</link>
+        <link>https://baishya.xyz/posts/</link>
         <description>Recent content in Posts on Bayesian Blogs</description>
         <generator>Hugo -- gohugo.io</generator>
         <language>en-us</language>
-        <lastBuildDate>Sun, 28 Jan 2024 16:12:46 -0800</lastBuildDate>
-        <atom:link href="https://example.org/posts/index.xml" rel="self" type="application/rss+xml" />
+        <lastBuildDate>Sun, 14 Jan 2024 21:51:34 -0800</lastBuildDate>
+        <atom:link href="https://baishya.xyz/posts/index.xml" rel="self" type="application/rss+xml" />
+        
+        <item>
+            <title>Interview Prep</title>
+            <link>https://baishya.xyz/posts/interview-prep/</link>
+            <pubDate>Sun, 14 Jan 2024 21:51:34 -0800</pubDate>
+            
+            <guid>https://baishya.xyz/posts/interview-prep/</guid>
+            <description>This is part 2 of my interview experience and preparation series, where I will talk about how I prepared for the interviews. Check out part 1 where I talk more about the process and types of interviews here
+As I mentioned in my previous post, this is catered to my search criteria, which was:
+Experience: Mid-level (~4–5 years of experience) Role: Product Security / Application Security Even within the roles I was looking for, different openings had slightly different requirements.</description>
+            <content type="html"><![CDATA[<p>This is part 2 of my interview experience and preparation series, where I will talk about how I prepared for the interviews. Check out part 1 where I talk more about the process and types of interviews <a href="https://www.baishya.xyz/posts/types-of-interviews/">here</a></p>
+<p>As I mentioned in my previous post, this is catered to my search criteria, which was:</p>
+<ul>
+<li>Experience: Mid-level (~4–5 years of experience)</li>
+<li>Role: Product Security / Application Security</li>
+</ul>
+<p>Even within the roles I was looking for, different openings had slightly different requirements. For example, an application security role for a team/company that has a large mobile application footprint is likely to involve duties related to securing these applications — and therefore, the candidate would be expected to know about mobile application security.</p>
+<p>The responsibilities and therefore the desired skillset also varied with the size/maturity of the company’s security program. In smaller teams, the responsibilities were broader, whereas in larger teams, the responsibilities were more specialized. I mostly applied to roles with more specialized requirements, based on my interests and skillset. I did explore a few roles that had a broader scope, but since my experience and skills are quite specialized in application/product security, I did not fare well in these interviews — and I decided to look for roles where I would be a good fit.</p>
+<p>Most of this post will be specific to roles having one or more of the following as the primary responsibilities:</p>
+<ul>
+<li>Understanding and triaging security issues including root cause analysis.</li>
+<li>Threat modeling and/or security reviews including code reviews.</li>
+<li>Building tooling/automation to detect application security issues.</li>
+</ul>
+<h2 id="technical-interviews">Technical Interviews</h2>
+<p>Most companies had multiple technical interviews, starting with basic technical questions and continuing to more in-depth or domain-specific questions. I spent most of my preparation time preparing for technical interviews. Having 4 years of experience in application security, and therefore being constantly exposed to topics in this space was a big help. My preparation in this area was mainly divided into:</p>
+<ul>
+<li>Topics that I do not work with (or rarely work with).</li>
+<li>Revising theoretical aspects of topics I worked with practically, e.g. TLS handshake or OAuth grants.</li>
+</ul>
+<p>I primarily used the following resources:</p>
+<ul>
+<li>
+<p><a href="https://portswigger.net/web-security"><strong>Portswigger Web Security Academy</strong></a>: This is by far my most used resource. The academy has detailed lessons on almost all topics you are likely to come across when applying for the type of roles I was looking at. The academy also has labs, which help in solidifying the theoretical understanding from going through the lessons. I concentrated on OWASP top 10/CWE top 25 and issues that are being discussed on the news/x.</p>
+</li>
+<li>
+<p><a href="https://tib3rius.com/interview-questions"><strong>Web Security Questions by Tib3rius</strong></a>: A great list of questions of all levels of difficulty.</p>
+</li>
+<li>
+<p><strong>News</strong>: I generally read cybersecurity news and this habit helped me with interview prep. I was able to learn about security concepts that are being discussed actively or issues that adversaries are exploiting. I use a few sources for news:</p>
+<ul>
+<li><a href="https://tldrsec.com/">tl;dr sec newsletter</a></li>
+<li>Blogs from security research organizations like <a href="https://unit42.paloaltonetworks.com/">Palo Alto Networks Unit 42</a>, <a href="https://googleprojectzero.blogspot.com/">Google Project Zero</a>, <a href="https://blog.assetnote.io/">Assetnote</a>, <a href="https://www.zerodayinitiative.com/blog">Trend Micro ZDI</a>, <a href="https://blog.talosintelligence.com/">Cisco Talos Blog</a>, etc.</li>
+<li>Social Media (LinkedIn/X)</li>
+<li>Medium blogs</li>
+</ul>
+</li>
+<li>
+<p><strong><em>Unconventional</em> Sources</strong>: I also find information related to security using some of these non-conventional sources:</p>
+<ul>
+<li>YouTube: Many hackers/security experts make educational videos on a variety of security-related topics. Some of my favorites are: <a href="https://www.youtube.com/@ippsec">IppSec</a>, <a href="https://www.youtube.com/@LiveOverflow">LiveOverflow</a>, <a href="https://www.youtube.com/@_JohnHammond">John Hammond</a>, <a href="https://www.youtube.com/@BugBountyReportsExplained">Bug Bounty Reports Explained</a>, <a href="https://www.youtube.com/@NahamSec">NahamSec</a></li>
+<li><a href="https://hackerone.com/hacktivity/overview">HackerOne hacktivity</a>: Reading through bug bounty disclosures can provide insights into possible ways to exploit vulnerabilities. Some of the reports are very creative.</li>
+</ul>
+</li>
+</ul>
+<p><strong>Books</strong>: Although I did not use these books specifically for interview preparation, I have learned a lot from them.</p>
+<ul>
+<li>The Tangled Web — Michal Zalewski</li>
+<li>Computer Security, A Hands-on Approach — Wenliang Du</li>
+<li>The Web Application Hackers Handbook — Dafydd Stuttard and Marcus Pinto</li>
+<li>Cryptography and Network Security — William Stallings</li>
+<li>The Hacker Playbook — Peter Kim</li>
+</ul>
+<p><strong>Practical Exploitation Practice</strong>: I feel I learn better by doing things. So I try my hand at CTFs or platforms like HackTheBox, TryHackMe, PortSwigger Web Security Academy, and others. I did not do these specifically for the interviews, it is just something I do sometimes to sharpen my skills.</p>
+<h2 id="code-review">Code Review</h2>
+<p>Due to my interest in static analysis, I looked at a lot of code for security flaws at work. This prepared me for the code review interviews. Here are some tips that might be helpful:</p>
+<ul>
+<li>
+<p>Have a checklist of things to look for. <a href="https://github.com/mgreiler/secure-code-review-checklist">This</a> GitHub repo provides a great list that you can adapt for yourself.</p>
+</li>
+<li>
+<p>Practice with some known vulnerable apps. There are many to choose from:</p>
+<ul>
+<li><a href="https://github.com/juice-shop/juice-shop">Juice Shop</a></li>
+<li><a href="https://github.com/digininja/DVWA">DVWA</a></li>
+<li><a href="https://github.com/WebGoat/WebGoat">WebGoat</a></li>
+<li>Many more are listed <a href="https://github.com/vavkamil/awesome-vulnerable-apps">here</a></li>
+</ul>
+</li>
+<li>
+<p>Semgrep Playground has an option to try out existing rules. The rule test has code that Semgrep will flag, and code it will not. Assuming the rule is correct, the code that Semgrep will flag will be vulnerable, and therefore you can use that to understand vulnerable patterns.</p>
+</li>
+</ul>
+<h2 id="threat-modeling-interview">Threat Modeling Interview</h2>
+<p>To be good at threat modeling, you will first need to have good technical knowledge. If you know how certain issues can impact systems, when you see a system that has these deficiencies, you can identify the issues. The next step would be to identify a threat modeling process that works best for you. There is no best method, but in my experience the most popular is STRIDE. There are other frameworks too like DREAD or PASTA. You can practice by looking at architectures and enumerating threats in them. You can also take an application (eg: a restaurant reservation system) and list potential threats in such an application.</p>
+<p>Here are some resources to prepare for threat modeling interviews:</p>
+<ul>
+<li><a href="https://shostack.org/resources/threat-modeling">The Ultimate Beginner’s Guide to Threat Modeling</a></li>
+<li><a href="https://owasp.org/www-community/Threat_Modeling_Process">Threat Modeling Process</a></li>
+<li><a href="https://threat-modeling.com/the-ultimate-list-of-stride-threat-examples/">List of example STRIDE threats</a></li>
+<li><a href="https://shostack.org/blog/category/threat-model-thursday">Shostack + Associates “Threat Model Thursday” Series</a></li>
+</ul>
+<h2 id="coding-interview">Coding Interview</h2>
+<p>I did not prepare much for coding interviews since the roles I was interested in did not have a coding interview. I relied on my coding skills from work or leisure projects to attempt the very few coding interviews I had. There are already many resources on the internet that provide detailed preparation guides for coding interviews. Please refer to them for coding interview guidance.</p>
+<h2 id="behavioral-interview">Behavioral Interview</h2>
+<p>Preparing for a behavioral interview involves understanding the format and anticipating questions that assess your past behavior in certain situations. It is important to have personal examples ready for commonly asked behavioral questions. There are many lists of common behavioral questions that you can look at, or you can ask ChatGPT to provide some examples. Using the STAR method is a great way to answer behavioral questions. STAR stands for Situation, Task, Action, and Result. Here’s an example (courtesy of ChatGPT):</p>
+<p><em>Can you provide an example of a time when you had to overcome a significant challenge in a team project?</em></p>
+<p><em>Situation</em>: In my previous role as a project manager, our team was tasked with implementing a new software system within a tight deadline.</p>
+<p><em>Task</em>: One of the key challenges was that we faced unexpected technical issues during the implementation phase, jeopardizing the project timeline.</p>
+<p><em>Action</em>: Recognizing the urgency, I immediately called for a team meeting to discuss the issues openly. I assigned specific tasks to team members based on their expertise, ensuring everyone had a clear role in addressing the technical challenges. Simultaneously, I collaborated with the IT department to expedite troubleshooting.</p>
+<p><em>Result</em>: Through our collaborative efforts, we successfully identified and resolved the technical issues within the deadline. This experience highlighted the importance of effective communication and swift problem-solving. As a result, our team developed stronger bonds and increased our overall efficiency in handling unexpected challenges.</p>
+<h2 id="leadership-interviews">Leadership Interviews</h2>
+<p>I am clubbing interviews with the manager, director, or more senior leadership in this section. In general, I felt these were more conversations than interviews — to understand my experiences and interests and to tell me more about the role or the company. Be prepared to answer questions about your experiences and background, why you are looking for a change, and what interests you in the company. It helps to familiarize yourself a little with the products or services the company offers. There might be some technical questions involved. I have already covered above how you can prepare for these.</p>
+<h2 id="general-tips">General Tips</h2>
+<p>Some general tips that might help with the preparation or interview:</p>
+<ul>
+<li>Read the job description thoroughly. The technical interviews were almost always related to the responsibilities mentioned in the job description.</li>
+<li>Ask the recruiter about the interview process — how many rounds will be there, what each round will entail, how long you can expect the process to take, and if they have any preparation tips.</li>
+<li>Ask questions to your interviewers. Some examples: what challenges they face, what tasks/projects they find most interesting, why they enjoy working at the company, and so on. If you are speaking with the manager or leadership, ask them about their leadership style, what specific tasks you might work on, how they promote employee growth, and so on.</li>
+<li>Be honest. If you don’t know something, let your interviewer know about it. Take a guess based on what you know — but be sure to inform your interviewer.</li>
+<li>Try to keep calm. Interviews can be nerve-wracking, especially if you feel they are not going well. Even if you are not able to answer anything, keeping calm will let you think much better and take educated guesses. The interviewers might not be expecting you to know everything — and they might want to understand how you think or approach problems.</li>
+<li>Try to free up your schedule at work. Since panel interviews will likely be multiple interviews within a day or two, you will need to have a few hours free on various days. Therefore, plan your work ahead of time. Make sure once you are actively interviewing, you have a good number of available slots.</li>
+<li>Self-analyze your performance after an interview. Determine what areas you did well on and what areas you need to spend more time preparing. The first few interviews for me did not go very well — because I did not know what to expect in terms of questions, and also how well I had prepared. From them, I was able to prepare better for the upcoming interviews.</li>
+</ul>
+]]></content>
+        </item>
         
         <item>
             <title>Tales from my Product Security Job Hunt: Part 1, Interview Types</title>
-            <link>https://example.org/posts/types-of-interviews/</link>
-            <pubDate>Sun, 28 Jan 2024 16:12:46 -0800</pubDate>
+            <link>https://baishya.xyz/posts/types-of-interviews/</link>
+            <pubDate>Sun, 07 Jan 2024 16:12:46 -0800</pubDate>
             
-            <guid>https://example.org/posts/types-of-interviews/</guid>
+            <guid>https://baishya.xyz/posts/types-of-interviews/</guid>
             <description>After spending 4 amazing years at Adobe, I recently decided it was time to take the next step in my career. I was fortunate to interview with several companies that varied in terms of their domain, size, or the maturity of their security processes.
 Many of those whom I informed about my decision and/or my interviews were interested in knowing what the process was like and how I prepared. After answering the same questions a few times, I thought it would be helpful to potential job seekers if I documented my experiences.</description>
             <content type="html"><![CDATA[<p>After spending 4 amazing years at Adobe, I recently decided it was time to take the next step in my career. I was fortunate to interview with several companies that varied in terms of their domain, size, or the maturity of their security processes.</p>

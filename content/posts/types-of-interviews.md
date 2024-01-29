@@ -1,7 +1,7 @@
 ---
 title: "Tales from my Product Security Job Hunt: Part 1, Interview Types"
-date: 2024-01-28T16:12:46-08:00
-toc: false
+date: 2024-01-07T16:12:46-08:00
+toc: true
 images:
 tags:
   - interviews

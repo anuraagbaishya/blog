@@ -2,26 +2,29 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://example.org/about/</loc>
+    <loc>https://baishya.xyz/about/</loc>
     <lastmod>2024-01-28T16:49:25-08:00</lastmod>
   </url><url>
-    <loc>https://example.org/</loc>
-    <lastmod>2024-01-28T16:12:46-08:00</lastmod>
+    <loc>https://baishya.xyz/</loc>
+    <lastmod>2024-01-14T21:51:34-08:00</lastmod>
   </url><url>
-    <loc>https://example.org/tags/interviews/</loc>
-    <lastmod>2024-01-28T16:12:46-08:00</lastmod>
+    <loc>https://baishya.xyz/posts/interview-prep/</loc>
+    <lastmod>2024-01-14T21:51:34-08:00</lastmod>
   </url><url>
-    <loc>https://example.org/posts/</loc>
-    <lastmod>2024-01-28T16:12:46-08:00</lastmod>
+    <loc>https://baishya.xyz/tags/interviews/</loc>
+    <lastmod>2024-01-14T21:51:34-08:00</lastmod>
   </url><url>
-    <loc>https://example.org/tags/</loc>
-    <lastmod>2024-01-28T16:12:46-08:00</lastmod>
+    <loc>https://baishya.xyz/posts/</loc>
+    <lastmod>2024-01-14T21:51:34-08:00</lastmod>
   </url><url>
-    <loc>https://example.org/posts/types-of-interviews/</loc>
-    <lastmod>2024-01-28T16:12:46-08:00</lastmod>
+    <loc>https://baishya.xyz/tags/</loc>
+    <lastmod>2024-01-14T21:51:34-08:00</lastmod>
   </url><url>
-    <loc>https://example.org/blog/</loc>
+    <loc>https://baishya.xyz/posts/types-of-interviews/</loc>
+    <lastmod>2024-01-07T16:12:46-08:00</lastmod>
   </url><url>
-    <loc>https://example.org/series/</loc>
+    <loc>https://baishya.xyz/blog/</loc>
+  </url><url>
+    <loc>https://baishya.xyz/series/</loc>
   </url>
 </urlset>
