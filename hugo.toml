@@ -1,12 +1,23 @@
-baseURL = 'https://baishya.netlify.app/'
+baseURL = 'https://example.org/'
 languageCode = 'en-us'
 title = 'Bayesian Blogs'
-theme        = "papermodx"
+theme        = "hello-friend-ng"
 paginate     = 10
 
 [params]
   # Subtitle for home
   homeSubtitle = "Misadventures in Security"
+
+  # Set disableReadOtherPosts to true in order to hide the links to other posts.
+  disableReadOtherPosts = false
+
+  # Enable sharing buttons, if you like
+  enableSharingButtons = false
+
+  # Metadata mostly used in document's head
+  description = "My new homepage or blog"
+  keywords = "homepage, blog"
+  images = [""]
 
   enableThemeToggle = false
 

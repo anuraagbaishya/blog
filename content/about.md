@@ -1,8 +1,7 @@
-+++
-title = 'About'
-date = 2024-01-28T16:49:25-08:00
-draft = true
-+++
+---
+title: 'About'
+date: 2024-01-28T16:49:25-08:00
+---
 
 Hello friend! Thank you for stopping by! If you have stumbled upon this page, you might be looking to know more about me. My name is Anuraag Baishya. Some of my friends like to call me "Bayesian" which is why this blog is titled *Bayesian Blog*. 
 

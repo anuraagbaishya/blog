@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>interviews on Bayesian Blogs</title>
+    <link>https://example.org/tags/interviews/</link>
+    <description>Recent content in interviews on Bayesian Blogs</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 28 Jan 2024 16:12:46 -0800</lastBuildDate>
+    <atom:link href="https://example.org/tags/interviews/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Tales from my Product Security Job Hunt: Part 1, Interview Types</title>
+      <link>https://example.org/posts/types-of-interviews/</link>
+      <pubDate>Sun, 28 Jan 2024 16:12:46 -0800</pubDate>
+      <guid>https://example.org/posts/types-of-interviews/</guid>
+      <description>After spending 4 amazing years at Adobe, I recently decided it was time to take the next step in my career. I was fortunate to interview with several companies that varied in terms of their domain, size, or the maturity of their security processes.&#xA;Many of those whom I informed about my decision and/or my interviews were interested in knowing what the process was like and how I prepared. After answering the same questions a few times, I thought it would be helpful to potential job seekers if I documented my experiences.</description>
+    </item>
+  </channel>
+</rss>
