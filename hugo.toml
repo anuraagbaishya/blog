@@ -1,0 +1,67 @@
+baseURL = 'https://example.org/'
+languageCode = 'en-us'
+title = 'Bayesian Blogs'
+theme        = "hello-friend-ng"
+paginate     = 10
+
+[params]
+  # Subtitle for home
+  homeSubtitle = "Misadventures in Security"
+
+  # Set disableReadOtherPosts to true in order to hide the links to other posts.
+  disableReadOtherPosts = false
+
+  # Enable sharing buttons, if you like
+  enableSharingButtons = false
+
+  # Metadata mostly used in document's head
+  description = "My new homepage or blog"
+  keywords = "homepage, blog"
+  images = [""]
+
+  enableThemeToggle = false
+
+  [params.author]
+    name = "Anuraag Baishya"
+
+  [params.footer]
+    trademark = 2024
+
+    topText = ["Anuraag Baishya"]
+    bottomText = [
+      "Powered by <a href=\"http://gohugo.io\">Hugo</a>",
+      "Using <a href=\"https://github.com/rhazdon/hugo-theme-hello-friend-ng\">Hello Friend NG</a> theme",
+    ]
+
+  [params.logo]
+    logoMark = ">"
+    logoText = "cd /home"
+    logoHomeLink = "/"
+
+  [[params.social]]
+    name = "linkedin"
+    url = "https://www.linkedin.com/in/anuraag-baishya/"
+  [[params.social]]
+    name = "email"
+    url = "mailto:baishya@protonmail.com"
+
+
+[taxonomies]
+    category = "blog"
+    tag      = "tags"
+    series   = "series"
+    # or
+    #
+    # path = "/img/your-example-logo.svg"
+    # alt = "Your example logo alt text"
+
+[menu]
+  # And you can even create generic menu
+  [[menu.main]]
+    identifier = "blog"
+    name       = "Blog"
+    url        = "/posts"
+  [[menu.main]]
+    identifier = "about"
+    name       = "About"
+    url        = "/about"
