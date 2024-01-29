@@ -1,4 +1,4 @@
-baseURL = 'https://anuraagbaishya.github.io/'
+baseURL = 'https://baishya.netlify.app/'
 languageCode = 'en-us'
 title = 'Bayesian Blogs'
 theme        = "papermodx"
