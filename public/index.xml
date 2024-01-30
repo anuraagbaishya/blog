@@ -6,8 +6,15 @@
     <description>Recent content on Bayesian Blogs</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 28 Jan 2024 16:49:25 -0800</lastBuildDate>
+    <lastBuildDate>Mon, 29 Jan 2024 20:05:09 -0800</lastBuildDate>
     <atom:link href="https://baishya.xyz/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Hack the Box — PC, but automated</title>
+      <link>https://baishya.xyz/posts/htb-pc/</link>
+      <pubDate>Mon, 29 Jan 2024 20:05:09 -0800</pubDate>
+      <guid>https://baishya.xyz/posts/htb-pc/</guid>
+      <description>PC is an easy Linux box that has a grpc service and a vulnerable version of an application running on it. While doing this box, I had gone to the forums for a hint, and I saw a comment that said something along the lines of “I wrote a script that can solve this box”. I found this quite intriguing and decided to write a script that could solve the box myself.</description>
+    </item>
     <item>
       <title>About</title>
       <link>https://baishya.xyz/about/</link>
@@ -16,7 +23,7 @@
       <description>Hello friend! Thank you for stopping by! If you have stumbled upon this page, you might be looking to know more about me. My name is Anuraag Baishya. Some of my friends like to call me &amp;ldquo;Bayesian&amp;rdquo; which is why this blog is titled Bayesian Blog.&#xA;By day I work on Palo Alto Networks&amp;rsquo; PSIRT team as a Sr. Staff Product Security Engineer, dealing with all things PSIRT such as handling reports and incidents, working with our engineers to investigate said reports and help them fix bugs, releasing advisories, and any other operations you would imagine a PSIRT personnel would need to handle.</description>
     </item>
     <item>
-      <title>Interview Prep</title>
+      <title>Tales from my Product Security Job Hunt: Part 2, Preparation</title>
       <link>https://baishya.xyz/posts/interview-prep/</link>
       <pubDate>Sun, 14 Jan 2024 21:51:34 -0800</pubDate>
       <guid>https://baishya.xyz/posts/interview-prep/</guid>

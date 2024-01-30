@@ -19,7 +19,8 @@ paginate     = 10
   keywords = "homepage, blog"
   images = [""]
 
-  enableThemeToggle = false
+  enableThemeToggle = true
+  enableGitInfo   = false
 
   [params.author]
     name = "Anuraag Baishya"
@@ -29,8 +30,7 @@ paginate     = 10
 
     topText = ["Anuraag Baishya"]
     bottomText = [
-      "Powered by <a href=\"http://gohugo.io\">Hugo</a>",
-      "Using <a href=\"https://github.com/rhazdon/hugo-theme-hello-friend-ng\">Hello Friend NG</a> theme",
+      "Powered by <a href=\"http://gohugo.io\">Hugo</a> & <a href=\"https://github.com/rhazdon/hugo-theme-hello-friend-ng\">Hello Friend NG</a> theme",
     ]
 
   [params.logo]
