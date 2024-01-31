@@ -6,14 +6,14 @@
     <description>Recent content on Bayesian Blogs</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Mon, 29 Jan 2024 20:05:09 -0800</lastBuildDate>
+    <lastBuildDate>Tue, 30 Jan 2024 23:54:28 -0800</lastBuildDate>
     <atom:link href="https://baishya.xyz/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>Hack the Box — PC, but automated</title>
-      <link>https://baishya.xyz/posts/htb-pc/</link>
-      <pubDate>Mon, 29 Jan 2024 20:05:09 -0800</pubDate>
-      <guid>https://baishya.xyz/posts/htb-pc/</guid>
-      <description>PC is an easy Linux box that has a grpc service and a vulnerable version of an application running on it. While doing this box, I had gone to the forums for a hint, and I saw a comment that said something along the lines of “I wrote a script that can solve this box”. I found this quite intriguing and decided to write a script that could solve the box myself.</description>
+      <title>Cocktails</title>
+      <link>https://baishya.xyz/cocktails/</link>
+      <pubDate>Tue, 30 Jan 2024 23:54:28 -0800</pubDate>
+      <guid>https://baishya.xyz/cocktails/</guid>
+      <description>Sour Monk 1 oz Old Monk 0.5 oz bourbon 1 oz lemon juice 0.75 oz simple syrup Garnish: Amarena Cherry </description>
     </item>
     <item>
       <title>About</title>
@@ -35,6 +35,13 @@
       <pubDate>Sun, 07 Jan 2024 16:12:46 -0800</pubDate>
       <guid>https://baishya.xyz/posts/types-of-interviews/</guid>
       <description>After spending 4 amazing years at Adobe, I recently decided it was time to take the next step in my career. I was fortunate to interview with several companies that varied in terms of their domain, size, or the maturity of their security processes.&#xA;Many of those whom I informed about my decision and/or my interviews were interested in knowing what the process was like and how I prepared. After answering the same questions a few times, I thought it would be helpful to potential job seekers if I documented my experiences.</description>
+    </item>
+    <item>
+      <title>Hack the Box — PC, but automated</title>
+      <link>https://baishya.xyz/posts/htb-pc/</link>
+      <pubDate>Mon, 06 Nov 2023 20:05:09 -0800</pubDate>
+      <guid>https://baishya.xyz/posts/htb-pc/</guid>
+      <description>PC is an easy Linux box that has a grpc service and a vulnerable version of an application running on it. While doing this box, I had gone to the forums for a hint, and I saw a comment that said something along the lines of “I wrote a script that can solve this box”. I found this quite intriguing and decided to write a script that could solve the box myself.</description>
     </item>
   </channel>
 </rss>

