@@ -1,6 +1,6 @@
 ---
 title: "Exploring Python Code Execution Patterns for Fun and Profit"
-date: 2024-02-10T10:01:34-08:00
+date: 2024-03-17T10:01:34-08:00
 draft: false
 toc: true
 images:
