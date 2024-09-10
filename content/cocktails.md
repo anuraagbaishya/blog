@@ -22,7 +22,22 @@ Cocktails are categorized by alcohol which has the highest quantity. Cocktails w
 * 0.5 oz simple syrup
 * 2 oz pineapple juice
 * 1 oz lime juice
-Garnish: pineapple wedge
+* Garnish: pineapple wedge
+
+### Jamaican Plane
+* 1 oz dark rum
+* 0.75 oz Aperol
+* 0.75 oz Amaro Nonino
+* 1 oz lime juice
+* 0.5 oz simple syrup
+* 1 barspoon mezcal
+* Garnish: amarena cherry and paper plane
+
+### Smoky Sea Captain
+* 1 oz dark rum
+* 0.5 oz Islay scotch
+* 1 oz lemon juice
+* 0.5 oz simple syrup
 
 ## Gin / Sloe Gin
 
@@ -58,15 +73,6 @@ Garnish: pineapple wedge
 * 0.5 oz Campari
 * 1 oz lemon juice
 * 0.5 oz simple syrup
-
-### Jamaican Plane
-* 1 oz dark rum
-* 0.75 oz Aperol
-* 0.75 oz Amaro Nonino
-* 1 oz lime juice
-* 0.5 oz simple syrup
-* 1 barspoon mezcal
-* Garnish: amarena cherry and paper plane
 
 ## Other spirits
 
