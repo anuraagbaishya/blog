@@ -2,46 +2,67 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Bayesian Blogs</title>
-    <link>https://baishya.xyz/</link>
+    <link>http://localhost:1313/</link>
     <description>Recent content on Bayesian Blogs</description>
-    <generator>Hugo -- gohugo.io</generator>
+    <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Tue, 30 Jan 2024 23:54:28 -0800</lastBuildDate>
-    <atom:link href="https://baishya.xyz/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sat, 20 Apr 2024 07:56:09 -0700</lastBuildDate>
+    <atom:link href="http://localhost:1313/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Analyzing new-ish CVEs in PyLoad</title>
+      <link>http://localhost:1313/posts/pyload-cves/</link>
+      <pubDate>Sat, 20 Apr 2024 07:56:09 -0700</pubDate>
+      <guid>http://localhost:1313/posts/pyload-cves/</guid>
+      <description>&lt;p&gt;&lt;a href=&#34;https://pyload.net/&#34;&gt;PyLoad&lt;/a&gt; is an open source download manager written in Python. I first came across PyLoad while solving a HackTheBox machine (PC). Solving the machine required exploiting a pre-auth RCE (&lt;a href=&#34;https://nvd.nist.gov/vuln/detail/CVE-2023-0297&#34;&gt;CVE-2023-0297&lt;/a&gt;). I then rediscovered PyLoad when I was looking for CVEs to analyze. My intention was to analyze around 3-4 CVEs in the same product and PyLoad fit the bill perfectly, as there were 4 CVEs disclosed in January and February 2024. In this article, I will explain the CVEs, examine the provided proof of concepts, and evaluate the fixes.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Exploring Python Code Execution Patterns for Fun and Profit</title>
+      <link>http://localhost:1313/posts/python-rce/</link>
+      <pubDate>Sun, 17 Mar 2024 10:01:34 -0800</pubDate>
+      <guid>http://localhost:1313/posts/python-rce/</guid>
+      <description>&lt;p&gt;Recently, I was looking at the Semgrep output for an open source project and I saw an interesting finding about potential arbitrary code execution. The code essentially ran an &lt;code&gt;eval&lt;/code&gt; but the interesting part was converting Python code to an abstract syntax tree, compiling it to bytecode, and evaluating it. This made me curious about other unsafe ways to write Python code that could lead to code execution. In this article, I will discuss a few patterns that I learnt about through my limited research.&lt;/p&gt;</description>
+    </item>
     <item>
       <title>Cocktails</title>
-      <link>https://baishya.xyz/cocktails/</link>
+      <link>http://localhost:1313/cocktails/</link>
       <pubDate>Tue, 30 Jan 2024 23:54:28 -0800</pubDate>
-      <guid>https://baishya.xyz/cocktails/</guid>
-      <description>Cocktails are categorized by alcohol which has the highest quantity. Cocktails which have multiple alcohols in the same highest quantity are added to one of the alcohols at random.&#xA;Rum Sour Monk 1 oz Old Monk 0.5 oz bourbon 1 oz lemon juice 0.75 oz simple syrup Garnish: amarena cherry Off Season 1.5 oz dark rum 1 oz rye / bourbon 0.5 oz sambuca 0.5 oz simple syrup 2 oz pineapple juice 1 oz lime juice Garnish: pineapple wedge Gin / Sloe Gin The Orchard 2 oz gin 1 oz irish whiskey 0.</description>
+      <guid>http://localhost:1313/cocktails/</guid>
+      <description>&lt;p&gt;Cocktails are categorized by alcohol which has the highest quantity. Cocktails which have multiple alcohols in the same highest quantity are added to one of the alcohols at random.&lt;/p&gt;&#xA;&lt;h2 id=&#34;rum&#34;&gt;Rum&lt;/h2&gt;&#xA;&lt;h3 id=&#34;sour-monk&#34;&gt;Sour Monk&lt;/h3&gt;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;1 oz Old Monk&lt;/li&gt;&#xA;&lt;li&gt;0.5 oz bourbon&lt;/li&gt;&#xA;&lt;li&gt;1 oz lemon juice&lt;/li&gt;&#xA;&lt;li&gt;0.75 oz simple syrup&lt;/li&gt;&#xA;&lt;li&gt;Garnish: amarena cherry&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;h3 id=&#34;off-season&#34;&gt;Off Season&lt;/h3&gt;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;1.5 oz dark rum&lt;/li&gt;&#xA;&lt;li&gt;1 oz rye / bourbon&lt;/li&gt;&#xA;&lt;li&gt;0.5 oz sambuca&lt;/li&gt;&#xA;&lt;li&gt;0.5 oz simple syrup&lt;/li&gt;&#xA;&lt;li&gt;2 oz pineapple juice&lt;/li&gt;&#xA;&lt;li&gt;1 oz lime juice&lt;/li&gt;&#xA;&lt;li&gt;Garnish: pineapple wedge&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;h3 id=&#34;jamaican-plane&#34;&gt;Jamaican Plane&lt;/h3&gt;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;1 oz dark rum&lt;/li&gt;&#xA;&lt;li&gt;0.75 oz Aperol&lt;/li&gt;&#xA;&lt;li&gt;0.75 oz Amaro Nonino&lt;/li&gt;&#xA;&lt;li&gt;1 oz lime juice&lt;/li&gt;&#xA;&lt;li&gt;0.5 oz simple syrup&lt;/li&gt;&#xA;&lt;li&gt;1 barspoon mezcal&lt;/li&gt;&#xA;&lt;li&gt;Garnish: amarena cherry and paper plane&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;h3 id=&#34;smoky-sea-captain&#34;&gt;Smoky Sea Captain&lt;/h3&gt;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;1 oz dark rum&lt;/li&gt;&#xA;&lt;li&gt;0.5 oz Islay scotch&lt;/li&gt;&#xA;&lt;li&gt;1 oz lemon juice&lt;/li&gt;&#xA;&lt;li&gt;0.5 oz simple syrup&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;h2 id=&#34;gin--sloe-gin&#34;&gt;Gin / Sloe Gin&lt;/h2&gt;&#xA;&lt;h3 id=&#34;the-orchard&#34;&gt;The Orchard&lt;/h3&gt;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;2 oz gin&lt;/li&gt;&#xA;&lt;li&gt;1 oz irish whiskey&lt;/li&gt;&#xA;&lt;li&gt;0.25 oz orange bitters&lt;/li&gt;&#xA;&lt;li&gt;1 oz tonic&lt;/li&gt;&#xA;&lt;li&gt;0.5 oz ginger syrup&lt;/li&gt;&#xA;&lt;li&gt;6-8 mint leaves, crushed&lt;/li&gt;&#xA;&lt;li&gt;Garnish: mint sprig&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;h3 id=&#34;summer-monsoon&#34;&gt;Summer Monsoon&lt;/h3&gt;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;2 oz gin&lt;/li&gt;&#xA;&lt;li&gt;1 oz Grand Marnier&lt;/li&gt;&#xA;&lt;li&gt;1 oz lemon juice&lt;/li&gt;&#xA;&lt;li&gt;0.5 oz sambuca&lt;/li&gt;&#xA;&lt;li&gt;Garnish: lemon twist&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;h3 id=&#34;rose-for-dawn&#34;&gt;Rose for Dawn&lt;/h3&gt;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;0.75 oz gin&lt;/li&gt;&#xA;&lt;li&gt;0.75 oz sloe gin&lt;/li&gt;&#xA;&lt;li&gt;0.75 oz Benedictine&lt;/li&gt;&#xA;&lt;li&gt;0.5 oz grenadine&lt;/li&gt;&#xA;&lt;li&gt;0.75 oz lemon juice&lt;/li&gt;&#xA;&lt;li&gt;Garnish: amarena cherry&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;h2 id=&#34;bourbon--rye--whiskey&#34;&gt;Bourbon / Rye / Whiskey&lt;/h2&gt;&#xA;&lt;h3 id=&#34;the-commuter&#34;&gt;The Commuter&lt;/h3&gt;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;1.5 oz bourbon&lt;/li&gt;&#xA;&lt;li&gt;1 oz dry curacao&lt;/li&gt;&#xA;&lt;li&gt;0.5 oz Campari&lt;/li&gt;&#xA;&lt;li&gt;1 oz lemon juice&lt;/li&gt;&#xA;&lt;li&gt;0.5 oz simple syrup&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;h2 id=&#34;other-spirits&#34;&gt;Other spirits&lt;/h2&gt;&#xA;&lt;h3 id=&#34;golden-charm&#34;&gt;Golden Charm&lt;/h3&gt;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;1 oz Amaro Nonino&lt;/li&gt;&#xA;&lt;li&gt;0.5 oz sloe gin&lt;/li&gt;&#xA;&lt;li&gt;0.5 oz dry curacao&lt;/li&gt;&#xA;&lt;li&gt;0.5 oz elderflower liquer&lt;/li&gt;&#xA;&lt;li&gt;1 oz lemon juice&lt;/li&gt;&#xA;&lt;li&gt;Garnish: lemon twist&lt;/li&gt;&#xA;&lt;/ul&gt;</description>
     </item>
     <item>
       <title>About</title>
-      <link>https://baishya.xyz/about/</link>
+      <link>http://localhost:1313/about/</link>
       <pubDate>Sun, 28 Jan 2024 16:49:25 -0800</pubDate>
-      <guid>https://baishya.xyz/about/</guid>
-      <description>Hello friend! Thank you for stopping by! If you have stumbled upon this page, you might be looking to know more about me. My name is Anuraag Baishya. Some of my friends like to call me &amp;ldquo;Bayesian&amp;rdquo; which is why this blog is titled Bayesian Blog.&#xA;By day I work on Palo Alto Networks&amp;rsquo; PSIRT team as a Sr. Staff Product Security Engineer, dealing with all things PSIRT such as handling reports and incidents, working with our engineers to investigate said reports and help them fix bugs, releasing advisories, and any other operations you would imagine a PSIRT personnel would need to handle.</description>
+      <guid>http://localhost:1313/about/</guid>
+      <description>&lt;p&gt;Hello friend! Thank you for stopping by! If you have stumbled upon this page, you might be looking to know more about me. My name is Anuraag Baishya. Some of my friends like to call me &amp;ldquo;Bayesian&amp;rdquo; which is why this blog is titled &lt;em&gt;Bayesian Blog&lt;/em&gt;.&lt;/p&gt;&#xA;&lt;p&gt;By day I work on Palo Alto Networks&amp;rsquo; PSIRT team as a Sr. Staff Product Security Engineer, dealing with all things PSIRT such as handling reports and incidents, working with our engineers to investigate said reports and help them fix bugs, releasing advisories, and any other operations you would imagine a PSIRT personnel would need to handle.&lt;/p&gt;</description>
     </item>
     <item>
       <title>Tales from my Product Security Job Hunt: Part 2, Preparation</title>
-      <link>https://baishya.xyz/posts/interview-prep/</link>
+      <link>http://localhost:1313/posts/interview-prep/</link>
       <pubDate>Sun, 14 Jan 2024 21:51:34 -0800</pubDate>
-      <guid>https://baishya.xyz/posts/interview-prep/</guid>
-      <description>This is part 2 of my interview experience and preparation series, where I will talk about how I prepared for the interviews. Check out part 1 where I talk more about the process and types of interviews here&#xA;As I mentioned in my previous post, this is catered to my search criteria, which was:&#xA;Experience: Mid-level (~4–5 years of experience) Role: Product Security / Application Security Even within the roles I was looking for, different openings had slightly different requirements.</description>
+      <guid>http://localhost:1313/posts/interview-prep/</guid>
+      <description>&lt;p&gt;This is part 2 of my interview experience and preparation series, where I will talk about how I prepared for the interviews. Check out part 1 where I talk more about the process and types of interviews &lt;a href=&#34;https://www.baishya.xyz/posts/types-of-interviews/&#34;&gt;here&lt;/a&gt;&lt;/p&gt;&#xA;&lt;p&gt;As I mentioned in my previous post, this is catered to my search criteria, which was:&lt;/p&gt;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;Experience: Mid-level (~4–5 years of experience)&lt;/li&gt;&#xA;&lt;li&gt;Role: Product Security / Application Security&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;p&gt;Even within the roles I was looking for, different openings had slightly different requirements. For example, an application security role for a team/company that has a large mobile application footprint is likely to involve duties related to securing these applications — and therefore, the candidate would be expected to know about mobile application security.&lt;/p&gt;</description>
     </item>
     <item>
       <title>Tales from my Product Security Job Hunt: Part 1, Interview Types</title>
-      <link>https://baishya.xyz/posts/types-of-interviews/</link>
+      <link>http://localhost:1313/posts/types-of-interviews/</link>
       <pubDate>Sun, 07 Jan 2024 16:12:46 -0800</pubDate>
-      <guid>https://baishya.xyz/posts/types-of-interviews/</guid>
-      <description>After spending 4 amazing years at Adobe, I recently decided it was time to take the next step in my career. I was fortunate to interview with several companies that varied in terms of their domain, size, or the maturity of their security processes.&#xA;Many of those whom I informed about my decision and/or my interviews were interested in knowing what the process was like and how I prepared. After answering the same questions a few times, I thought it would be helpful to potential job seekers if I documented my experiences.</description>
+      <guid>http://localhost:1313/posts/types-of-interviews/</guid>
+      <description>&lt;p&gt;After spending 4 amazing years at Adobe, I recently decided it was time to take the next step in my career. I was fortunate to interview with several companies that varied in terms of their domain, size, or the maturity of their security processes.&lt;/p&gt;&#xA;&lt;p&gt;Many of those whom I informed about my decision and/or my interviews were interested in knowing what the process was like and how I prepared. After answering the same questions a few times, I thought it would be helpful to potential job seekers if I documented my experiences. Therefore, I am writing this two-part series that will talk about the types of interviews I attempted, and how I prepared for them. This blog in particular will list the types of interviews. In the next one, I will talk about my preparation and provide some tips that worked for me.&lt;/p&gt;</description>
     </item>
     <item>
       <title>Hack the Box — PC, but automated</title>
-      <link>https://baishya.xyz/posts/htb-pc/</link>
+      <link>http://localhost:1313/posts/htb-pc/</link>
       <pubDate>Mon, 06 Nov 2023 20:05:09 -0800</pubDate>
-      <guid>https://baishya.xyz/posts/htb-pc/</guid>
-      <description>PC is an easy Linux box that has a grpc service and a vulnerable version of an application running on it. While doing this box, I had gone to the forums for a hint, and I saw a comment that said something along the lines of “I wrote a script that can solve this box”. I found this quite intriguing and decided to write a script that could solve the box myself.</description>
+      <guid>http://localhost:1313/posts/htb-pc/</guid>
+      <description>&lt;p&gt;PC is an easy Linux box that has a grpc service and a vulnerable version of an application running on it. While doing this box, I had gone to the forums for a hint, and I saw a comment that said something along the lines of “I wrote a script that can solve this box”. I found this quite intriguing and decided to write a script that could solve the box myself.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title></title>
+      <link>http://localhost:1313/menu/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/menu/</guid>
+      <description>&lt;ol&gt;&#xA;&lt;li&gt;Gin &amp;amp; Tonic: Gin, Elderflower Liquer, Tonic&lt;/li&gt;&#xA;&lt;li&gt;Old Fashioned: Rye Whiskey, Bitters&lt;/li&gt;&#xA;&lt;li&gt;Monte Carlo: Rye Whiskey, Benedictine, Bitters&lt;/li&gt;&#xA;&lt;li&gt;Smoky Sea Captain: Rum, Islay Scotch, Lemon&lt;/li&gt;&#xA;&lt;li&gt;Daiquiri: Rum, Lime&lt;/li&gt;&#xA;&lt;li&gt;Whisky Sour: Rye Whiskey, Lemon&lt;/li&gt;&#xA;&lt;/ol&gt;</description>
     </item>
   </channel>
 </rss>

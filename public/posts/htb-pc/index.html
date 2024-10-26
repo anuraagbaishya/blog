@@ -1,22 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
+    <head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
         <meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="ie=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="author" content="">
-<meta name="description" content="PC is an easy Linux box that has a grpc service and a vulnerable version of an application running on it. While doing this box, I had gone to the forums for a hint, and I saw a comment that said something along the lines of “I wrote a script that can solve this box”. I found this quite intriguing and decided to write a script that could solve the box myself." />
-<meta name="keywords" content="homepage, blog, htb, automation" />
+<meta name="author"
+    content="">
+<meta name="description"
+    content="PC is an easy Linux box that has a grpc service and a vulnerable version of an application running on it. While doing this box, I had gone to the forums for a hint, and I saw a comment that said something along the lines of “I wrote a script that can solve this box”. I found this quite intriguing and decided to write a script that could solve the box myself.
+" />
+<meta name="keywords"
+    content="homepage, blog, htb, automation" />
 <meta name="robots" content="noodp" />
 <meta name="theme-color" content="" />
-<link rel="canonical" href="https://baishya.xyz/posts/htb-pc/" />
+<link rel="canonical" href="http://localhost:1313/posts/htb-pc/" />
 
 
-    <title>
-        
-            Hack the Box — PC, but automated :: Bayesian Blogs 
-        
-    </title>
+<title>
+    
+    Hack the Box — PC, but automated :: Bayesian Blogs 
+    
+</title>
 
 
 
@@ -35,33 +39,41 @@
     <meta name="msapplication-TileColor" content="">
 
 
-<meta itemprop="name" content="Hack the Box — PC, but automated">
-<meta itemprop="description" content="PC is an easy Linux box that has a grpc service and a vulnerable version of an application running on it. While doing this box, I had gone to the forums for a hint, and I saw a comment that said something along the lines of “I wrote a script that can solve this box”. I found this quite intriguing and decided to write a script that could solve the box myself."><meta itemprop="datePublished" content="2023-11-06T20:05:09-08:00" />
-<meta itemprop="dateModified" content="2023-11-06T20:05:09-08:00" />
-<meta itemprop="wordCount" content="1250"><meta itemprop="image" content="https://baishya.xyz" />
-<meta itemprop="keywords" content="htb,automation," />
-<meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:image" content="https://baishya.xyz" /><meta name="twitter:title" content="Hack the Box — PC, but automated"/>
-<meta name="twitter:description" content="PC is an easy Linux box that has a grpc service and a vulnerable version of an application running on it. While doing this box, I had gone to the forums for a hint, and I saw a comment that said something along the lines of “I wrote a script that can solve this box”. I found this quite intriguing and decided to write a script that could solve the box myself."/>
+
+  <meta itemprop="name" content="Hack the Box — PC, but automated">
+  <meta itemprop="description" content="PC is an easy Linux box that has a grpc service and a vulnerable version of an application running on it. While doing this box, I had gone to the forums for a hint, and I saw a comment that said something along the lines of “I wrote a script that can solve this box”. I found this quite intriguing and decided to write a script that could solve the box myself.">
+  <meta itemprop="datePublished" content="2023-11-06T20:05:09-08:00">
+  <meta itemprop="dateModified" content="2023-11-06T20:05:09-08:00">
+  <meta itemprop="wordCount" content="1250">
+  <meta itemprop="image" content="http://localhost:1313/">
+  <meta itemprop="keywords" content="Htb,Automation">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="http://localhost:1313/">
+  <meta name="twitter:title" content="Hack the Box — PC, but automated">
+  <meta name="twitter:description" content="PC is an easy Linux box that has a grpc service and a vulnerable version of an application running on it. While doing this box, I had gone to the forums for a hint, and I saw a comment that said something along the lines of “I wrote a script that can solve this box”. I found this quite intriguing and decided to write a script that could solve the box myself.">
 
 
 
-    <meta property="og:title" content="Hack the Box — PC, but automated" />
-<meta property="og:description" content="PC is an easy Linux box that has a grpc service and a vulnerable version of an application running on it. While doing this box, I had gone to the forums for a hint, and I saw a comment that said something along the lines of “I wrote a script that can solve this box”. I found this quite intriguing and decided to write a script that could solve the box myself." />
-<meta property="og:type" content="article" />
-<meta property="og:url" content="https://baishya.xyz/posts/htb-pc/" /><meta property="og:image" content="https://baishya.xyz" /><meta property="article:section" content="posts" />
-<meta property="article:published_time" content="2023-11-06T20:05:09-08:00" />
-<meta property="article:modified_time" content="2023-11-06T20:05:09-08:00" />
+<meta property="og:url" content="http://localhost:1313/posts/htb-pc/">
+  <meta property="og:site_name" content="Bayesian Blogs">
+  <meta property="og:title" content="Hack the Box — PC, but automated">
+  <meta property="og:description" content="PC is an easy Linux box that has a grpc service and a vulnerable version of an application running on it. While doing this box, I had gone to the forums for a hint, and I saw a comment that said something along the lines of “I wrote a script that can solve this box”. I found this quite intriguing and decided to write a script that could solve the box myself.">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2023-11-06T20:05:09-08:00">
+    <meta property="article:modified_time" content="2023-11-06T20:05:09-08:00">
+    <meta property="article:tag" content="Htb">
+    <meta property="article:tag" content="Automation">
+    <meta property="og:image" content="http://localhost:1313/">
 
 
 
 
 
 
-
-    <meta property="article:published_time" content="2023-11-06 20:05:09 -0800 PST" />
-
-
+<meta property="article:published_time" content="2023-11-06 20:05:09 -0800 PST" />
 
 
 
@@ -122,32 +134,34 @@
 
             <div class="content">
                 
-  <main class="post">
+<main class="post">
 
-    <div class="post-info">
-      <p>
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-clock">
-          <circle cx="12" cy="12" r="10"></circle>
-          <polyline points="12 6 12 12 16 14"></polyline>
-        </svg>
-        6 minutes
-
-        
-      </p>
-    </div>
-
-    <article>
-      <h1 class="post-title">
-        <a href="https://baishya.xyz/posts/htb-pc/">Hack the Box — PC, but automated</a>
-      </h1>
+  <div class="post-info">
+    <p>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+        class="feather feather-clock">
+        <circle cx="12" cy="12" r="10"></circle>
+        <polyline points="12 6 12 12 16 14"></polyline>
+      </svg>
+      6 minutes
 
       
+    </p>
+  </div>
 
-      
-        <hr />
-        <aside id="toc">
-          <div class="toc-title">Table of Contents</div>
-          <nav id="TableOfContents">
+  <article>
+    <h1 class="post-title">
+      <a href="http://localhost:1313/posts/htb-pc/">Hack the Box — PC, but automated</a>
+    </h1>
+
+    
+
+    
+    <hr />
+    <aside id="toc">
+      <div class="toc-title">Table of Contents</div>
+      <nav id="TableOfContents">
   <ul>
     <li><a href="#setup-grpc">Setup grpc</a></li>
     <li><a href="#sql-injection-in-grpc">SQL Injection in grpc</a></li>
@@ -156,13 +170,13 @@
     <li><a href="#closing-thoughts">Closing Thoughts</a></li>
   </ul>
 </nav>
-        </aside>
-        <hr />
+    </aside>
+    <hr />
 
-      
+    
 
-      <div class="post-content">
-        <p>PC is an easy Linux box that has a grpc service and a vulnerable version of an application running on it. While doing this box, I had gone to the forums for a hint, and I saw a comment that said something along the lines of “I wrote a script that can solve this box”. I found this quite intriguing and decided to write a script that could solve the box myself.</p>
+    <div class="post-content">
+      <p>PC is an easy Linux box that has a grpc service and a vulnerable version of an application running on it. While doing this box, I had gone to the forums for a hint, and I saw a comment that said something along the lines of “I wrote a script that can solve this box”. I found this quite intriguing and decided to write a script that could solve the box myself.</p>
 <p><em>Note 1: This is not a proper write-up of the PC box. There is already an official write-up by the creator of the box which is very thorough and explains all the details of the box. There are many unofficial writeups as well. There’s also ippsec’s video on his channel.</em></p>
 <p><em>Note 2: This script only automates the steps that need to be taken to get the flags. It does not automate the looking for the vulnerabilities part. After I completed the box, I automated the steps I took to get the flags.</em></p>
 <p>The complete code for this script can be found on <a href="https://github.com/anuraagbaishya/htb-pc">Github</a>.</p>
@@ -262,59 +276,63 @@
 <p>That’s it from me. This is my 2023 contribution to my blog. I will not promise anything else here till a really long time has passed since this publication. I usually don’t work on technical things during my free time. Most (if not all) of the security work I do is by virtue of my employment. Therefore, there usually is not much for me to share.</p>
 <p>Thanks for reading!</p>
 
-      </div>
-    </article>
+    </div>
+  </article>
 
-    <hr />
+  <hr />
 
-    <div class="post-info">
-      
+  <div class="post-info">
+    
     <p>
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag meta-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7" y2="7"></line></svg>
 
-        <span class="tag"><a href="https://baishya.xyz/tags/htb/">htb</a></span>
-        <span class="tag"><a href="https://baishya.xyz/tags/automation/">automation</a></span>
+        <span class="tag"><a href="http://localhost:1313/tags/htb/">htb</a></span>
+        <span class="tag"><a href="http://localhost:1313/tags/automation/">automation</a></span>
         
     </p>
 
+    
+
+    <p>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+        class="feather feather-file-text">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+        <line x1="16" y1="13" x2="8" y2="13"></line>
+        <line x1="16" y1="17" x2="8" y2="17"></line>
+        <polyline points="10 9 9 9 8 9"></polyline>
+      </svg>
+      1250 Words
+    </p>
+
+    <p>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+        class="feather feather-calendar">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+        <line x1="16" y1="2" x2="16" y2="6"></line>
+        <line x1="8" y1="2" x2="8" y2="6"></line>
+        <line x1="3" y1="10" x2="21" y2="10"></line>
+      </svg>
+      
+      2023-11-06 20:05
       
 
-      <p>
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-          <polyline points="14 2 14 8 20 8"></polyline>
-          <line x1="16" y1="13" x2="8" y2="13"></line>
-          <line x1="16" y1="17" x2="8" y2="17"></line>
-          <polyline points="10 9 9 9 8 9"></polyline>
-        </svg>
-        1250 Words
-      </p>
+      
+      
+      
+    </p>
+  </div>
 
-      <p>
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar">
-          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-          <line x1="16" y1="2" x2="16" y2="6"></line>
-          <line x1="8" y1="2" x2="8" y2="6"></line>
-          <line x1="3" y1="10" x2="21" y2="10"></line>
-        </svg>
-        
-          2023-11-06 20:05
-        
-
-         
-          
-        
-      </p>
-    </div>
-
-    
+  
     <div class="pagination">
         
 
         <div class="pagination__buttons">
             
             <span class="button previous">
-                <a href="https://baishya.xyz/posts/types-of-interviews/">
+                <a href="http://localhost:1313/posts/types-of-interviews/">
                     <span class="button__icon">←</span>
                     <span class="button__text">Tales from my Product Security Job Hunt: Part 1, Interview Types</span>
                 </a>
@@ -326,13 +344,11 @@
     </div>
 
 
-    
+  
 
-    
+  
 
-    
-
-  </main>
+</main>
 
             </div>
 

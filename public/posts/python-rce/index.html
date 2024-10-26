@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+        <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="author"
+    content="">
+<meta name="description"
+    content="Recently, I was looking at the Semgrep output for an open source project and I saw an interesting finding about potential arbitrary code execution. The code essentially ran an eval but the interesting part was converting Python code to an abstract syntax tree, compiling it to bytecode, and evaluating it. This made me curious about other unsafe ways to write Python code that could lead to code execution. In this article, I will discuss a few patterns that I learnt about through my limited research.
+" />
+<meta name="keywords"
+    content="homepage, blog, python" />
+<meta name="robots" content="noodp" />
+<meta name="theme-color" content="" />
+<link rel="canonical" href="http://localhost:1313/posts/python-rce/" />
+
+
+<title>
+    
+    Exploring Python Code Execution Patterns for Fun and Profit :: Bayesian Blogs 
+    
+</title>
+
+
+
+
+
+<link rel="stylesheet" href="/main.30656cf6cc2ee1a47aa579e5c4bd5726f790db131f71835d5ccccbfc6f4b8ec1.css" integrity="sha256-MGVs9swu4aR6pXnlxL1XJveQ2xMfcYNdXMzL/G9LjsE=">
+
+
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="">
+    <link rel="shortcut icon" href="/favicon.ico">
+    <meta name="msapplication-TileColor" content="">
+
+
+
+  <meta itemprop="name" content="Exploring Python Code Execution Patterns for Fun and Profit">
+  <meta itemprop="description" content="Recently, I was looking at the Semgrep output for an open source project and I saw an interesting finding about potential arbitrary code execution. The code essentially ran an eval but the interesting part was converting Python code to an abstract syntax tree, compiling it to bytecode, and evaluating it. This made me curious about other unsafe ways to write Python code that could lead to code execution. In this article, I will discuss a few patterns that I learnt about through my limited research.">
+  <meta itemprop="datePublished" content="2024-03-17T10:01:34-08:00">
+  <meta itemprop="dateModified" content="2024-03-17T10:01:34-08:00">
+  <meta itemprop="wordCount" content="1339">
+  <meta itemprop="image" content="http://localhost:1313/">
+  <meta itemprop="keywords" content="Python">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="http://localhost:1313/">
+  <meta name="twitter:title" content="Exploring Python Code Execution Patterns for Fun and Profit">
+  <meta name="twitter:description" content="Recently, I was looking at the Semgrep output for an open source project and I saw an interesting finding about potential arbitrary code execution. The code essentially ran an eval but the interesting part was converting Python code to an abstract syntax tree, compiling it to bytecode, and evaluating it. This made me curious about other unsafe ways to write Python code that could lead to code execution. In this article, I will discuss a few patterns that I learnt about through my limited research.">
+
+
+
+<meta property="og:url" content="http://localhost:1313/posts/python-rce/">
+  <meta property="og:site_name" content="Bayesian Blogs">
+  <meta property="og:title" content="Exploring Python Code Execution Patterns for Fun and Profit">
+  <meta property="og:description" content="Recently, I was looking at the Semgrep output for an open source project and I saw an interesting finding about potential arbitrary code execution. The code essentially ran an eval but the interesting part was converting Python code to an abstract syntax tree, compiling it to bytecode, and evaluating it. This made me curious about other unsafe ways to write Python code that could lead to code execution. In this article, I will discuss a few patterns that I learnt about through my limited research.">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2024-03-17T10:01:34-08:00">
+    <meta property="article:modified_time" content="2024-03-17T10:01:34-08:00">
+    <meta property="article:tag" content="Python">
+    <meta property="og:image" content="http://localhost:1313/">
+
+
+
+
+
+
+<meta property="article:published_time" content="2024-03-17 10:01:34 -0800 -0800" />
+
+
+
+
+
+
+
+
+
+    </head>
+
+    
+        <body>
+    
+    
+        <div class="container">
+            <header class="header">
+    <span class="header__inner">
+        <a href="/" style="text-decoration: none;">
+    <div class="logo">
+        
+            <span class="logo__mark">&gt;</span>
+            <span class="logo__text ">
+                cd /home</span>
+            <span class="logo__cursor" style=
+                  "
+                   
+                   ">
+            </span>
+        
+    </div>
+</a>
+
+
+        <span class="header__right">
+            
+                <nav class="menu">
+    <ul class="menu__inner"><li><a href="/about">About</a></li><li><a href="/posts">Blog</a></li><li><a href="/cocktails">Cocktails</a></li>
+    </ul>
+</nav>
+
+                <span class="menu-trigger">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M0 0h24v24H0z" fill="none"/>
+                        <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+                    </svg>
+                </span>
+            
+                <span class="theme-toggle not-selectable"><svg class="theme-toggler" width="24" height="24" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+   <path d="M22 41C32.4934 41 41 32.4934 41 22C41 11.5066 32.4934 3 22
+   3C11.5066 3 3 11.5066 3 22C3 32.4934 11.5066 41 22 41ZM7 22C7
+   13.7157 13.7157 7 22 7V37C13.7157 37 7 30.2843 7 22Z"/>
+ </svg></span>
+        </span>
+    </span>
+</header>
+
+
+            <div class="content">
+                
+<main class="post">
+
+  <div class="post-info">
+    <p>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+        class="feather feather-clock">
+        <circle cx="12" cy="12" r="10"></circle>
+        <polyline points="12 6 12 12 16 14"></polyline>
+      </svg>
+      7 minutes
+
+      
+    </p>
+  </div>
+
+  <article>
+    <h1 class="post-title">
+      <a href="http://localhost:1313/posts/python-rce/">Exploring Python Code Execution Patterns for Fun and Profit</a>
+    </h1>
+
+    
+
+    
+    <hr />
+    <aside id="toc">
+      <div class="toc-title">Table of Contents</div>
+      <nav id="TableOfContents">
+  <ul>
+    <li><a href="#basic-patterns">Basic Patterns</a></li>
+    <li><a href="#eval-and-exec-with-abstract-syntax-trees"><code>eval</code> and <code>exec</code> with Abstract Syntax Trees</a>
+      <ul>
+        <li><a href="#code-example">Code example</a></li>
+      </ul>
+    </li>
+    <li><a href="#recursive-attribute-lookup">Recursive attribute lookup</a>
+      <ul>
+        <li><a href="#code-example-1">Code example</a></li>
+        <li><a href="#cve-2023-33733">CVE-2023-33733</a></li>
+      </ul>
+    </li>
+    <li><a href="#pickle">Pickle</a>
+      <ul>
+        <li><a href="#code-example-2">Code example</a></li>
+      </ul>
+    </li>
+    <li><a href="#forward-references-and-typingget_type_hints">Forward References and <code>typing.get_type_hints</code></a>
+      <ul>
+        <li><a href="#code-example-3">Code example</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+    </aside>
+    <hr />
+
+    
+
+    <div class="post-content">
+      <p>Recently, I was looking at the Semgrep output for an open source project and I saw an interesting finding about potential arbitrary code execution. The code essentially ran an <code>eval</code> but the interesting part was converting Python code to an abstract syntax tree, compiling it to bytecode, and evaluating it. This made me curious about other unsafe ways to write Python code that could lead to code execution. In this article, I will discuss a few patterns that I learnt about through my limited research.</p>
+<p>Notes:</p>
+<ul>
+<li>This is by no means a complete list of all patterns that can lead to arbitrary code execution in Python.</li>
+<li>Some of these examples are contrived, and might not make any sense in the real world. I merely use them to demonstrate vulnerable code patterns.</li>
+</ul>
+<h2 id="basic-patterns">Basic Patterns</h2>
+<p>Python provides many ways of running system commands or arbitrary code in its <code>os</code> and <code>subprocess</code> modules. Some examples include:</p>
+<ul>
+<li><a href="https://docs.python.org/3/library/os.html"><code>os.system</code>, <code>os.popen</code>, <code>os.execve</code></a></li>
+<li><a href="https://docs.python.org/3/library/subprocess.html"><code>subprocess.Popen</code>, <code>subprocess.run</code>, <code>subprocess.check_call</code>, <code>subprocess.check_output</code></a></li>
+</ul>
+<p>While <code>subprocess</code> functions are designed to be safer than <code>os</code> functions, allowing code execution via untrusted input should always be avoided. Some examples of untrusted inputs leading to remote code execution can be seen in <a href="https://pentest.blog/advisory-roxy-wi-unauthenticated-remote-code-executions-cve-2022-31137/">these vulnerabilities</a> reported against Roxy-WI. Here, user input is directly concatenated to commands used in calls to <code>os.system</code>, <code>subprocess.Popen</code> and <code>ssh.exec_command</code>.</p>
+<p>It is also possible to run arbitrary Python code using <a href="https://docs.python.org/3/library/functions.html#eval"><code>eval</code></a> and <a href="https://docs.python.org/3/library/functions.html#exec"><code>exec</code></a>.</p>
+<h2 id="eval-and-exec-with-abstract-syntax-trees"><code>eval</code> and <code>exec</code> with Abstract Syntax Trees</h2>
+<p><code>eval</code> and <code>exec</code> require a string, bytes or code object. There is also <a href="https://docs.python.org/3/library/functions.html#compile"><code>compile</code></a> which can compile code into bytecode. The compiled bytecode can then be used with <code>eval</code> or <code>exec</code>. However <code>compile</code> requires a string, bytes or AST object. Therefore, just by themselves one cannot <code>eval</code> or <code>exec</code> a function like this:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Python" data-lang="Python"><span style="display:flex;"><span>eval(my_function)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">TypeError</span>: eval arg <span style="color:#ae81ff">1</span> must be a string, bytes <span style="color:#f92672">or</span> code object
+</span></span></code></pre></div><p>Although I can&rsquo;t think of any good reasons for evaluating a function like this, someone might have some use case. They can then convert the function to an AST first, compile it to bytecode, and evaluate or execute it as needed. If a malicious user can control what function is being evaluated or executed, they will achieve code execution.</p>
+<h3 id="code-example">Code example</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Python" data-lang="Python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">eval_node</span>(func):
+</span></span><span style="display:flex;"><span>    tree <span style="color:#f92672">=</span> ast<span style="color:#f92672">.</span>parse(textwrap<span style="color:#f92672">.</span>dedent(inspect<span style="color:#f92672">.</span>getsource(func)))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> node <span style="color:#f92672">in</span> ast<span style="color:#f92672">.</span>walk(tree):
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> isinstance(node, ast<span style="color:#f92672">.</span>Call):
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span> eval(compile(ast<span style="color:#f92672">.</span>Expression(node), <span style="color:#e6db74">&#34;fl&#34;</span>, <span style="color:#e6db74">&#34;eval&#34;</span>))
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">except</span> <span style="color:#a6e22e">Exception</span>:
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">pass</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">None</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">my_function</span>():
+</span></span><span style="display:flex;"><span>    subprocess<span style="color:#f92672">.</span>check_output([<span style="color:#e6db74">&#34;id&#34;</span>])<span style="color:#f92672">.</span>decode(<span style="color:#e6db74">&#34;utf-8&#34;</span>)<span style="color:#f92672">.</span>strip
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>print(eval_node(my_function))
+</span></span></code></pre></div><p>Here, <code>my_function</code> is parsed into an AST, which is then compiled to bytecode before being evaluated.</p>
+<h2 id="recursive-attribute-lookup">Recursive attribute lookup</h2>
+<p>I learnt about this pattern while reading a <a href="https://snyk.io/blog/python-rce-vulnerability/">CVE report for Celery</a> by Calum Hutton. I would highly recommend reading the original article, but I will summarize the finding here.</p>
+<p>Python allows performing recursive lookups on objects to get their attributes or sub-attributes. This means it is possible to traverse from one module to another, and use functions present in the other module, if the first module imports the subsequent module(s). This also means if an application exposes functionality that allows user controlled object traversal, the user might be able to manipulate the traversal and get references to functions such as <code>os.system</code>, therefore acheiving arbitrary code execution. (I am using <code>os.system</code> as example, but this would apply to something like <code>subprocess.run</code> too.)</p>
+<p>Not every module imports the <code>os</code> module, so this pattern only affects modules import <code>os</code> and thus have <code>os</code> as an attribute . Some examples of such modules are:</p>
+<ul>
+<li><a href="https://github.com/python/cpython/blob/main/Lib/random.py#L62"><code>random</code></a> (<code>os</code> is imported as <code>_os</code>)</li>
+<li><a href="https://github.com/python/cpython/blob/main/Lib/shutil.py#L7"><code>shutil</code></a></li>
+<li><a href="https://github.com/python/cpython/blob/main/Lib/pathlib/__init__.py#L10"><code>pathlib</code></a></li>
+<li><a href="https://github.com/python/cpython/blob/main/Lib/posixpath.py#L25"><code>posixpath</code></a></li>
+</ul>
+<p>If you are interested in finding more modules, you can look at the Python <a href="https://github.com/python/cpython/tree/main/Lib">sourcecode</a> where the modules are defined and check if the module imports <code>os</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Python" data-lang="Python"><span style="display:flex;"><span>getattr(pathlib, <span style="color:#e6db74">&#34;os&#34;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;</span>module <span style="color:#e6db74">&#39;os&#39;</span> <span style="color:#f92672">from</span> <span style="color:#e6db74">&#39;/Users/user/.pyenv/versions/3.9.5/lib/python3.9/os.py&#39;</span><span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>getattr(shutil, <span style="color:#e6db74">&#34;os&#34;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;</span>module <span style="color:#e6db74">&#39;os&#39;</span> <span style="color:#f92672">from</span> <span style="color:#e6db74">&#39;/Users/user/.pyenv/versions/3.9.5/lib/python3.9/os.py&#39;</span><span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>getattr(random, <span style="color:#e6db74">&#34;_os&#34;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;</span>module <span style="color:#e6db74">&#39;os&#39;</span> <span style="color:#f92672">from</span> <span style="color:#e6db74">&#39;/Users/user/.pyenv/versions/3.9.5/lib/python3.9/os.py&#39;</span><span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>getattr(posixpath, <span style="color:#e6db74">&#34;os&#34;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;</span>module <span style="color:#e6db74">&#39;os&#39;</span> <span style="color:#f92672">from</span> <span style="color:#e6db74">&#39;/Users/user/.pyenv/versions/3.9.5/lib/python3.9/os.py&#39;</span><span style="color:#f92672">&gt;</span>
+</span></span></code></pre></div><h3 id="code-example-1">Code example</h3>
+<p>This snippet is adapted from Celery source code presented in the original article.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Python" data-lang="Python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">code_exec</span>(d):
+</span></span><span style="display:flex;"><span>    _module <span style="color:#f92672">=</span> d[<span style="color:#e6db74">&#34;module&#34;</span>]
+</span></span><span style="display:flex;"><span>    _type <span style="color:#f92672">=</span> d[<span style="color:#e6db74">&#34;type&#34;</span>]
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>        cls <span style="color:#f92672">=</span> sys<span style="color:#f92672">.</span>modules[_module]
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> name <span style="color:#f92672">in</span> _type<span style="color:#f92672">.</span>split(<span style="color:#e6db74">&#34;.&#34;</span>):
+</span></span><span style="display:flex;"><span>            cls <span style="color:#f92672">=</span> getattr(cls, name)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">except</span> <span style="color:#a6e22e">Exception</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">pass</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    _msg <span style="color:#f92672">=</span> d[<span style="color:#e6db74">&#34;message&#34;</span>]
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> isinstance(_msg, (tuple, list)):
+</span></span><span style="display:flex;"><span>            d <span style="color:#f92672">=</span> cls(<span style="color:#f92672">*</span>_msg)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>            d <span style="color:#f92672">=</span> cls(_msg)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">except</span> <span style="color:#a6e22e">Exception</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">pass</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>d <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;module&#34;</span>: <span style="color:#e6db74">&#34;os&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;system&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;message&#34;</span>: <span style="color:#e6db74">&#34;id&#34;</span>,
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>The above snippet will lead to running <code>os.system(&quot;id&quot;)</code>. First <code>cls</code> is instantiated as <code>os</code> using <code>sys.modules</code>. It is then updated to the <code>os.system</code> function via recursive lookup using <code>getattr</code>. Finally code is executed when <code>cls(_msg)</code> is evaluated.</p>
+<h3 id="cve-2023-33733">CVE-2023-33733</h3>
+<p>CVE-2023-3373 is a CVE in the <code>reportlab</code> Python library. This was reported by Elyas Damej, who has published a great <a href="https://github.com/c53elyas/CVE-2023-33733">write-up</a> describing the vulnerabilties and its technical details. This is a very interesting CVE since it combines recursive attribute lookup and using <code>eval</code> to execute arbitrary code.</p>
+<p>I would recommend reading the original write-up, but I&rsquo;ll summarize it here. The <code>reportlab</code> library allows creating PDFs using Python. In 2019, a <a href="https://nvd.nist.gov/vuln/detail/CVE-2019-17626">CVE</a> was discovered which allowed remote code execution through the <code>color</code> HTML tag which is passed to <code>eval</code> without proper sanitization. To fix this  <code>rl_safe_eval</code> sandbox was implemented where all Python builtins functions are removed and many builtin functions are overriden to prevent access to dangerous functions that could lead to code execution. This sandbox was bypassed by creating a new class <code>Word</code> which is specifically crafted to bypass the checks in the sandbox. Following this, the <code>__globals__</code> attribute of <code>Word</code> is accessed and used to call <code>os.system</code></p>
+<h2 id="pickle">Pickle</h2>
+<p>In Python, the <code>pickle</code> module is used for serializing and deserializing objects. Serialization refers to the process of converting objects in memory to a byte stream. Deserialization is the reverse process, where the byte stream is converted back into objects in memory. Serialization is performed by <code>pickle.dump</code> / <code>pickle.dumps</code> and deserialization is performed by <code>pickle.load / pickle.loads</code>.</p>
+<p>Python allows specifying how an object should be pickled by using the <code>__reduce__</code> method. The <code>__reduce__</code> function can return a tuple which represents callable code along with arguments to the callable code. When this object is deserialized, Python will run the callable code in the object&rsquo;s <code>__reduce__</code> method. This gives one the ability to create an object that can lead to code execution when deserialized.</p>
+<h3 id="code-example-2">Code example</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Python" data-lang="Python"><span style="display:flex;"><span><span style="color:#f92672">import</span> pickle
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Payload</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">__reduce__</span>(self):
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">import</span> os
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> (os<span style="color:#f92672">.</span>system, (<span style="color:#e6db74">&#39;whoami&#39;</span>,))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>serialized <span style="color:#f92672">=</span> pickle<span style="color:#f92672">.</span>dumps(Payload())
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>pickle<span style="color:#f92672">.</span>loads(serialized)
+</span></span></code></pre></div><p>When an object of the class <code>Payload</code> is deserialized using <code>pickle.loads()</code>, the <code>__reduce__</code> function is called. This function returns callable code <code>os.system('whoami')</code>, which is then executed.</p>
+<p>This behavior of <code>pickle</code> has led to many CVEs. Some examples:</p>
+<ul>
+<li><a href="https://nvd.nist.gov/vuln/detail/CVE-2023-23930">CVE-2023-23930</a></li>
+<li><a href="https://nvd.nist.gov/vuln/detail/CVE-2022-34668">CVE-2022-34668</a></li>
+<li><a href="https://nvd.nist.gov/vuln/detail/CVE-2021-33026">CVE-2021-33026</a></li>
+<li><a href="https://nvd.nist.gov/vuln/detail/CVE-2020-22083">CVE-2020-22083</a></li>
+</ul>
+<h2 id="forward-references-and-typingget_type_hints">Forward References and <code>typing.get_type_hints</code></h2>
+<p>I learnt of this technique from a <a href="https://stackoverflow.com/questions/25353753/python-can-i-safely-unpickle-untrusted-data">Stack Overflow</a> post about dangers of unpickling untrusted data.</p>
+<p>A forward reference is a reference to a variable, function, or class that is defined later in the code. One place where forward references can be used is with <code>typing.get_type_hints</code>.</p>
+<p>From <a href="https://docs.python.org/3/library/typing.html#typing.get_type_hints">documentation</a>: <code>typing.get_type_hints</code> returns a dictionary containing type hints for a function, method, module or class object. In addition, forward references encoded as string literals are handled by evaluating them in globals and locals namespaces.</p>
+<p>This behavior can be misused to run arbitrary code, by specifying the code as a forward reference. Setting the <code>__anotations__</code> attribute of an object to such a forward reference does the trick.</p>
+<h3 id="code-example-3">Code example</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Python" data-lang="Python"><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Payload</span>(object):
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> __init__(self):
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>__annotations__ <span style="color:#f92672">=</span> {<span style="color:#e6db74">&#34;x&#34;</span>: <span style="color:#e6db74">&#34;&#34;&#34;eval(&#39;__import__(&#34;os&#34;).system(&#34;ls&#34;)&#39;)&#34;&#34;&#34;</span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>p <span style="color:#f92672">=</span> Payload()
+</span></span><span style="display:flex;"><span>print(typing<span style="color:#f92672">.</span>get_type_hints(p))
+</span></span></code></pre></div><p>Here, we specify a forward reference which imports <code>os</code> and calls <code>os.system</code></p>
+<p>It is possible that <code>typing.get_type_hints</code> is used internally by other Python functions, which could make these functions also susceptible to similar misuse. The Stack Overflow post mentions <code>functools.singledispatch</code> which has inner function <code>register</code>. The <code>register</code> function calls <code>typing.get_type_hints</code>. I tried using the above <code>Payload</code> class with <code>functools.singledispatch</code> but was not able to achieve code execution. Therefore, I leave this as an exercise to the reader.</p>
+<hr>
+<p>While researching for this article, I learnt many things about Python internals. I found this quite interesting, and therefore, plan to look more into Python internals - and research other unsafe patterns that could lead to security issues. I also plan to use what I learn to look for security issues in open source code. Only time will tell how successful I am in these endeavors!</p>
+<p>Thanks for reading!</p>
+
+    </div>
+  </article>
+
+  <hr />
+
+  <div class="post-info">
+    
+    <p>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag meta-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7" y2="7"></line></svg>
+
+        <span class="tag"><a href="http://localhost:1313/tags/python/">python</a></span>
+        
+    </p>
+
+    
+
+    <p>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+        class="feather feather-file-text">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+        <line x1="16" y1="13" x2="8" y2="13"></line>
+        <line x1="16" y1="17" x2="8" y2="17"></line>
+        <polyline points="10 9 9 9 8 9"></polyline>
+      </svg>
+      1339 Words
+    </p>
+
+    <p>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+        class="feather feather-calendar">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+        <line x1="16" y1="2" x2="16" y2="6"></line>
+        <line x1="8" y1="2" x2="8" y2="6"></line>
+        <line x1="3" y1="10" x2="21" y2="10"></line>
+      </svg>
+      
+      2024-03-17 11:01
+      
+
+      
+      
+      
+    </p>
+  </div>
+
+  
+    <div class="pagination">
+        
+
+        <div class="pagination__buttons">
+            
+            <span class="button previous">
+                <a href="http://localhost:1313/posts/pyload-cves/">
+                    <span class="button__icon">←</span>
+                    <span class="button__text">Analyzing new-ish CVEs in PyLoad</span>
+                </a>
+            </span>
+            
+
+            
+            <span class="button next">
+                <a href="http://localhost:1313/posts/interview-prep/">
+                    <span class="button__text">Tales from my Product Security Job Hunt: Part 2, Preparation</span>
+                    <span class="button__icon">→</span>
+                </a>
+            </span>
+            
+        </div>
+    </div>
+
+
+  
+
+  
+
+</main>
+
+            </div>
+
+            
+                <footer class="footer">
+    
+    <div class="footer__inner">
+        <div class="footer__content">
+            <span>&copy; 2024</span>
+            
+            
+            
+            <span>Anuraag Baishya</span>
+        </div>
+    </div>
+    
+    
+    <div class="footer__inner">
+        <div class="footer__content">
+            <span>Powered by <a href="http://gohugo.io">Hugo</a> & <a href="https://github.com/rhazdon/hugo-theme-hello-friend-ng">Hello Friend NG</a> theme</span>
+        </div>
+    </div>
+    
+</footer>
+
+            
+        </div>
+
+        
+
+
+<script type="text/javascript" src="/bundle.min.4037dc94fd1565c4fd3354e2b4a2d1ff11842c906242435350b4d2d8d6e8b7890da46c0a865173f543a6161c1f4d1c94147f1b907db36489fc2bf5e20d4af75c.js" integrity="sha512-QDfclP0VZcT9M1TitKLR/xGELJBiQkNTULTS2Nbot4kNpGwKhlFz9UOmFhwfTRyUFH8bkH2zZIn8K/XiDUr3XA=="></script>
+
+
+
+
+    </body>
+</html>

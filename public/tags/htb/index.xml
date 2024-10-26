@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>htb on Bayesian Blogs</title>
-    <link>https://baishya.xyz/tags/htb/</link>
-    <description>Recent content in htb on Bayesian Blogs</description>
-    <generator>Hugo -- gohugo.io</generator>
+    <title>Htb on Bayesian Blogs</title>
+    <link>http://localhost:1313/tags/htb/</link>
+    <description>Recent content in Htb on Bayesian Blogs</description>
+    <generator>Hugo</generator>
     <language>en-us</language>
     <lastBuildDate>Mon, 06 Nov 2023 20:05:09 -0800</lastBuildDate>
-    <atom:link href="https://baishya.xyz/tags/htb/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/tags/htb/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Hack the Box — PC, but automated</title>
-      <link>https://baishya.xyz/posts/htb-pc/</link>
+      <link>http://localhost:1313/posts/htb-pc/</link>
       <pubDate>Mon, 06 Nov 2023 20:05:09 -0800</pubDate>
-      <guid>https://baishya.xyz/posts/htb-pc/</guid>
-      <description>PC is an easy Linux box that has a grpc service and a vulnerable version of an application running on it. While doing this box, I had gone to the forums for a hint, and I saw a comment that said something along the lines of “I wrote a script that can solve this box”. I found this quite intriguing and decided to write a script that could solve the box myself.</description>
+      <guid>http://localhost:1313/posts/htb-pc/</guid>
+      <description>&lt;p&gt;PC is an easy Linux box that has a grpc service and a vulnerable version of an application running on it. While doing this box, I had gone to the forums for a hint, and I saw a comment that said something along the lines of “I wrote a script that can solve this box”. I found this quite intriguing and decided to write a script that could solve the box myself.&lt;/p&gt;</description>
     </item>
   </channel>
 </rss>

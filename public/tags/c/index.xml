@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>C on Bayesian Blogs</title>
+    <link>http://localhost:1313/tags/c/</link>
+    <description>Recent content in C on Bayesian Blogs</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 22 Sep 2024 16:09:29 -0700</lastBuildDate>
+    <atom:link href="http://localhost:1313/tags/c/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Httpd Cves</title>
+      <link>http://localhost:1313/posts/httpd-cves/</link>
+      <pubDate>Sun, 22 Sep 2024 16:09:29 -0700</pubDate>
+      <guid>http://localhost:1313/posts/httpd-cves/</guid>
+      <description>&lt;p&gt;&lt;a href=&#34;https://httpd.apache.org/&#34;&gt;Apache HTTP Server&lt;/a&gt; (httpd) is a powerful, open-source web server that powers a significant portion of the internet. It’s highly configurable, allowing users to host websites, serve dynamic content, and handle requests efficiently. Key features include:&lt;/p&gt;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;Modular Architecture: Easily extendable via modules like mod_rewrite for URL manipulation or mod_ssl for secure connections.&lt;/li&gt;&#xA;&lt;li&gt;Cross-Platform: Runs on a variety of operating systems, including Linux, Windows, and macOS.&lt;/li&gt;&#xA;&lt;li&gt;Scalability: Supports both small personal websites and large-scale enterprise applications.&#xA;Customization: Through configuration files, you can fine-tune security, performance, and URL handling.&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;p&gt;I don&amp;rsquo;t remember when I first came across httpd. The only thing I know about httpd is that its a server used to serve websites. I do not how to use it, what features it has, and how to configure it. For the longest time, I also did not know the fact that it has a modular architecture. When I was interviewing for an internship position at Adobe &lt;del&gt;a million&lt;/del&gt; around 5 years ago, one of the questions I was asked was about adding custom modules to httpd, specifically how to ensure that the custom modules added are secure. The question was more general in nature - what kind of checks would one perform before using a plugin for their application. httpd was used as an example. That was the day I learnt about the modular architecture of httpd. Since then there have been many instances - at work or otherwise - where I came across names like &lt;code&gt;mod_proxy&lt;/code&gt;, &lt;code&gt;mod_rewrite&lt;/code&gt;, &lt;code&gt;mod_ssl&lt;/code&gt; etc. which I presumed were modules, but I never looked deeper into them.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

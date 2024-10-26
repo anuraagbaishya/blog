@@ -1,26 +1,26 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>interviews on Bayesian Blogs</title>
-    <link>https://baishya.xyz/tags/interviews/</link>
-    <description>Recent content in interviews on Bayesian Blogs</description>
-    <generator>Hugo -- gohugo.io</generator>
+    <title>Interviews on Bayesian Blogs</title>
+    <link>http://localhost:1313/tags/interviews/</link>
+    <description>Recent content in Interviews on Bayesian Blogs</description>
+    <generator>Hugo</generator>
     <language>en-us</language>
     <lastBuildDate>Sun, 14 Jan 2024 21:51:34 -0800</lastBuildDate>
-    <atom:link href="https://baishya.xyz/tags/interviews/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/tags/interviews/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Tales from my Product Security Job Hunt: Part 2, Preparation</title>
-      <link>https://baishya.xyz/posts/interview-prep/</link>
+      <link>http://localhost:1313/posts/interview-prep/</link>
       <pubDate>Sun, 14 Jan 2024 21:51:34 -0800</pubDate>
-      <guid>https://baishya.xyz/posts/interview-prep/</guid>
-      <description>This is part 2 of my interview experience and preparation series, where I will talk about how I prepared for the interviews. Check out part 1 where I talk more about the process and types of interviews here&#xA;As I mentioned in my previous post, this is catered to my search criteria, which was:&#xA;Experience: Mid-level (~4–5 years of experience) Role: Product Security / Application Security Even within the roles I was looking for, different openings had slightly different requirements.</description>
+      <guid>http://localhost:1313/posts/interview-prep/</guid>
+      <description>&lt;p&gt;This is part 2 of my interview experience and preparation series, where I will talk about how I prepared for the interviews. Check out part 1 where I talk more about the process and types of interviews &lt;a href=&#34;https://www.baishya.xyz/posts/types-of-interviews/&#34;&gt;here&lt;/a&gt;&lt;/p&gt;&#xA;&lt;p&gt;As I mentioned in my previous post, this is catered to my search criteria, which was:&lt;/p&gt;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;Experience: Mid-level (~4–5 years of experience)&lt;/li&gt;&#xA;&lt;li&gt;Role: Product Security / Application Security&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;p&gt;Even within the roles I was looking for, different openings had slightly different requirements. For example, an application security role for a team/company that has a large mobile application footprint is likely to involve duties related to securing these applications — and therefore, the candidate would be expected to know about mobile application security.&lt;/p&gt;</description>
     </item>
     <item>
       <title>Tales from my Product Security Job Hunt: Part 1, Interview Types</title>
-      <link>https://baishya.xyz/posts/types-of-interviews/</link>
+      <link>http://localhost:1313/posts/types-of-interviews/</link>
       <pubDate>Sun, 07 Jan 2024 16:12:46 -0800</pubDate>
-      <guid>https://baishya.xyz/posts/types-of-interviews/</guid>
-      <description>After spending 4 amazing years at Adobe, I recently decided it was time to take the next step in my career. I was fortunate to interview with several companies that varied in terms of their domain, size, or the maturity of their security processes.&#xA;Many of those whom I informed about my decision and/or my interviews were interested in knowing what the process was like and how I prepared. After answering the same questions a few times, I thought it would be helpful to potential job seekers if I documented my experiences.</description>
+      <guid>http://localhost:1313/posts/types-of-interviews/</guid>
+      <description>&lt;p&gt;After spending 4 amazing years at Adobe, I recently decided it was time to take the next step in my career. I was fortunate to interview with several companies that varied in terms of their domain, size, or the maturity of their security processes.&lt;/p&gt;&#xA;&lt;p&gt;Many of those whom I informed about my decision and/or my interviews were interested in knowing what the process was like and how I prepared. After answering the same questions a few times, I thought it would be helpful to potential job seekers if I documented my experiences. Therefore, I am writing this two-part series that will talk about the types of interviews I attempted, and how I prepared for them. This blog in particular will list the types of interviews. In the next one, I will talk about my preparation and provide some tips that worked for me.&lt;/p&gt;</description>
     </item>
   </channel>
 </rss>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Python on Bayesian Blogs</title>
+    <link>http://localhost:1313/tags/python/</link>
+    <description>Recent content in Python on Bayesian Blogs</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 20 Apr 2024 07:56:09 -0700</lastBuildDate>
+    <atom:link href="http://localhost:1313/tags/python/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Analyzing new-ish CVEs in PyLoad</title>
+      <link>http://localhost:1313/posts/pyload-cves/</link>
+      <pubDate>Sat, 20 Apr 2024 07:56:09 -0700</pubDate>
+      <guid>http://localhost:1313/posts/pyload-cves/</guid>
+      <description>&lt;p&gt;&lt;a href=&#34;https://pyload.net/&#34;&gt;PyLoad&lt;/a&gt; is an open source download manager written in Python. I first came across PyLoad while solving a HackTheBox machine (PC). Solving the machine required exploiting a pre-auth RCE (&lt;a href=&#34;https://nvd.nist.gov/vuln/detail/CVE-2023-0297&#34;&gt;CVE-2023-0297&lt;/a&gt;). I then rediscovered PyLoad when I was looking for CVEs to analyze. My intention was to analyze around 3-4 CVEs in the same product and PyLoad fit the bill perfectly, as there were 4 CVEs disclosed in January and February 2024. In this article, I will explain the CVEs, examine the provided proof of concepts, and evaluate the fixes.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Exploring Python Code Execution Patterns for Fun and Profit</title>
+      <link>http://localhost:1313/posts/python-rce/</link>
+      <pubDate>Sun, 17 Mar 2024 10:01:34 -0800</pubDate>
+      <guid>http://localhost:1313/posts/python-rce/</guid>
+      <description>&lt;p&gt;Recently, I was looking at the Semgrep output for an open source project and I saw an interesting finding about potential arbitrary code execution. The code essentially ran an &lt;code&gt;eval&lt;/code&gt; but the interesting part was converting Python code to an abstract syntax tree, compiling it to bytecode, and evaluating it. This made me curious about other unsafe ways to write Python code that could lead to code execution. In this article, I will discuss a few patterns that I learnt about through my limited research.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>
