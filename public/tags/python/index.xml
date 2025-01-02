@@ -6,8 +6,15 @@
     <description>Recent content in Python on Bayesian Blogs</description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 20 Apr 2024 07:56:09 -0700</lastBuildDate>
+    <lastBuildDate>Fri, 25 Oct 2024 17:00:09 -0800</lastBuildDate>
     <atom:link href="http://localhost:1313/tags/python/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>CVE-2024-47821: Remote Code Execution in PyLoad</title>
+      <link>http://localhost:1313/posts/cve-2024-47821/</link>
+      <pubDate>Fri, 25 Oct 2024 17:00:09 -0800</pubDate>
+      <guid>http://localhost:1313/posts/cve-2024-47821/</guid>
+      <description>&lt;p&gt;I found my first CVE! &lt;a href=&#34;https://www.cve.org/CVERecord?id=CVE-2024-47821&#34;&gt;CVE-2024-47821&lt;/a&gt; (&lt;a href=&#34;https://github.com/pyload/pyload/security/advisories/GHSA-w7hq-f2pj-c53g&#34;&gt;GitHub Advisory&lt;/a&gt;) is a remote code execution vulnerability in &lt;a href=&#34;https://pyload.net/&#34;&gt;PyLoad&lt;/a&gt;. PyLoad is an open source download manager written in Python. The folder &lt;code&gt;~/.pyload/scripts&lt;/code&gt; on the server where PyLoad is installed has scripts which are run when certain actions are completed, for e.g. a download is finished. By downloading a executable file to a folder in &lt;code&gt;~/.pyload/scripts&lt;/code&gt; and performing the respective action, remote code execution can be achieved. A file can be downloaded to such a folder by changing the download folder to a folder in &lt;code&gt;~/.pyload/scripts&lt;/code&gt; path and using the &lt;code&gt;/flashgot&lt;/code&gt; API to download the file.&lt;/p&gt;</description>
+    </item>
     <item>
       <title>Analyzing new-ish CVEs in PyLoad</title>
       <link>http://localhost:1313/posts/pyload-cves/</link>

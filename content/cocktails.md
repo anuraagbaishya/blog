@@ -74,6 +74,14 @@ Cocktails are categorized by alcohol which has the highest quantity. Cocktails w
 * 1 oz lemon juice
 * 0.5 oz simple syrup
 
+### Amber Ember
+* 1.5 oz spiced whiskey
+* 0.5 oz maraschino liquer
+* 0.5 oz Benedictine
+* 1 oz lemon cordial
+* 0.5 oz lemon juice
+* 3 dashes orange bitters
+
 ## Other spirits
 
 ### Golden Charm

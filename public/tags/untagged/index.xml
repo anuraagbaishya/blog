@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>untagged on Bayesian Blogs</title>
-    <link>https://baishya.xyz/tags/untagged/</link>
-    <description>Recent content in untagged on Bayesian Blogs</description>
-    <generator>Hugo -- gohugo.io</generator>
+    <title>Untagged on Bayesian Blogs</title>
+    <link>http://localhost:1313/tags/untagged/</link>
+    <description>Recent content in Untagged on Bayesian Blogs</description>
+    <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Mon, 29 Jan 2024 20:05:09 -0800</lastBuildDate>
-    <atom:link href="https://baishya.xyz/tags/untagged/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Tue, 29 Oct 2024 00:08:05 -0700</lastBuildDate>
+    <atom:link href="http://localhost:1313/tags/untagged/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>Hack the Box — PC, but automated</title>
-      <link>https://baishya.xyz/posts/htb-pc/</link>
-      <pubDate>Mon, 29 Jan 2024 20:05:09 -0800</pubDate>
-      <guid>https://baishya.xyz/posts/htb-pc/</guid>
-      <description>PC is an easy Linux box that has a grpc service and a vulnerable version of an application running on it. While doing this box, I had gone to the forums for a hint, and I saw a comment that said something along the lines of “I wrote a script that can solve this box”. I found this quite intriguing and decided to write a script that could solve the box myself.</description>
+      <title>Reversing Airflow Patches</title>
+      <link>http://localhost:1313/posts/reversing-airflow-patches/</link>
+      <pubDate>Tue, 29 Oct 2024 00:08:05 -0700</pubDate>
+      <guid>http://localhost:1313/posts/reversing-airflow-patches/</guid>
+      <description>&lt;p&gt;&lt;img src=&#34;http://localhost:1313/airflow-logo.png&#34; alt=&#34;airflow-logo&#34;&gt;&lt;/p&gt;&#xA;&lt;p&gt;I have been reading quite a few blogs about reversing patches for CVEs and generating exploits based on the diff. One of my favorites is &lt;a href=&#34;https://www.assetnote.io/resources/research/two-bytes-is-plenty-fortigate-rce-with-cve-2024-21762&#34;&gt;this blog&lt;/a&gt; from the folks at Assetnote about a CVE in Fortigate. While this level of reverse engineering is waaaay beyond what I can even think of attempting, I also read articles about simpler exercises, such as &lt;a href=&#34;https://blog.securelayer7.net/arbitrary-code-execution-in-apache-airflow/&#34;&gt;this&lt;/a&gt; for a CVE in Apache Airflow - which is a direct inspiration for this blog.&lt;/p&gt;</description>
     </item>
   </channel>
 </rss>

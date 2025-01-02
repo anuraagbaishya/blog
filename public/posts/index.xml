@@ -5,8 +5,43 @@
         <description>Recent content in Posts on Bayesian Blogs</description>
         <generator>Hugo -- gohugo.io</generator>
         <language>en-us</language>
-        <lastBuildDate>Fri, 25 Oct 2024 17:00:09 -0800</lastBuildDate>
+        <lastBuildDate>Tue, 29 Oct 2024 00:08:05 -0700</lastBuildDate>
         <atom:link href="http://localhost:1313/posts/index.xml" rel="self" type="application/rss+xml" />
+        
+        <item>
+            <title>Unpatching Airflow: Turning CVE Fixes into Exploitable PoCs</title>
+            <link>http://localhost:1313/posts/reversing-airflow-patches/</link>
+            <pubDate>Tue, 29 Oct 2024 00:08:05 -0700</pubDate>
+            
+            <guid>http://localhost:1313/posts/reversing-airflow-patches/</guid>
+            <description>&lt;p&gt;I have been reading quite a few blogs about analyzing patches for CVEs and generating exploits based on the diff. One of my favorites is &lt;a href=&#34;https://www.assetnote.io/resources/research/two-bytes-is-plenty-fortigate-rce-with-cve-2024-21762&#34;&gt;this blog&lt;/a&gt; from the folks at Assetnote about a CVE in Fortigate. While this level of reverse engineering is waaaay beyond what I can even think of attempting, I also read articles about simpler exercises, such as &lt;a href=&#34;https://blog.securelayer7.net/arbitrary-code-execution-in-apache-airflow/&#34;&gt;this&lt;/a&gt; for a CVE in Apache Airflow - which is a direct inspiration for this blog.&lt;/p&gt;</description>
+            <content type="html"><![CDATA[<p>I have been reading quite a few blogs about analyzing patches for CVEs and generating exploits based on the diff. One of my favorites is <a href="https://www.assetnote.io/resources/research/two-bytes-is-plenty-fortigate-rce-with-cve-2024-21762">this blog</a> from the folks at Assetnote about a CVE in Fortigate. While this level of reverse engineering is waaaay beyond what I can even think of attempting, I also read articles about simpler exercises, such as <a href="https://blog.securelayer7.net/arbitrary-code-execution-in-apache-airflow/">this</a> for a CVE in Apache Airflow - which is a direct inspiration for this blog.</p>
+<p><a href="https://airflow.apache.org/">Apache Airflow</a> is an open-source platform for creating, scheduling, and managing complex workflows and data pipelines programmatically. Apache Airflow uses <a href="https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/dags.html">Directed Acyclic Graphs</a> (DAGs) to define and schedule workflows as a series of interdependent tasks, ensuring a clear execution order without cycles. DAGs are Python-based, allowing dynamic task definitions and flexible scheduling. DAGs are defined in <code>$AIRFLOW_HOME/dags</code> folder. Airflow also has a plugin manager built-in that can integrate external features to its core by adding files in the <code>$AIRFLOW_HOME/plugins</code> folder.</p>
+<p>Looking at the list of Airflow CVEs, I settled for 2 CVEs to explore:</p>
+<ul>
+<li><a href="https://www.cvedetails.com/cve/CVE-2024-45034/">CVE-2024-45034</a> - A arbitrary code execution issue.</li>
+<li><a href="https://www.cvedetails.com/cve/CVE-2024-41937/">CVE-2024-41937</a> - A XSS issue.</li>
+</ul>
+<p>While I was able to exploit CVE-2024-45034, I was not able to exploit CVE-2024-41937. There seemed to be additional controls that prevented the exploitation of CVE-2024-41937 (or I don&rsquo;t know how to exploit XSS - which, honestly, is quite probable - given complex XSS payloads can get). I will still share my learnings as this blog serves as a structured version of my notes from my ongoing journey in security research.</p>
+<h2 id="cve-2024-45034">CVE-2024-45034</h2>
+<p>[CVE-2024-45034]is an arbitrary code execution vulnerability which affects Airflow &lt; 2.10.1. The description states the CVE &ldquo;allows DAG authors to add local settings to the DAG folder and get it executed by the scheduler, where the scheduler is not supposed to execute code submitted by the DAG author&rdquo;. The patch for this CVE is added in <a href="https://github.com/apache/airflow/pull/41672">this pull request</a>. The changes are made to <a href="https://github.com/apache/airflow/blob/2.9.3/airflow/settings.py">settings.py</a>. The patch appears quite simple:</p>
+<ul>
+<li>In the vulnerable version, the <code>DAGS_FOLDER</code> and the <code>PLUGINS_FOLDER</code> are added to <code>sys.path</code> before executing <code>import_local_settings</code>.</li>
+<li>In the patched version, the <code>DAGS_FOLDER</code> and the <code>PLUGINS_FOLDER</code> folder are added to <code>sys.path</code> after executing <code>import_local_settings</code>.</li>
+</ul>
+<p>It can be guessed that <code>$AIRFLOW_HOME/dags</code> maps to <code>DAGS_FOLDER</code> and <code>$AIRFLOW_HOME/plugins</code> maps to <code>PLUGINS_FOLDER</code>. It can be inferred from the patch that something interesting happens in <code>import_local_settings</code> which deserves deeper investigation. Looking at <a href="https://github.com/apache/airflow/blob/81845de9d95a733b4eb7826aaabe23ba9813eba3/airflow/settings.py#L474"><code>import_local_settings</code></a> we see this code:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Python" data-lang="Python"><span style="display:flex;"><span>  <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">import_local_settings</span>():
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;&#34;&#34;Import airflow_local_settings.py files to allow overriding any configs in settings.py file.&#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">import</span> airflow_local_settings
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">...</span>
+</span></span></code></pre></div><p>In the vulnerable version, it can be seen that since the <code>DAGS_FOLDER</code> and the <code>PLUGINS_FOLDER</code> are appended to <code>sys.path</code> before executing <code>import_local_settings</code>. Therefore, adding a file named <code>airflow_local_settings.py</code> to one of these folders will lead to it being executed by <code>import_local_settings</code>. This would lead to arbitrary code execution. The <code>DAGS_FOLDER</code> and the <code>PLUGINS_FOLDER</code> are meant to be writable by the users - thereby allowing any user to exploit this vulnerability by adding malicious code to a file named <code>airflow_local_settings.py</code> in either the <code>DAGS_FOLDER</code> or the <code>PLUGINS_FOLDER</code></p>
+<p>I created a simple <code>airflow_local_settings.py</code> file in my <code>$AIRFLOW_HOME/dags</code> folder with this line <code>print(&quot;This code runs when the module is imported.&quot;)</code>. I then restarted Airflow. Looking at the logs, I could see that this line was printed when the containers started. The CVE description states that the code will be executed by the scheduler. However, I noticed it was executed by the webserver, the worker, and the triggerer as well.</p>
+<p><img src="/airflow-rev-1.png" alt="local-settings-imported"></p>
+<p><img src="/airflow-rev-2.png" alt="code-exec-1"></p>
+<p><img src="/airflow-rev-3.png" alt="code-exec-2"></p>
+]]></content>
+        </item>
         
         <item>
             <title>CVE-2024-47821: Remote Code Execution in PyLoad</title>
