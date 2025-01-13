@@ -6,8 +6,15 @@
     <description>Recent content in Python on Bayesian Blogs</description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Fri, 25 Oct 2024 17:00:09 -0800</lastBuildDate>
+    <lastBuildDate>Sun, 12 Jan 2025 00:08:05 -0700</lastBuildDate>
     <atom:link href="http://localhost:1313/tags/python/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Not a CVE: Using Airflow via Docker Can Lead to Arbitrary Code Execution</title>
+      <link>http://localhost:1313/posts/reversing-airflow-patches/</link>
+      <pubDate>Sun, 12 Jan 2025 00:08:05 -0700</pubDate>
+      <guid>http://localhost:1313/posts/reversing-airflow-patches/</guid>
+      <description>&lt;p&gt;I have been reading quite a few blogs about analyzing patches for CVEs and generating exploits based on the difference in code between the vulnerable and the fixed versions (&lt;code&gt;diff&lt;/code&gt;). One of my favorites is &lt;a href=&#34;https://www.assetnote.io/resources/research/two-bytes-is-plenty-fortigate-rce-with-cve-2024-21762&#34;&gt;this blog&lt;/a&gt; from the folks at Assetnote about a CVE in Fortigate. While this level of reverse engineering is waaaay beyond what I can even think of attempting, I also read articles about simpler exercises, such as &lt;a href=&#34;https://blog.securelayer7.net/arbitrary-code-execution-in-apache-airflow/&#34;&gt;this&lt;/a&gt; for a CVE in Apache Airflow - which is a direct inspiration for this blog.&lt;/p&gt;</description>
+    </item>
     <item>
       <title>CVE-2024-47821: Remote Code Execution in PyLoad</title>
       <link>http://localhost:1313/posts/cve-2024-47821/</link>
