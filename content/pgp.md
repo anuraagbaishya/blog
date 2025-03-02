@@ -1,4 +1,6 @@
-## PGP Key
+---
+title: 'PGP Key'
+---
 
 If you would like to encrypt your emails to me, you can use my PGP key:
 ```
