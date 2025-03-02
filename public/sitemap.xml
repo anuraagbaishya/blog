@@ -55,6 +55,8 @@
   </url><url>
     <loc>http://localhost:1313/menu/</loc>
   </url><url>
+    <loc>http://localhost:1313/pgp/</loc>
+  </url><url>
     <loc>http://localhost:1313/blog/</loc>
   </url><url>
     <loc>http://localhost:1313/series/</loc>
