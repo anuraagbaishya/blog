@@ -2,7 +2,7 @@ baseURL = 'https://baishya.xyz'
 languageCode = 'en-us'
 title = 'Bayesian Blogs'
 theme        = "hello-friend-ng"
-paginate     = 10
+pagination.pagerSize     = 10
 
 [params]
   # Subtitle for home

@@ -17,7 +17,7 @@ _Note 2: This script only automates the steps that need to be taken to get the f
 The complete code for this script can be found on [Github](https://github.com/anuraagbaishya/htb-pc).
 
 ## Setup grpc
-The box is running a grpc service on port 50051. Therefore, to interact with the service, we need a grpc client. I followed a [tutorial](https://grpc.io/docs/languages/python/basics/) on how to create a grpc client using thegrpcio-tools Python library. The first step was to define the service in a .proto file. My service definition is here. Once the service is defined grpcio-tools can generate the client code for you. You can use a command like this:
+The box is running a grpc service on port 50051. Therefore, to interact with the service, we need a grpc client. I followed a [tutorial](https://grpc.io/docs/languages/python/basics/) on how to create a grpc client using the grpcio-tools Python library. The first step was to define the service in a .proto file. My service definition is [here](https://github.com/anuraagbaishya/htb-pc/blob/main/SimpleApp.proto). Once the service is defined grpcio-tools can generate the client code for you. You can use a command like this:
 ```bash
 $ python -m grpc_tools.protoc -I../../protos --python_out=. --pyi_out=. --grpc_python_out=. SimpleApp.proto
 ```
@@ -122,7 +122,7 @@ $'http://localhost:8000/flash/addcrypted2'
 
 Here, I am running a script called [`shell.sh`](https://github.com/anuraagbaishya/htb-pc/blob/main/shell.sh) which is just a bash reverse shell.
 
-PyLoad on this box is not available publicly. It can only be accessed from within the box. The official write-up uses SSH tunneling to tunnel from the user’s machine to the box. I chose the alternative option of running the exploit from within the SSH session, using the same `exec_command` function I used to read the user flag.
+PyLoad on this box is not available publicly. It can only be accessed from within the box. The official write-up uses SSH tunneling to tunnel from the user’s machine to the box. I chose the alternate option of running the exploit from within the SSH session, using the same `exec_command` function I used to read the user flag.
 
 I used SFTP to transfer the reverse shell to the box:
 
@@ -155,7 +155,7 @@ This experiment was a lot of fun. After completing this box, I pondered over wha
 
 * Requires little to no UI interaction like clicking buttons, filing forms, etc that cannot be replicated using direct web / API calls. It might be possible to replicate these functionalities using selenium or similar — but that increases the complexity of the script.
 * Related to the above — requires performing operations using some software running on one of the open ports or the machine. These might be web UIs or even CLI programs installed in the box.
-* Has a lot of steps / requires running a lot of tools. The time required to create the script will be directly proportionate to the number of steps.
+* Does not have a lot of steps / does not require running a lot of tools. The time required to create the script will be directly proportionate to the number of steps.
 
 This was the first (and only) box I have tried to script. I have done a few other boxes after this one, but I did not spend time trying to script them because of one of the above reasons. As I complete more boxes, I will continue to assess if the box is easy to script. If yes, great! If not, it may have to do with one of the above reasons, or I might have some other new reasons.
 

