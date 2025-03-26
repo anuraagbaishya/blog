@@ -3,6 +3,7 @@
     <head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
         <meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <meta name="author"
     content="">
@@ -26,7 +27,9 @@
 
 
 
-<link rel="stylesheet" href="/main.30656cf6cc2ee1a47aa579e5c4bd5726f790db131f71835d5ccccbfc6f4b8ec1.css" integrity="sha256-MGVs9swu4aR6pXnlxL1XJveQ2xMfcYNdXMzL/G9LjsE=">
+  <link rel="stylesheet" href="/main.min.3fbdd467156edb5ed861aa27faeb89d1145b4287f0e6f84613c0311da271fd37.css" integrity="sha256-P73UZxVu217YYaon&#43;uuJ0RRbQofw5vhGE8AxHaJx/Tc=" crossorigin="anonymous">
+
+
 
 
 
@@ -83,6 +86,7 @@
 
 
 
+
     </head>
 
     
@@ -109,7 +113,6 @@
 
 
         <span class="header__right">
-            
                 <nav class="menu">
     <ul class="menu__inner"><li><a href="/about">About</a></li><li><a href="/posts">Blog</a></li><li><a href="/cocktails">Cocktails</a></li><li><a href="/pgp">PGP</a></li>
     </ul>
@@ -121,7 +124,6 @@
                         <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
                     </svg>
                 </span>
-            
                 <span class="theme-toggle not-selectable"><svg class="theme-toggler" width="24" height="24" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
    <path d="M22 41C32.4934 41 41 32.4934 41 22C41 11.5066 32.4934 3 22
    3C11.5066 3 3 11.5066 3 22C3 32.4934 11.5066 41 22 41ZM7 22C7
@@ -175,7 +177,7 @@
     
 
     <div class="post-content">
-      <p>I have been reading quite a few blogs about analyzing patches for CVEs and generating exploits based on the difference in code between the vulnerable and the fixed versions (<code>diff</code>). One of my favorites is <a href="https://www.assetnote.io/resources/research/two-bytes-is-plenty-fortigate-rce-with-cve-2024-21762">this blog</a> from the folks at Assetnote about a CVE in Fortigate. While this level of reverse engineering is waaaay beyond what I can even think of attempting, I also read articles about simpler exercises, such as <a href="https://blog.securelayer7.net/arbitrary-code-execution-in-apache-airflow/">this</a> for a CVE in Apache Airflow - which is a direct inspiration for this blog.</p>
+        <p>I have been reading quite a few blogs about analyzing patches for CVEs and generating exploits based on the difference in code between the vulnerable and the fixed versions (<code>diff</code>). One of my favorites is <a href="https://www.assetnote.io/resources/research/two-bytes-is-plenty-fortigate-rce-with-cve-2024-21762">this blog</a> from the folks at Assetnote about a CVE in Fortigate. While this level of reverse engineering is waaaay beyond what I can even think of attempting, I also read articles about simpler exercises, such as <a href="https://blog.securelayer7.net/arbitrary-code-execution-in-apache-airflow/">this</a> for a CVE in Apache Airflow - which is a direct inspiration for this blog.</p>
 <p><a href="https://airflow.apache.org/">Apache Airflow</a> is an open-source platform for creating, scheduling, and managing complex workflows and data pipelines programmatically. Apache Airflow uses <a href="https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/dags.html">Directed Acyclic Graphs</a> (DAGs) to define and schedule workflows as a series of interdependent tasks, ensuring a clear execution order without cycles. DAGs are Python-based, allowing dynamic task definitions and flexible scheduling. DAGs are defined in <code>$AIRFLOW_HOME/dags</code> folder. Airflow also has a plugin manager built-in that can integrate external features to its core by adding files in the <code>$AIRFLOW_HOME/plugins</code> folder.</p>
 <p>Looking at the list of Airflow CVEs, I settled on exploring <a href="https://www.cvedetails.com/cve/CVE-2024-45034/">CVE-2024-45034</a> which is an arbitrary code execution issue.</p>
 <h2 id="cve-2024-45034">CVE-2024-45034</h2>
@@ -206,52 +208,8 @@
 <p>Thank you for reading, and Happy New Year!</p>
 
     </div>
-  </article>
-
-  <hr />
-
-  <div class="post-info">
-    
-    <p>
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag meta-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7" y2="7"></line></svg>
-
-        <span class="tag"><a href="http://localhost:1313/tags/cve-analysis/">cve-analysis</a></span>
-        <span class="tag"><a href="http://localhost:1313/tags/python/">python</a></span>
-        
-    </p>
 
     
-
-    <p>
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-        class="feather feather-file-text">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-        <polyline points="14 2 14 8 20 8"></polyline>
-        <line x1="16" y1="13" x2="8" y2="13"></line>
-        <line x1="16" y1="17" x2="8" y2="17"></line>
-        <polyline points="10 9 9 9 8 9"></polyline>
-      </svg>
-      914 Words
-    </p>
-
-    <p>
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-        class="feather feather-calendar">
-        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-        <line x1="16" y1="2" x2="16" y2="6"></line>
-        <line x1="8" y1="2" x2="8" y2="6"></line>
-        <line x1="3" y1="10" x2="21" y2="10"></line>
-      </svg>
-      
-      2025-01-11 23:08
-      
-
-      
-      
-      
-    </p>
   </div>
 
   
@@ -259,6 +217,13 @@
         
 
         <div class="pagination__buttons">
+            
+            <span class="button previous">
+                <a href="http://localhost:1313/posts/cve-2025-30161/">
+                    <span class="button__icon">←</span>
+                    <span class="button__text">I Ran Free SAST Tools on OpenEMR and Found a CVE</span>
+                </a>
+            </span>
             
 
             

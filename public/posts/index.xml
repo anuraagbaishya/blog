@@ -5,8 +5,148 @@
         <description>Recent content in Posts on Bayesian Blogs</description>
         <generator>Hugo -- gohugo.io</generator>
         <language>en-us</language>
-        <lastBuildDate>Sun, 12 Jan 2025 00:08:05 -0700</lastBuildDate>
+        <lastBuildDate>Wed, 19 Mar 2025 19:37:34 -0700</lastBuildDate>
         <atom:link href="http://localhost:1313/posts/index.xml" rel="self" type="application/rss+xml" />
+        
+        <item>
+            <title>I Ran Free SAST Tools on OpenEMR and Found a CVE</title>
+            <link>http://localhost:1313/posts/cve-2025-30161/</link>
+            <pubDate>Wed, 19 Mar 2025 19:37:34 -0700</pubDate>
+            
+            <guid>http://localhost:1313/posts/cve-2025-30161/</guid>
+            <description>&lt;p&gt;CVE-2025-30161 is a stored XSS vulnerability in the bronchitis form component of OpenEMR. It allows anyone with access to edit a bronchitis form to inject malicious javascript payload into the form and run these payloads in the context of other users including administrators.&lt;/p&gt;
+&lt;h2 id=&#34;background&#34;&gt;Background&lt;/h2&gt;
+&lt;p&gt;I am a big proponent of open source static analysis engines like &lt;a href=&#34;https://github.com/semgrep/semgrep&#34;&gt;Semgrep&lt;/a&gt; and tools like &lt;a href=&#34;https://docs.snyk.io/scan-with-snyk/snyk-code&#34;&gt;Snyk Code&lt;/a&gt; that provide a free tier. One of the biggest selling point for both Semgrep and Snyk is that they allow writing your own rules. I have written many Semgrep rules at my job or otherwise and have found the rule language easy to learn and understand, while also providing very powerful features such as taint tracking and autofixing. Snyk&amp;rsquo;s &lt;a href=&#34;https://docs.snyk.io/scan-with-snyk/snyk-code/snyk-code-custom-rules/create-custom-rule&#34;&gt;custom rule&lt;/a&gt; support is currently in preview as of the time of writing. Both Semgrep and Snyk also have a set of pre-built rules. In the Semgrep world they are called community rules and can be found in this &lt;a href=&#34;https://github.com/semgrep/semgrep-rules&#34;&gt;repo&lt;/a&gt;.&lt;/p&gt;</description>
+            <content type="html"><![CDATA[<p>CVE-2025-30161 is a stored XSS vulnerability in the bronchitis form component of OpenEMR. It allows anyone with access to edit a bronchitis form to inject malicious javascript payload into the form and run these payloads in the context of other users including administrators.</p>
+<h2 id="background">Background</h2>
+<p>I am a big proponent of open source static analysis engines like <a href="https://github.com/semgrep/semgrep">Semgrep</a> and tools like <a href="https://docs.snyk.io/scan-with-snyk/snyk-code">Snyk Code</a> that provide a free tier. One of the biggest selling point for both Semgrep and Snyk is that they allow writing your own rules. I have written many Semgrep rules at my job or otherwise and have found the rule language easy to learn and understand, while also providing very powerful features such as taint tracking and autofixing. Snyk&rsquo;s <a href="https://docs.snyk.io/scan-with-snyk/snyk-code/snyk-code-custom-rules/create-custom-rule">custom rule</a> support is currently in preview as of the time of writing. Both Semgrep and Snyk also have a set of pre-built rules. In the Semgrep world they are called community rules and can be found in this <a href="https://github.com/semgrep/semgrep-rules">repo</a>.</p>
+<h2 id="experimental-setup">Experimental Setup</h2>
+<p>While writing rules is fun, I am a lazy security researcher who wants quick <del>profits</del> CVEs. So I decided to perform an experiment. Here are the steps of my experiment:</p>
+<ol>
+<li>Pick a few open source repositories.</li>
+<li>Clone them to my laptop and run Semgrep with its community rules.</li>
+<li>Fork them to my GitHub account and run Snyk (Snyk&rsquo;s GitHub integration requires the user to have write access to the repos and the easiest way to do this was to fork it to my account).</li>
+<li>Analyze the results.</li>
+<li>Find ___ CVEs.</li>
+</ol>
+<p>This seemed like an easy enough experiment. I anticipated the result analysis to take some time since the probability of having a lot of noise was quite high.</p>
+<p>The first repository I picked was <a href="https://www.open-emr.org/">OpenEMR</a>. From their homepage:</p>
+<blockquote>
+<p>OpenEMR is the most popular open source electronic health records and medical practice management solution. OpenEMR is a community of passionate volunteers and contributors dedicated to guarding OpenEMR’s status as a free, open source software solution for medical practices with a commitment to openness, kindness and cooperation.</p></blockquote>
+<p>The motivation behind picking this was a talk I attended where the speaker spoke about security issues in EMR (Electronic Medical Record) systems. The speaker emphasized on the need to ensure the security of these systems as they contain a lot of sensitive information.</p>
+<h2 id="related-work">Related Work</h2>
+<p>OpenEMR has been scrutinized many times in the past. Some references:</p>
+<ul>
+<li><a href="https://www.open-emr.org/wiki/images/1/11/Openemr_insecurity.pdf">Report by Project Insecurity</a></li>
+<li><a href="https://www.sonarsource.com/blog/openemr-remote-code-execution-in-your-healthcare-system/">RCE in OpenEMR</a></li>
+<li><a href="https://www.talosintelligence.com/vulnerability_reports/TALOS-2020-1179">SQL injecion in phpGACL</a> (These CVEs are not in OpenEMR itself, but OpenEMR was used to demonstrate the PoC)</li>
+</ul>
+<p>Due to these reports, the developers on OpenEMR have worked very hard to make the codebase quite secure, which is very respectable and great for users, but not good for me as my chances of finding vulnerabilities are greatly reduced 🙁.</p>
+<h2 id="running-semgrep">Running Semgrep</h2>
+<p>OpenEMR is a large code base. Running <code>cloc</code> on only git tracked files shows 6116 text files and over 1.7 million lines of code.</p>
+<pre tabindex="0"><code>cloc --list-file=&lt;(git ls-files)
+
+    6116 text files.
+
+github.com/AlDanial/cloc v 2.02  T=22.94 s (239.0 files/s, 97010.4 lines/s)
+--------------------------------------------------------------------------------
+Language                      files          blank        comment           code
+--------------------------------------------------------------------------------
+PHP                            3717          86837         263709         637104
+SVG                             274            106          33465         411322
+SQL                             123           7386           7446         321356
+HTML                            217           3294           7123         132878
+JavaScript                      284          11920          15960          82732
+CSS                              91           5006           1071          42703
+... snipped ...
+--------------------------------------------------------------------------------
+SUM:                           5482         122999         346123        1755972
+--------------------------------------------------------------------------------
+</code></pre><p>The Semgrep scan result was also incredibly large:</p>
+<pre tabindex="0"><code>Ran 1362 rules on 4588 files: 3021 findings.
+</code></pre><p>3021 findings?! Boy, have a found a gold mine! Or did I? Spoiler alert: I did not. Going over 3000+ findings is an impossible feat. I read some of the findings and quickly determined that most of them were false positives.</p>
+<p>I was interested in learning how many findings are reported per rule so I asked ChatGPT to write a script for me to count the findings by rule from the sarif output. These were the top rules:</p>
+<pre tabindex="0"><code>php.lang.security.taint-unsafe-echo-tag.taint-unsafe-echo-tag: 2243
+javascript.express.security.audit.xss.mustache.explicit-unescape.template-explicit-unescape: 123
+php.lang.security.unlink-use.unlink-use: 99
+php.lang.security.tainted-user-input-in-php-script.tainted-user-input-in-php-script: 97
+php.lang.security.injection.tainted-sql-string.tainted-sql-string: 92
+php.lang.security.injection.tainted-filename.tainted-filename: 72
+php.lang.security.unserialize-use.unserialize-use: 61
+php.lang.security.injection.printed-request.printed-request: 41
+php.lang.security.exec-use.exec-use: 38
+generic.secrets.security.detected-bcrypt-hash.detected-bcrypt-hash: 26
+javascript.browser.security.insecure-document-method.insecure-document-method: 22
+</code></pre><p>Reading the OpenEMR code, I found that the developers have applied robust protections for common issues such as XSS, SQL injection, and code injection. For XSS mitigation, they added many <a href="https://github.com/openemr/openemr/blob/master/library/htmlspecialchars.inc.php">helper functions</a> and used them wherever user input was used. For SQL injection, they have correctly used prepared statements and parameterized queries. For code injection, they have ensured to not use any user input while making system calls.</p>
+<p>The 2243 findings for <code>php.lang.security.taint-unsafe-echo-tag.taint-unsafe-echo-tag</code> were mostly reported for code like</p>
+<pre tabindex="0"><code>&lt;span class=\&#34;text\&#34;&gt;&lt;?php echo xlt(&#39;Total active reminders before update&#39;) . \&#34;: \&#34; . text($update_rem_log[&#39;total_pre_active_reminders&#39;]); ?&gt;&lt;/span&gt;&lt;br /&gt;&#34;
+</code></pre><p>The <code>xlt</code> function is from the aforementioned helper functions designed to prevent XSS. Glancing through many of them, I quickly got bored and decided that this rule is noisy. In the rule writer&rsquo;s and Semgrep&rsquo;s defense, it is very unlikely that a generic rule can correctly determine that a custom XSS protection mechanism is being used here.</p>
+<p>Similarly I looked through the 92 SQL injection findings and found them to be noise too. So much for &ldquo;easy CVEs&rdquo;&hellip;</p>
+<p>I ended up writing a script to ignore a bunch of rules and then re-ran Semgrep:</p>
+<pre tabindex="0"><code>exclude_rules=(
+  &#34;php.lang.security.taint-unsafe-echo-tag.taint-unsafe-echo-tag&#34;
+  &#34;php.lang.security.unlink-use.unlink-use&#34;
+  &#34;javascript.express.security.audit.xss.mustache.explicit-unescape.template-explicit-unescape&#34;
+  &#34;php.lang.security.curl-ssl-verifypeer-off.curl-ssl-verifypeer-off&#34;
+  &#34;javascript.browser.security.insecure-document-method.insecure-document-method&#34;
+  &#34;php.lang.security.tainted-path-traversal.tainted-path-traversal&#34;
+  &#34;php.lang.security.tainted-user-input-in-php-script.tainted-user-input-in-php-script&#34;
+  &#34;php.lang.security.injection.printed-request.printed-request&#34;
+  &#34;php.lang.security.exec-use.exec-use&#34;
+  &#34;php.lang.security.injection.tainted-sql-string.tainted-sql-string&#34;
+  &#34;php.lang.security.injection.tainted-filename.tainted-filename&#34;
+  &#34;php.laravel.security.laravel-path-traversal.laravel-path-traversal&#34;
+)
+
+semgrep_command=&#34;semgrep scan --config auto . -o semgrep-results.txt --severity ERROR --severity WARNING&#34;
+
+for rule in &#34;${exclude_rules[@]}&#34;; do
+  semgrep_command+=&#34; --exclude-rule $rule&#34;
+done
+
+eval &#34;$semgrep_command&#34;%
+</code></pre><p>This drastically reduced the findings to 165. This I could go over. Having a better understanding of the OpenEMR codebase and its various security protection, I was able to rule out (<em>drumroll please</em>) all 165 findings as false positives.</p>
+<p>I spent almost 20 hours doing this and had nothing to show for it&hellip;</p>
+<h2 id="enter-snyk">Enter Snyk</h2>
+<p>I had almost given up on finding an issue in OpenEMR (and with this experiment in general). I had other &ldquo;easy CVE&rdquo; ideas which seemed very enticing. However, I decided not to give in to my habit of jumping from one idea to another <em>(&hellip; cough &hellip; all my incomplete coding projects &hellip; cough &hellip; from the past 8 years &hellip; cough &hellip;)</em>. On a whim, I decided to run Snyk.</p>
+<p>Snyk had considerably lesser findings. Only ~ 640. (Side note: for some unknown reasons, I decided to delete the original project, and therefore rescanned it today for this blog. Therefore, the original finding is understandably missing from this result.)</p>
+<p><img src="/snyk-ss.png" alt="snyk-output"></p>
+<p>Many of these findings were also XSS and SQL injections - similar to Semgrep - which can again be attributed to the custom helper functions. At this point I was ready to walk away from this and go to my next &ldquo;easy CVE&rdquo; idea ✨ fuzzing ✨.</p>
+<p>By now, it was well into the evening, and not wanting to start a new experiment, I told myself I will spend as much time as I had before I had to start preparing dinner to quickly look through the High findings.</p>
+<h2 id="cve-2025-30161">CVE-2025-30161</h2>
+<p>A few minutes into reviewing the High findings, I found code that used <code>echo</code> without the helper functions. Could it be??? 😱. Well, dinner prep went for a toss as I started looking into this finding.</p>
+<p>Not too long after, I confirmed that this code was indeed vulnerable to stored XSS. The finding was in the bronchitis form component of OpenEMR. There are 2 sources of XSS in the bronchitis form:</p>
+<ul>
+<li>Bronchitis Ops Appearance</li>
+<li>Bronchitis Oropharynx Appearance</li>
+</ul>
+<p>The issue is caused by improper sanitization of user input in these lines:</p>
+<ul>
+<li><a href="https://github.com/openemr/openemr/blob/17ca5539bafcdc25a9042ebc14480552e07867e4/interface/forms/bronchitis/view.php#L102-L103">1</a></li>
+<li><a href="https://github.com/openemr/openemr/blob/17ca5539bafcdc25a9042ebc14480552e07867e4/interface/forms/bronchitis/view.php#L303-L304">2</a></li>
+</ul>
+<p>The code here is like this:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-PHP" data-lang="PHP"><span style="display:flex;"><span><span style="color:#f92672">&lt;</span><span style="color:#a6e22e">td</span><span style="color:#f92672">&gt;&lt;</span><span style="color:#a6e22e">input</span> <span style="color:#a6e22e">type</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;text&#34;</span> <span style="color:#a6e22e">name</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;bronchitis_oropharynx_appearance&#34;</span> <span style="color:#a6e22e">value</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&lt;?php echo
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">stripslashes(</span><span style="color:#e6db74">$obj[&#34;bronchitis_oropharynx_appearance&#34;]</span><span style="color:#e6db74">);?&gt;&#34;</span> <span style="color:#a6e22e">size</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;15&#34;</span><span style="color:#f92672">&gt;&lt;/</span><span style="color:#a6e22e">td</span><span style="color:#f92672">&gt;</span>
+</span></span></code></pre></div><p>where <code>$obj[&quot;bronchitis_oropharynx_appearance&quot;]</code> is user controlled data. When a payload like <code>&quot; onfocus=&quot;alert(1)&quot;</code> is passed as the user input, the <code>&lt;td&gt;</code> is rendered like this which leads to XSS:</p>
+<pre tabindex="0"><code>&lt;td&gt;&lt;input type=&#34;text&#34; name=&#34;bronchitis_oropharynx_appearance&#34; value=&#34;&#34; onfocus=&#34;alert(1)&#34; size=&#34;15&#34;&gt;&lt;/td&gt;
+</code></pre><p>The issue is the same with Bronchitis Ops Appearance.</p>
+<h2 id="fix">Fix</h2>
+<p>The OpenEMR developers <a href="https://github.com/openemr/openemr/pull/7945">fixed</a> this issue very promptly by applying the <code>attr()</code> helper function to the vulnerable sources. The fix has been added to OpenEMR 7.0.3.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>There may be &ldquo;easy CVEs&rdquo;. Perhaps I chose the wrong repo. After this success, I have continued the experiment with a few more repos and I have nothing to report yet. As I have mentioned previously, I am lazy and therefore I do not spend too much time looking into a finding, which, along with my general lack of skill in crafting exploits from SAST findings, could have lead to me missing vulnerabilities. If you are good at such sports, this experiment may produce better results for you.</p>
+<p>I should note here that I have only tried somewhat popular repos with large-ish number of stars and forks. It is possible that not-so-popular repos would lead to more results. Even though I keep saying &ldquo;easy CVEs&rdquo;, I find myself more interested in finding CVEs in software that have a decent user base. The same also applies to my target selection for my fuzzing escapades. I will write about that in some time (or won&rsquo;t - depending on my learnings and success&hellip;). Or maybe I will have more success with this experiment. Stay tuned! Thank you for reading.</p>
+<h2 id="timeline">Timeline</h2>
+<ul>
+<li>January 23, 2025: Reported issue to OpenEMR security team.</li>
+<li>January 28, 2025: Issue fixed by OpenEMR security team.</li>
+<li>March 1, 2025: Notified by OpenEMR security team that the issue is fixed.</li>
+<li>March 19, 2025: Requested a CVE for this issue through GitHub.</li>
+<li>March 20, 2025: CVE-2025-30161 assigned.</li>
+<li>&ndash;, x, 2025: OpenEMR 7.0.3 released, blog published.</li>
+</ul>
+]]></content>
+        </item>
         
         <item>
             <title>Not a CVE: Using Airflow via Docker Can Lead to Arbitrary Code Execution</title>
