@@ -6,8 +6,15 @@
     <description>Recent content on Bayesian Blogs</description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Wed, 19 Mar 2025 19:37:34 -0700</lastBuildDate>
+    <lastBuildDate>Sun, 29 Jun 2025 09:11:02 -0700</lastBuildDate>
     <atom:link href="http://localhost:1313/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>I Ran Free SAST Tools on chi and Found a GHSA</title>
+      <link>http://localhost:1313/posts/ghsa-vrw8-fxc6-2r93/</link>
+      <pubDate>Sun, 29 Jun 2025 09:11:02 -0700</pubDate>
+      <guid>http://localhost:1313/posts/ghsa-vrw8-fxc6-2r93/</guid>
+      <description>&lt;p&gt;&lt;a href=&#34;https://github.com/go-chi/chi/security/advisories/GHSA-vrw8-fxc6-2r93&#34;&gt;GHSA-vrw8-fxc6-2r93&lt;/a&gt; is a Host Header Injection issue in the &lt;a href=&#34;https://github.com/go-chi/chi&#34;&gt;chi framework&lt;/a&gt; which allows arbitrary redirect to any domain while redirecting slashes. I did not receive a CVE for this finding &amp;ldquo;Given the lower impact (can&amp;rsquo;t be exploited in browser or email client)&amp;rdquo; (verbatim from the maintainers) - which I can agree with to some extent. I will say though, that lower impact vulnerabilities should also get CVEs, else there would be no CVSS &amp;ldquo;low&amp;rdquo; score CVEs. My slight disagreement is probably more influenced by me wanting CVEs to my name than a technical outlook. Having said that, GHSAs are pretty recognized too, and in these parts, we take what we get.&lt;/p&gt;</description>
+    </item>
     <item>
       <title>I Ran Free SAST Tools on OpenEMR and Found a CVE</title>
       <link>http://localhost:1313/posts/cve-2025-30161/</link>

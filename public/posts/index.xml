@@ -5,8 +5,131 @@
         <description>Recent content in Posts on Bayesian Blogs</description>
         <generator>Hugo -- gohugo.io</generator>
         <language>en-us</language>
-        <lastBuildDate>Wed, 19 Mar 2025 19:37:34 -0700</lastBuildDate>
+        <lastBuildDate>Sun, 29 Jun 2025 09:11:02 -0700</lastBuildDate>
         <atom:link href="http://localhost:1313/posts/index.xml" rel="self" type="application/rss+xml" />
+        
+        <item>
+            <title>I Ran Free SAST Tools on chi and Found a GHSA</title>
+            <link>http://localhost:1313/posts/ghsa-vrw8-fxc6-2r93/</link>
+            <pubDate>Sun, 29 Jun 2025 09:11:02 -0700</pubDate>
+            
+            <guid>http://localhost:1313/posts/ghsa-vrw8-fxc6-2r93/</guid>
+            <description>&lt;p&gt;&lt;a href=&#34;https://github.com/go-chi/chi/security/advisories/GHSA-vrw8-fxc6-2r93&#34;&gt;GHSA-vrw8-fxc6-2r93&lt;/a&gt; is a Host Header Injection issue in the &lt;a href=&#34;https://github.com/go-chi/chi&#34;&gt;chi framework&lt;/a&gt; which allows arbitrary redirect to any domain while redirecting slashes. I did not receive a CVE for this finding &amp;ldquo;Given the lower impact (can&amp;rsquo;t be exploited in browser or email client)&amp;rdquo; (verbatim from the maintainers) - which I can agree with to some extent. I will say though, that lower impact vulnerabilities should also get CVEs, else there would be no CVSS &amp;ldquo;low&amp;rdquo; score CVEs. My slight disagreement is probably more influenced by me wanting CVEs to my name than a technical outlook. Having said that, GHSAs are pretty recognized too, and in these parts, we take what we get.&lt;/p&gt;</description>
+            <content type="html"><![CDATA[<p><a href="https://github.com/go-chi/chi/security/advisories/GHSA-vrw8-fxc6-2r93">GHSA-vrw8-fxc6-2r93</a> is a Host Header Injection issue in the <a href="https://github.com/go-chi/chi">chi framework</a> which allows arbitrary redirect to any domain while redirecting slashes. I did not receive a CVE for this finding &ldquo;Given the lower impact (can&rsquo;t be exploited in browser or email client)&rdquo; (verbatim from the maintainers) - which I can agree with to some extent. I will say though, that lower impact vulnerabilities should also get CVEs, else there would be no CVSS &ldquo;low&rdquo; score CVEs. My slight disagreement is probably more influenced by me wanting CVEs to my name than a technical outlook. Having said that, GHSAs are pretty recognized too, and in these parts, we take what we get.</p>
+<p>This is somewhat a part 2 of my <a href="https://baishya.xyz/posts/cve-2025-30161/">previous blog</a> about using free SAST tools to find CVEs. I was particularly attracted to looking at go codebases (although my go skills are questionable at best) due to the large number of go vulnerabilities I have assessed for various reasons at work. The workflow is basically the same as described in the previous blog - so I will skip the details here. TL;DR: clone repo, run semgrep, profit $$$ (?)</p>
+<h2 id="about-chi">About chi</h2>
+<p>From the README:</p>
+<blockquote>
+<p>chi is a lightweight, idiomatic and composable router for building Go HTTP services. It&rsquo;s especially good at helping you write large REST API services that are kept maintainable as your project grows and changes. chi is built on the new context package introduced in Go 1.7 to handle signaling, cancelation and request-scoped values across a handler chain.</p></blockquote>
+<h3 id="chi-middleware">Chi Middleware</h3>
+<p>One of chi&rsquo;s powerful features is middleware—modular functions that sit between the incoming request and your handlers. Middleware in Chi allows you to add cross-cutting behavior like logging, authentication, rate limiting, or CORS handling in a clean and reusable way. Middleware functions wrap around routes or groups of routes, making them easy to apply globally or selectively. This modularity helps keep your codebase maintainable and your concerns separated.</p>
+<p>This is very similar to other popular frameworks such as Express, next.js or Django.</p>
+<h3 id="redirect-slashes-middleware">Redirect Slashes Middleware</h3>
+<p>The RedirectSlashes middleware in the Chi router is a built-in middleware that automatically normalizes request URLs by handling trailing slashes. It ensures consistent routing behavior and helps avoid issues where <code>/foo</code> and <code>/foo/</code> are treated as different routes.</p>
+<h2 id="ghsa-vrw8-fxc6-2r93">GHSA-vrw8-fxc6-2r93</h2>
+<p>I am feeling lazy, and there is no mind-bending state-of-the-art exploitation technique here, so I&rsquo;ll just append the report I sent to the maintainers. (With the original <code>RedirectSlashes</code> function added in since the original code has been fixed. The maintainers also added a note which has been highlighted.)</p>
+<h3 id="summary">Summary</h3>
+<p>The <code>RedirectSlashes</code> function in <code>middleware/strip.go</code> is vulnerable to host header injection which leads to open redirect.</p>
+<p>We consider this a <strong>lower-severity</strong> open redirect, as it can&rsquo;t be exploited from browsers or email clients (requires manipulation of a Host header). [Added by maintainers]</p>
+<h3 id="details">Details</h3>
+<p>The <code>RedirectSlashes</code> method uses the Host header to construct the redirectURL</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">RedirectSlashes</span>(<span style="color:#a6e22e">next</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Handler</span>) <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Handler</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">fn</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">w</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ResponseWriter</span>, <span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Request</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">path</span> <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">rctx</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">chi</span>.<span style="color:#a6e22e">RouteContext</span>(<span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Context</span>())
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">rctx</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">rctx</span>.<span style="color:#a6e22e">RoutePath</span> <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#34;&#34;</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">path</span> = <span style="color:#a6e22e">rctx</span>.<span style="color:#a6e22e">RoutePath</span>
+</span></span><span style="display:flex;"><span>		} <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">path</span> = <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">URL</span>.<span style="color:#a6e22e">Path</span>
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> len(<span style="color:#a6e22e">path</span>) &gt; <span style="color:#ae81ff">1</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">path</span>[len(<span style="color:#a6e22e">path</span>)<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>] <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;/&#39;</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">URL</span>.<span style="color:#a6e22e">RawQuery</span> <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#34;&#34;</span> {
+</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">path</span> = <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprintf</span>(<span style="color:#e6db74">&#34;%s?%s&#34;</span>, <span style="color:#a6e22e">path</span>[:len(<span style="color:#a6e22e">path</span>)<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>], <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">URL</span>.<span style="color:#a6e22e">RawQuery</span>)
+</span></span><span style="display:flex;"><span>			} <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">path</span> = <span style="color:#a6e22e">path</span>[:len(<span style="color:#a6e22e">path</span>)<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>]
+</span></span><span style="display:flex;"><span>			}
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">// Host header used to create redirect URL here</span>
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">redirectURL</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprintf</span>(<span style="color:#e6db74">&#34;//%s%s&#34;</span>, <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Host</span>, <span style="color:#a6e22e">path</span>)
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Redirect</span>(<span style="color:#a6e22e">w</span>, <span style="color:#a6e22e">r</span>, <span style="color:#a6e22e">redirectURL</span>, <span style="color:#ae81ff">301</span>)
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">next</span>.<span style="color:#a6e22e">ServeHTTP</span>(<span style="color:#a6e22e">w</span>, <span style="color:#a6e22e">r</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">HandlerFunc</span>(<span style="color:#a6e22e">fn</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>The Host header can be manipulated by a user to be any arbitrary host. This leads to open redirect when using the <code>RedirectSlashes</code> middleware</p>
+<h3 id="poc">PoC</h3>
+<p>Create a simple server which uses the <code>RedirectSlashes</code> middleware</p>
+<pre tabindex="0"><code>package main
+
+import (
+	&#34;fmt&#34;
+	&#34;net/http&#34;
+
+	&#34;github.com/go-chi/chi/v5&#34;
+	&#34;github.com/go-chi/chi/v5/middleware&#34; // Import the middleware package
+)
+
+func main() {
+	// Create a new Chi router
+	r := chi.NewRouter()
+
+	// Use the built-in RedirectSlashes middleware
+	r.Use(middleware.RedirectSlashes) // Use middleware.RedirectSlashes
+
+	// Define a route handler
+	r.Get(&#34;/&#34;, func(w http.ResponseWriter, r *http.Request) {
+		// A simple response
+		w.Write([]byte(&#34;Hello, World!&#34;))
+	})
+
+	// Start the server
+	fmt.Println(&#34;Starting server on :8080&#34;)
+	http.ListenAndServe(&#34;:8080&#34;, r)
+}
+</code></pre><p>Run the server <code>go run main.go</code></p>
+<p>Once the server is running, send a request that will trigger the <code>RedirectSlashes</code> function with an arbitrary Host header
+<code>curl -iL -H &quot;Host: example.com&quot; http://localhost:8080/test/</code></p>
+<p>Observe that the request will be redirected to example.com</p>
+<pre tabindex="0"><code>curl -L -H &#34;Host: example.com&#34; http://localhost:8080/test/
+
+&lt;!doctype html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;Example Domain&lt;/title&gt;
+
+    &lt;meta charset=&#34;utf-8&#34; /&gt;
+    &lt;meta http-equiv=&#34;Content-type&#34; content=&#34;text/html; charset=utf-8&#34; /&gt;
+    &lt;meta name=&#34;viewport&#34; content=&#34;width=device-width, initial-scale=1&#34; /&gt;
+    &lt;style type=&#34;text/css&#34;&gt;
+    body {
+        background-color: #f0f0f2;
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, system-ui, BlinkMacSystemFont, &#34;Segoe UI&#34;, &#34;Open Sans&#34;, &#34;Helvetica Neue&#34;, Helvetica, Arial, sans-serif;
+... snipped ...
+</code></pre><p>Without the host header, the response is returned from the test server</p>
+<pre tabindex="0"><code>curl -L http://localhost:8080/test/
+
+404 page not found
+</code></pre><h3 id="impact">Impact</h3>
+<p>An open redirect vulnerability allows attackers to trick users into visiting malicious sites. This can lead to phishing attacks, credential theft, and malware distribution, as users trust the application’s domain while being redirected to harmful sites.</p>
+<h3 id="cvss-score">CVSS score</h3>
+<p>I had originally scored this CVE as a Medium severity CVE with a score of 5.1 (CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:A/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N). This is the current score in the advisory.</p>
+<p>Reflecting back, it can be argued that the score is 2.1 Low (CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:A/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N)</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>This is another win for my free SAST tools experiment. FWIW, this is also the first security advisory published for <code>chi</code>. I am not entirely sure if this is the first vulnerability discovered in <code>chi</code>. I did try looking for CVEs but I did not find any - so I would like to believe this is the first.</p>
+<p>Sneak peek into my fuzzing escapades - I gave up on fuzzing using AFL++ on popular C/C++ codebases - due to many skill issues. I prefer spending my time away from work doing non-security things (which is probably obvious given the inconsistent post history here and the basic content of the few blogs that are posted). Therefore I determined that I don&rsquo;t want to spend the time needed to dive into the completely unchartered territory of fuzzing C / C++ binaries. I did however find that go code can be fuzzed too - and that had a easier entry point for me personally. So, I pivoted to fuzzing go code instead. Did I find something? 🤷. Thank you for reading.</p>
+<h2 id="timeline">Timeline</h2>
+<ul>
+<li>March 5, 2025: Reported issue to chi maintainers through Github.</li>
+<li>June 6, 2025: Commented on report due to no response from chi maintainers. Received acknowledgement of report receipt.</li>
+<li>June 9, 2025: chi maintainers confirmed the issue.</li>
+<li>June 19, 2025: Fix released, GHSA published.</li>
+<li>June 29, 2025: Blog published.</li>
+</ul>
+]]></content>
+        </item>
         
         <item>
             <title>I Ran Free SAST Tools on OpenEMR and Found a CVE</title>
@@ -143,7 +266,7 @@ eval &#34;$semgrep_command&#34;%
 <li>March 1, 2025: Notified by OpenEMR security team that the issue is fixed.</li>
 <li>March 19, 2025: Requested a CVE for this issue through GitHub.</li>
 <li>March 20, 2025: CVE-2025-30161 assigned.</li>
-<li>&ndash;, x, 2025: OpenEMR 7.0.3 released, blog published.</li>
+<li>March 30, 2025: GHSA published, blog published.</li>
 </ul>
 ]]></content>
         </item>
