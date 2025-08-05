@@ -67,7 +67,7 @@ The Host header can be manipulated by a user to be any arbitrary host. This lead
 
 ### PoC
 Create a simple server which uses the `RedirectSlashes` middleware
-```
+```go
 package main
 
 import (
@@ -103,7 +103,7 @@ Once the server is running, send a request that will trigger the `RedirectSlashe
 
 Observe that the request will be redirected to example.com
 
-```
+```html
 curl -L -H "Host: example.com" http://localhost:8080/test/
 
 <!doctype html>

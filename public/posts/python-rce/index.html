@@ -27,7 +27,7 @@
 
 
 
-  <link rel="stylesheet" href="/main.min.3fbdd467156edb5ed861aa27faeb89d1145b4287f0e6f84613c0311da271fd37.css" integrity="sha256-P73UZxVu217YYaon&#43;uuJ0RRbQofw5vhGE8AxHaJx/Tc=" crossorigin="anonymous">
+  <link rel="stylesheet" href="/main.min.fdc47f2ea14102755136c9244f7fedfda5afa7ad0acc3947a50e795b188c7e74.css" integrity="sha256-/cR/LqFBAnVRNskkT3/t/aWvp60KzDlHpQ55WxiMfnQ=" crossorigin="anonymous">
 
 
 
@@ -312,7 +312,7 @@
 <p>This behavior can be misused to run arbitrary code, by specifying the code as a forward reference. Setting the <code>__anotations__</code> attribute of an object to such a forward reference does the trick.</p>
 <h3 id="code-example-3">Code example</h3>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Python" data-lang="Python"><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Payload</span>(object):
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> __init__(self):
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">__init__</span>(self):
 </span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>__annotations__ <span style="color:#f92672">=</span> {<span style="color:#e6db74">&#34;x&#34;</span>: <span style="color:#e6db74">&#34;&#34;&#34;eval(&#39;__import__(&#34;os&#34;).system(&#34;ls&#34;)&#39;)&#34;&#34;&#34;</span>}
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>

