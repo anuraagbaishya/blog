@@ -6,8 +6,15 @@
     <description>Recent content on Bayesian Blogs</description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Tue, 29 Jul 2025 19:43:13 -0700</lastBuildDate>
+    <lastBuildDate>Tue, 25 Nov 2025 10:48:19 -0600</lastBuildDate>
     <atom:link href="http://localhost:1313/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Using Free Resources to Build and Deploy Apps</title>
+      <link>http://localhost:1313/posts/free-app-dev-deploy/</link>
+      <pubDate>Tue, 25 Nov 2025 10:48:19 -0600</pubDate>
+      <guid>http://localhost:1313/posts/free-app-dev-deploy/</guid>
+      <description>&lt;p&gt;Recently, an app building bug bit me. This was a result of me finding an app that solved a problem I was facing, but it was not free. For a long time, the apps I built for myself were CLI only, as I did not have the skills or the patience to develop a web UI (especially writing HTML and CSS). A CLI would however not work for the usecase in question.&lt;/p&gt;</description>
+    </item>
     <item>
       <title>Crashing Fiber via go-fuzz</title>
       <link>http://localhost:1313/posts/cve-2025-54801/</link>

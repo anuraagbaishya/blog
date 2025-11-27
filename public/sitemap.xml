@@ -3,21 +3,27 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>http://localhost:1313/</loc>
-    <lastmod>2025-07-29T19:43:13-07:00</lastmod>
+    <lastmod>2025-11-25T10:48:19-06:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/posts/fiber-crash/</loc>
+    <loc>http://localhost:1313/tags/development/</loc>
+    <lastmod>2025-11-25T10:48:19-06:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/posts/</loc>
+    <lastmod>2025-11-25T10:48:19-06:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/tags/</loc>
+    <lastmod>2025-11-25T10:48:19-06:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/posts/free-app-dev-deploy/</loc>
+    <lastmod>2025-11-25T10:48:19-06:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/posts/cve-2025-54801/</loc>
     <lastmod>2025-07-29T19:43:13-07:00</lastmod>
   </url><url>
     <loc>http://localhost:1313/tags/cve-analysis/</loc>
     <lastmod>2025-07-29T19:43:13-07:00</lastmod>
   </url><url>
     <loc>http://localhost:1313/tags/go/</loc>
-    <lastmod>2025-07-29T19:43:13-07:00</lastmod>
-  </url><url>
-    <loc>http://localhost:1313/posts/</loc>
-    <lastmod>2025-07-29T19:43:13-07:00</lastmod>
-  </url><url>
-    <loc>http://localhost:1313/tags/</loc>
     <lastmod>2025-07-29T19:43:13-07:00</lastmod>
   </url><url>
     <loc>http://localhost:1313/posts/ghsa-vrw8-fxc6-2r93/</loc>
