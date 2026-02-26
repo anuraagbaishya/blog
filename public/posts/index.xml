@@ -5,8 +5,172 @@
         <description>Recent content in Posts on Bayesian Blogs</description>
         <generator>Hugo -- gohugo.io</generator>
         <language>en-us</language>
-        <lastBuildDate>Tue, 25 Nov 2025 10:48:19 -0600</lastBuildDate>
+        <lastBuildDate>Fri, 13 Feb 2026 19:47:59 -0800</lastBuildDate>
         <atom:link href="http://localhost:1313/posts/index.xml" rel="self" type="application/rss+xml" />
+        
+        <item>
+            <title>XSS via Code Injection in NiceGUI</title>
+            <link>http://localhost:1313/posts/nicegui-xss/</link>
+            <pubDate>Fri, 13 Feb 2026 19:47:59 -0800</pubDate>
+            
+            <guid>http://localhost:1313/posts/nicegui-xss/</guid>
+            <description>&lt;p&gt;NiceGUI is a Python framework that lets you build web-based UIs directly in Python, with no HTML/CSS/JS required. It handles both the frontend and backend, making it easy to create interactive dashboards, tools, and apps with a clean, declarative API. To be able to do this, NiceGUI has functions that construct Javascript code from input received through Python code. One of these functions, &lt;code&gt;run_method()&lt;/code&gt;, was vulnerable to quote injection that allowed providing input in ways that led to XSS.&lt;/p&gt;</description>
+            <content type="html"><![CDATA[<p>NiceGUI is a Python framework that lets you build web-based UIs directly in Python, with no HTML/CSS/JS required. It handles both the frontend and backend, making it easy to create interactive dashboards, tools, and apps with a clean, declarative API. To be able to do this, NiceGUI has functions that construct Javascript code from input received through Python code. One of these functions, <code>run_method()</code>, was vulnerable to quote injection that allowed providing input in ways that led to XSS.</p>
+<p>This vulnerability has been assigned <a href="https://github.com/zauberzeug/nicegui/security/advisories/GHSA-78qv-3mpx-9cqq">CVE-2026-27156 / GHSA-78qv-3mpx-9cqq</a></p>
+<p>The PoCs were tested on NiceGUI 3.7.1 installed from pypi. This issue is fixed in NiceGUI 3.8.0.</p>
+<p>Side Note: At the end I also talk about <a href="https://github.com/anuraagbaishya/paladin">Paladin</a>, a Semgrep runner and result manager. It&rsquo;s what I use for many aspects of my research - and it&rsquo;s open source!</p>
+<h2 id="semgrep-result-evaluation-or-lack-thereof">Semgrep result evaluation (or lack thereof)</h2>
+<p>When you do something a lot of times over a long period of time, you generally develop methodologies to make yourself more efficient at it. It is no different for me when I review Semgrep results. The results I am usually looking at have close to a hundred (and sometimes multiple hundreds) of findings - most of them are just noise. For me (and my friend Mr. Claude) to be able to effectively analyze the scan result within a reasonable timeframe (and without burning millions of tokens), I have developed a systematic way to prune the number of findings:</p>
+<ol>
+<li>Sort by severity - error, warning, note.</li>
+<li>Sort by confidence - high, medium, low. (This is the confidence noted in the Semgrep rule and subsequently in all findings for that rule)</li>
+<li>Remove any findings which seem noisy - use of sha1, use of innerHTML, etc</li>
+</ol>
+<p>The third bullet is a mental bias - rules that I <em>think</em> are noisy, from looking at a lot of findings with these rules that did not materialize into anything interesting. The thing is how you interpret a finding depends on what your end goal is. At work I look at results from a defensive point of view - finding unsafe code patterns and recommending secure coding practices to resolve such risks. When I look at results for personal research, I am looking for exploitable vulnerabilities. Therefore, the rules I care about also differ by setting.</p>
+<h2 id="context-confusion">Context confusion</h2>
+<p>The few days leading upto me finding this vulnerability were something like this - help teams reduce their risk of security issues by providing guidance sourced from reviewing Semgrep results during the day, and then try to find exploitable vulnerabilities in open source software by reviewing Semgrep results in the evening. If you guessed I used my &ldquo;work filters&rdquo; to review NiceGUI, you would be right. One of the rules I generally don&rsquo;t care about for personal research is <code>javascript.lang.security.audit.unsafe-dynamic-method </code> (from Semgrep community rules). However, by muscle memory, I found myself looking into findings for this rule.</p>
+<h2 id="using-non-static-data-to-retrieve-and-run-functions">Using non-static data to retrieve and run functions</h2>
+<p>(Yes, I copied the first few words from the rule&rsquo;s message.) The function reported by Semgrep is</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">runMethod</span>(<span style="color:#a6e22e">target</span>, <span style="color:#a6e22e">method_name</span>, <span style="color:#a6e22e">args</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">target</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#34;object&#34;</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">method_name</span> <span style="color:#66d9ef">in</span> <span style="color:#a6e22e">target</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">target</span>[<span style="color:#a6e22e">method_name</span>](...<span style="color:#a6e22e">args</span>);
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> eval(<span style="color:#a6e22e">method_name</span>)(<span style="color:#a6e22e">target</span>, ...<span style="color:#a6e22e">args</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">element</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">getElement</span>(<span style="color:#a6e22e">target</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">element</span> <span style="color:#f92672">===</span> <span style="color:#66d9ef">null</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">element</span> <span style="color:#f92672">===</span> <span style="color:#66d9ef">undefined</span>) <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">method_name</span> <span style="color:#66d9ef">in</span> <span style="color:#a6e22e">element</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">element</span>[<span style="color:#a6e22e">method_name</span>](...<span style="color:#a6e22e">args</span>);
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">method_name</span> <span style="color:#66d9ef">in</span> (<span style="color:#a6e22e">element</span>.<span style="color:#a6e22e">$refs</span>.<span style="color:#a6e22e">qRef</span> <span style="color:#f92672">||</span> [])) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">element</span>.<span style="color:#a6e22e">$refs</span>.<span style="color:#a6e22e">qRef</span>[<span style="color:#a6e22e">method_name</span>](...<span style="color:#a6e22e">args</span>);
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> eval(<span style="color:#a6e22e">method_name</span>)(<span style="color:#a6e22e">element</span>, ...<span style="color:#a6e22e">args</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>from <code>nicegui/static/nicegui.js</code></p>
+<p>The <code>eval()</code> lines immediately caught my eye. If there was a way to get user input into this function, it would <code>eval</code> the input. Grepping for <code>runMethod</code> I found</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">run_method</span>(self, name: str, <span style="color:#f92672">*</span>args: Any, timeout: float <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>) <span style="color:#f92672">-&gt;</span> AwaitableResponse:
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> core<span style="color:#f92672">.</span>loop:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> NullResponse()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> self<span style="color:#f92672">.</span>client<span style="color:#f92672">.</span>run_javascript(
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">f</span><span style="color:#e6db74">&#39;return runMethod(</span><span style="color:#e6db74">{</span>self<span style="color:#f92672">.</span>id<span style="color:#e6db74">}</span><span style="color:#e6db74">, &#34;</span><span style="color:#e6db74">{</span>name<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;, </span><span style="color:#e6db74">{</span>json<span style="color:#f92672">.</span>dumps(args)<span style="color:#e6db74">}</span><span style="color:#e6db74">)&#39;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">#                              </span>
+</span></span><span style="display:flex;"><span>        timeout<span style="color:#f92672">=</span>timeout
+</span></span><span style="display:flex;"><span>    )
+</span></span></code></pre></div><p>in <code>nicegui/element.py</code>. The <code>name</code> parameter in this function uses string interpolation (<code>&quot;{name}&quot;</code>) without escaping. This allows for code injection.</p>
+<h3 id="attack-flow">Attack Flow</h3>
+<pre tabindex="0"><code>Input: &#39;x&#34;, alert(document.cookie), &#34;y&#39;
+  ↓
+Python generates:
+  f&#39;return runMethod(123, &#34;{name}&#34;, [])&#39;
+  → &#39;return runMethod(123, &#34;x&#34;, alert(document.cookie), &#34;y&#34;, [])&#39;
+  ↓
+Client-side eval() executes:
+  runMethod receives three arguments
+  alert(document.cookie) executes during parsing
+  ↓
+XSS achieved
+</code></pre><h3 id="proof-of-concept">Proof of Concept</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">from</span> nicegui <span style="color:#f92672">import</span> ui
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">@ui.page</span>(<span style="color:#e6db74">&#39;/&#39;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">page</span>(method: str <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;focus&#39;</span>):
+</span></span><span style="display:flex;"><span>    input_field <span style="color:#f92672">=</span> ui<span style="color:#f92672">.</span>input(<span style="color:#e6db74">&#39;Test&#39;</span>)
+</span></span><span style="display:flex;"><span>    ui<span style="color:#f92672">.</span>button(<span style="color:#e6db74">&#39;Execute&#39;</span>, on_click<span style="color:#f92672">=</span><span style="color:#66d9ef">lambda</span>: input_field<span style="color:#f92672">.</span>run_method(method))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>ui<span style="color:#f92672">.</span>run()
+</span></span></code></pre></div><p><strong>Test:</strong> Visit <code>/?method=x&quot;, alert(1), &quot;y</code> and click &ldquo;Execute&rdquo;
+<strong>Result:</strong> Alert executes</p>
+<h2 id="code-flow-analysis">Code Flow Analysis</h2>
+<pre tabindex="0"><code>┌─────────────────────────────────────────────────────────┐
+│ 1. HTTP Request                                         │
+│    /?method=x&#34;, alert(1), &#34;y                            │
+└────────────────────┬────────────────────────────────────┘
+                     ↓
+┌─────────────────────────────────────────────────────────┐
+│ 2. Parameter Injection                          │
+│    def page(method: str = &#39;x&#34;, alert(1), &#34;y&#39;)           │
+└────────────────────┬────────────────────────────────────┘
+                     ↓
+┌─────────────────────────────────────────────────────────┐
+│ 3. element.py                                           │
+│    f&#39;return runMethod(123, &#34;{name}&#34;, [])&#39;               │
+│    → &#39;return runMethod(123, &#34;x&#34;, alert(1), &#34;y&#34;, [])&#39;    │
+└────────────────────┬────────────────────────────────────┘
+                     ↓
+┌─────────────────────────────────────────────────────────┐
+│ 4. WebSocket Message                                    │
+│    {&#34;code&#34;: &#34;return runMethod(123, \&#34;x\&#34;, alert(1)...&#34;}│
+└────────────────────┬────────────────────────────────────┘
+                     ↓
+┌─────────────────────────────────────────────────────────┐
+│ 5. nicegui.js                                           │
+│    eval(&#39;return runMethod(123, &#34;x&#34;, alert(1), &#34;y&#34;, [])&#39; │
+└────────────────────┬────────────────────────────────────┘
+                     ↓
+┌─────────────────────────────────────────────────────────┐
+│ 6. XSS Execution                                        │
+│    alert(1) runs in user&#39;s browser context              │
+└─────────────────────────────────────────────────────────┘
+</code></pre><p>There you have it. By a bit of luck, I did not ignore a rule I would otherwise have, and found some XSS.</p>
+<h2 id="additonal-findings">Additonal findings</h2>
+<p>Based on this report, the maintainers did their own due diligence and discovered many other functions that were similarly vulnerable. This is complete list as noted in the advisory:</p>
+<ul>
+<li><code>Element.run_method()</code></li>
+<li><code>Element.get_computed_prop()</code></li>
+<li><code>AgGrid.run_grid_method()</code></li>
+<li><code>AgGrid.run_row_method()</code></li>
+<li><code>EChart.run_chart_method()</code></li>
+<li><code>JsonEditor.run_editor_method()</code></li>
+<li><code>Xterm.run_terminal_method()</code></li>
+<li><code>Leaflet.run_map_method()</code></li>
+<li><code>Leaflet.run_layer_method()</code></li>
+<li><code>LeafletLayer.run_method()</code></li>
+</ul>
+<hr>
+<h2 id="introducing-paladin">Introducing Paladin</h2>
+<p><a href="https://github.com/anuraagbaishya/paladin">Paladin</a> is a Semgrep runner and result manager. It has the following features:</p>
+<h3 id="scanning">Scanning</h3>
+<ul>
+<li>You can scan a repo it Github URL or from Github Security Advisories (GHSAs).</li>
+<li>A custom results viewer shows findings grouped by rules.</li>
+<li>A configurable SARIF cleaner cleans SARIF files based on configured rule paths and individual rules. This cleaner runs automatically after a scan so you never see results from rules you don&rsquo;t care about.</li>
+</ul>
+<h3 id="scan-result-viewer">Scan Result Viewer</h3>
+<p>The Scan Result Viewer provides these functionalities for each finding:</p>
+<ul>
+<li>Opening the source file in an embedded code viewer.</li>
+<li>Suppressing individual findings. Suppressed findings will not be shown in future views.</li>
+<li>Reviewing the finding using Claude Code.</li>
+</ul>
+<p>The result viewer also allows configuring rules and files you want to suppress findings for at a repo level instead of globally.</p>
+<h3 id="ai-review">AI Review</h3>
+<ul>
+<li>AI Review uses Claude Code (via a bridge server that runs on the host machine (outside Docker) if Paladin is used via the Docker container).</li>
+<li>The bridge server sends the finding details and repository path to Claude Code, which analyzes the code in context and returns a structured verdict (true positive / false positive with reasoning).</li>
+</ul>
+<h3 id="ghsas-viewer">GHSAs Viewer</h3>
+<ul>
+<li>You can optionally fetch and review latest GHSAs.</li>
+<li>You can then scan repos where Paladin was able to find the repo from the advisory.</li>
+</ul>
+<h2 id="how-i-use-paladin-and-claude-code-for-my-research">How I use Paladin and Claude code for my research</h2>
+<p>My go-to way of using Paladin is to go through the GHSAs and then scan repos that have interesting GHSAs. This drastically reduces combing through thousands of repos on Github to find a research target. I found NiceGUI because there were a few GHSAs for it.</p>
+<p>Next I run a scan and then quickly skim through the result using the methodology I mentioned earlier. From this I determine rules and file paths I am not interested in for the repo. I analyze the remaining findings by viewing the file and deciding if it needs a complete in-depth review. The few shortlisted findings go through a Claude code review. I have a Claude code skill that performs complete data flow analysis and provides an assessment of whether the finding is a true positive or false positive. More often than not, I usually pay much more attention to the data flow analysis than the verdict.</p>
+<p>After performing all these steps, I am usually left with a handful of findings (or none!) that I pursue for exploitability. I use a combination of manually reviewing the data flow, asking Claude code to review additional code paths, and testing payloads to confirm whether the finding can be exploited. (Usually the answer is no&hellip;).</p>
+<p>You may ask why not just have Claude code review the repo instead of this multi-step process of first running Semgrep, then using heuristics and filters to reduce the number of findings, and finally selectively asking Claude code to review a few findings. This is valid question, given <a href="https://red.anthropic.com/2026/zero-days/">Claude Opus 4.6 can find vulnerabilities without specialized tools</a>. The truth is, I don&rsquo;t want to spend $100-$200 a month on a Claude subscription. I currently have a $20 subscription - that I am evaluating on whether I use it enough to justify the cost. Currently, the answer is a resounding yes!</p>
+<p>Anyway, that&rsquo;s all folks. See you in the next one - once Claude finds me more vulnerabilities&hellip;</p>
+<h2 id="timeline">Timeline</h2>
+<ul>
+<li>February 11, 2026: Reported issue to NiceGUI maintainers through Github security advisories. (I submitted 2 reports. We agreed that the other one was not a vulnerability.)</li>
+<li>February 13, 2026: Received a through assessment of the report from NiceGUI maintainers -  including fix plans.</li>
+<li>February 24, 2026: Issue patched in NiceGUI 3.8.0. Shoutout to the maintainers for addressing this issue prompty. This is by far the quickest patch for a report I have submitted.</li>
+<li>February 25, 2026: Blog published.</li>
+</ul>
+]]></content>
+        </item>
         
         <item>
             <title>Using Free Resources to Build and Deploy Apps</title>
@@ -58,13 +222,13 @@ straighforward to explain desired UIs in words.)</p>
 <h2 id="deploying">Deploying</h2>
 <p>Once I had the iOS app up and running, I needed to deploy the APIs such that they were reachable outside my home network. I initially wanted to use my Raspberry Pi to host the app and then use something like a <a href="https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/">Cloudflare Tunnel</a> to expose it to the internet. After an initial excitement at using yet more shiny new things, the idea seemed a bit too insecure for my security engineer brain. In the past I have used Heroku to deploy apps for free, but sadly, Heroku removed their free tier (TBH, I did not check recently if it was reinstated). I have also used GCP and AWS sporadically but they are not free. Cheap enough (~$0.1 a month) for my wallet to not notice but not free. In my quest to find a free hosting platform, I landed on <a href="https://vercel.com">Vercel</a>.</p>
 <h3 id="experiment-21---deploying-to-vercel">Experiment 2.1 - deploying to Vercel</h3>
-<p>Deploying to Vercel was mostly a breeze. I just had to import the github repo to Vercel, add environment variables and secrets, and let Vercel do its thing. The deployment was complete within a few seconds. I did have to modify some parts of the API - especially the MongoDB connection part - but these were very minor changes.</p>
+<p>Deploying to Vercel was mostly a breeze. I just had to import the Github repo to Vercel, add environment variables and secrets, and let Vercel do its thing. The deployment was complete within a few seconds. I did have to modify some parts of the API - especially the MongoDB connection part - but these were very minor changes.</p>
 <p>Experience: 10/10</p>
 <h3 id="experiment-22---free-db">Experiment 2.2 - free DB</h3>
 <p>The database technology I am most familiar with is MongoDB - which works brillianly since I am always dealing with JSON data. I used local MongoDB for all the local development and testing. MongoDB provides a fully managed cloud service <a href="https://www.mongodb.com/products/platform/atlas-database">Atlas</a>, that has a free tier. Atlas also <a href="https://vercel.com/marketplace/mongodbatlas">integrates with Vercel</a> very easily. Once I set up a cluster on Atlas, I was able to seamlessly migrate my collections to Atlas. With this last step complete, my app + APIs could now fulfill all the requirements I had.</p>
 <p>Experience: 10/10</p>
 <h2 id="impressions">Impressions</h2>
-<p>In total I probably spent about 40 hours in total to develop the APIs, the webapp (which I later discarded) and the iOS app. Granted that the app is not production ready by any means, it still serves all my needs. Without ChatGPT, building the iOS app itself would have taken me 100+ hours. I am highly delighted with the outcome - and my brain is already thinking of more apps I can develop. One in particular that I am building is a web UI wrapper over Semgrep that fetches Github security advisories (GHSAs) and then lets me scan the repos associated with the GHSAs - allowing me to attempt finding other vulnerabilities in said repos.</p>
+<p>In total I probably spent about 40 hours to develop the APIs, the webapp (which I later discarded) and the iOS app. Granted that the app is not production ready by any means, it still serves all my needs. Without ChatGPT, building the iOS app itself would have taken me 100+ hours. I am highly delighted with the outcome - and my brain is already thinking of more apps I can develop. One in particular that I am building is a web UI wrapper over Semgrep that fetches Github security advisories (GHSAs) and then lets me scan the repos associated with the GHSAs - allowing me to attempt finding other vulnerabilities in said repos.</p>
 <p>I have heard a lot of people say that their reliance on using AI assistance to write code has negatively impacted their coding skills. This can be true. At a lot of points, I was tempted to ask ChatGPT to write code that I could write myself too - out of pure laziness. I would be lying if I said I did not give in to the temptation. Having said that, I made it a point to understand the code ChatGPT provided, and learn any new inbuilt functions or syntactic sugar it used. I also tried using these newly learnt patterns myself when I felt they were needed. This, in turn, improved my coding skills. For example, I can now use promises, array filters / maps in JS, and write basic React elements myself.</p>
 <h2 id="conclusion">Conclusion</h2>
 <p>This will probably be the last blog of the year. Therefore, this conclusion section is more of a reflection on the year. I set out to find 5 CVEs this year. I started out strong with 3 reports within the first 3 months. Got 2 CVEs, 1 GHSA. I also decided to change the goal to 5 security issues as I learnt not everything I find may get a CVE. Somewhere along the line life happened and I did not work on security research much after the initial months. Subsequently, I will not be meeting my goal of 5 CVEs. I did, however, experiment a whole bunch with AI, both at work and in my personal time. Supplementing SAST with AI is my latest &ldquo;passion&rdquo;. I have not done enough to write about it yet though. I also built apps, which was not in my to-do list for the year.</p>
@@ -237,8 +401,8 @@ fatal error: out of memory
 <li>June 26, 2025: Requested a CVE once the issue is fixed.</li>
 <li>July 22, 2025: Sent a follow up email asking for an updated regarding fix and CVE assignment.</li>
 <li>July 29, 2025: Tested the issue in Fiber v2.52.9 and found it to be fixed. Sent another email requesting a CVE assignment since issue has been fixed.</li>
-<li>June 30, 2025: Reached out to a Fiber maintainer via Discord.</li>
-<li>June 30, 2025: Received a prompt response from maintainer on Discord. (Maybe I was barking up the wrong tree.)</li>
+<li>July 30, 2025: Reached out to a Fiber maintainer via Discord.</li>
+<li>July 30, 2025: Received a prompt response from maintainer on Discord. (Maybe I was barking up the wrong tree.)</li>
 <li>August 1, 2025: Drafted the GHSA as recommended by maintainer.</li>
 <li>August 5, 2025: GHSA published, blog published.</li>
 </ul>

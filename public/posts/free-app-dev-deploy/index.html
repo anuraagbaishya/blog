@@ -47,7 +47,7 @@
   <meta itemprop="description" content="Recently, an app building bug bit me. This was a result of me finding an app that solved a problem I was facing, but it was not free. For a long time, the apps I built for myself were CLI only, as I did not have the skills or the patience to develop a web UI (especially writing HTML and CSS). A CLI would however not work for the usecase in question.">
   <meta itemprop="datePublished" content="2025-11-25T10:48:19-06:00">
   <meta itemprop="dateModified" content="2025-11-25T10:48:19-06:00">
-  <meta itemprop="wordCount" content="2428">
+  <meta itemprop="wordCount" content="2426">
   <meta itemprop="image" content="http://localhost:1313/">
   <meta itemprop="keywords" content="Development">
 
@@ -75,7 +75,7 @@
 
 
 
-<meta property="article:published_time" content="2025-11-25 10:48:19 -0600 CST" />
+<meta property="article:published_time" content="2025-11-25 10:48:19 -0600 -0600" />
 
 
 
@@ -231,13 +231,13 @@ straighforward to explain desired UIs in words.)</p>
 <h2 id="deploying">Deploying</h2>
 <p>Once I had the iOS app up and running, I needed to deploy the APIs such that they were reachable outside my home network. I initially wanted to use my Raspberry Pi to host the app and then use something like a <a href="https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/">Cloudflare Tunnel</a> to expose it to the internet. After an initial excitement at using yet more shiny new things, the idea seemed a bit too insecure for my security engineer brain. In the past I have used Heroku to deploy apps for free, but sadly, Heroku removed their free tier (TBH, I did not check recently if it was reinstated). I have also used GCP and AWS sporadically but they are not free. Cheap enough (~$0.1 a month) for my wallet to not notice but not free. In my quest to find a free hosting platform, I landed on <a href="https://vercel.com">Vercel</a>.</p>
 <h3 id="experiment-21---deploying-to-vercel">Experiment 2.1 - deploying to Vercel</h3>
-<p>Deploying to Vercel was mostly a breeze. I just had to import the github repo to Vercel, add environment variables and secrets, and let Vercel do its thing. The deployment was complete within a few seconds. I did have to modify some parts of the API - especially the MongoDB connection part - but these were very minor changes.</p>
+<p>Deploying to Vercel was mostly a breeze. I just had to import the Github repo to Vercel, add environment variables and secrets, and let Vercel do its thing. The deployment was complete within a few seconds. I did have to modify some parts of the API - especially the MongoDB connection part - but these were very minor changes.</p>
 <p>Experience: 10/10</p>
 <h3 id="experiment-22---free-db">Experiment 2.2 - free DB</h3>
 <p>The database technology I am most familiar with is MongoDB - which works brillianly since I am always dealing with JSON data. I used local MongoDB for all the local development and testing. MongoDB provides a fully managed cloud service <a href="https://www.mongodb.com/products/platform/atlas-database">Atlas</a>, that has a free tier. Atlas also <a href="https://vercel.com/marketplace/mongodbatlas">integrates with Vercel</a> very easily. Once I set up a cluster on Atlas, I was able to seamlessly migrate my collections to Atlas. With this last step complete, my app + APIs could now fulfill all the requirements I had.</p>
 <p>Experience: 10/10</p>
 <h2 id="impressions">Impressions</h2>
-<p>In total I probably spent about 40 hours in total to develop the APIs, the webapp (which I later discarded) and the iOS app. Granted that the app is not production ready by any means, it still serves all my needs. Without ChatGPT, building the iOS app itself would have taken me 100+ hours. I am highly delighted with the outcome - and my brain is already thinking of more apps I can develop. One in particular that I am building is a web UI wrapper over Semgrep that fetches Github security advisories (GHSAs) and then lets me scan the repos associated with the GHSAs - allowing me to attempt finding other vulnerabilities in said repos.</p>
+<p>In total I probably spent about 40 hours to develop the APIs, the webapp (which I later discarded) and the iOS app. Granted that the app is not production ready by any means, it still serves all my needs. Without ChatGPT, building the iOS app itself would have taken me 100+ hours. I am highly delighted with the outcome - and my brain is already thinking of more apps I can develop. One in particular that I am building is a web UI wrapper over Semgrep that fetches Github security advisories (GHSAs) and then lets me scan the repos associated with the GHSAs - allowing me to attempt finding other vulnerabilities in said repos.</p>
 <p>I have heard a lot of people say that their reliance on using AI assistance to write code has negatively impacted their coding skills. This can be true. At a lot of points, I was tempted to ask ChatGPT to write code that I could write myself too - out of pure laziness. I would be lying if I said I did not give in to the temptation. Having said that, I made it a point to understand the code ChatGPT provided, and learn any new inbuilt functions or syntactic sugar it used. I also tried using these newly learnt patterns myself when I felt they were needed. This, in turn, improved my coding skills. For example, I can now use promises, array filters / maps in JS, and write basic React elements myself.</p>
 <h2 id="conclusion">Conclusion</h2>
 <p>This will probably be the last blog of the year. Therefore, this conclusion section is more of a reflection on the year. I set out to find 5 CVEs this year. I started out strong with 3 reports within the first 3 months. Got 2 CVEs, 1 GHSA. I also decided to change the goal to 5 security issues as I learnt not everything I find may get a CVE. Somewhere along the line life happened and I did not work on security research much after the initial months. Subsequently, I will not be meeting my goal of 5 CVEs. I did, however, experiment a whole bunch with AI, both at work and in my personal time. Supplementing SAST with AI is my latest &ldquo;passion&rdquo;. I have not done enough to write about it yet though. I also built apps, which was not in my to-do list for the year.</p>
@@ -254,6 +254,13 @@ straighforward to explain desired UIs in words.)</p>
         
 
         <div class="pagination__buttons">
+            
+            <span class="button previous">
+                <a href="http://localhost:1313/posts/nicegui-xss/">
+                    <span class="button__icon">←</span>
+                    <span class="button__text">XSS via Code Injection in NiceGUI</span>
+                </a>
+            </span>
             
 
             

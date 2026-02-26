@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+        <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="author"
+    content="">
+<meta name="description"
+    content="NiceGUI is a Python framework that lets you build web-based UIs directly in Python, with no HTML/CSS/JS required. It handles both the frontend and backend, making it easy to create interactive dashboards, tools, and apps with a clean, declarative API. To be able to do this, NiceGUI has functions that construct Javascript code from input received through Python code. One of these functions, run_method(), was vulnerable to quote injection that allowed providing input in ways that led to XSS.
+" />
+<meta name="keywords"
+    content="homepage, blog, python, cve-analysis, development" />
+<meta name="robots" content="noodp" />
+<meta name="theme-color" content="" />
+<link rel="canonical" href="http://localhost:1313/posts/nicegui-xss/" />
+
+
+<title>
+    
+    XSS via Code Injection in NiceGUI :: Bayesian Blogs 
+    
+</title>
+
+
+
+
+
+  <link rel="stylesheet" href="/main.min.fdc47f2ea14102755136c9244f7fedfda5afa7ad0acc3947a50e795b188c7e74.css" integrity="sha256-/cR/LqFBAnVRNskkT3/t/aWvp60KzDlHpQ55WxiMfnQ=" crossorigin="anonymous">
+
+
+
+
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="">
+    <link rel="shortcut icon" href="/favicon.ico">
+    <meta name="msapplication-TileColor" content="">
+
+
+
+  <meta itemprop="name" content="XSS via Code Injection in NiceGUI">
+  <meta itemprop="description" content="NiceGUI is a Python framework that lets you build web-based UIs directly in Python, with no HTML/CSS/JS required. It handles both the frontend and backend, making it easy to create interactive dashboards, tools, and apps with a clean, declarative API. To be able to do this, NiceGUI has functions that construct Javascript code from input received through Python code. One of these functions, run_method(), was vulnerable to quote injection that allowed providing input in ways that led to XSS.">
+  <meta itemprop="datePublished" content="2026-02-13T19:47:59-08:00">
+  <meta itemprop="dateModified" content="2026-02-13T19:47:59-08:00">
+  <meta itemprop="wordCount" content="1507">
+  <meta itemprop="image" content="http://localhost:1313/">
+  <meta itemprop="keywords" content="Python,Cve-Analysis,Development">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="http://localhost:1313/">
+  <meta name="twitter:title" content="XSS via Code Injection in NiceGUI">
+  <meta name="twitter:description" content="NiceGUI is a Python framework that lets you build web-based UIs directly in Python, with no HTML/CSS/JS required. It handles both the frontend and backend, making it easy to create interactive dashboards, tools, and apps with a clean, declarative API. To be able to do this, NiceGUI has functions that construct Javascript code from input received through Python code. One of these functions, run_method(), was vulnerable to quote injection that allowed providing input in ways that led to XSS.">
+
+
+
+<meta property="og:url" content="http://localhost:1313/posts/nicegui-xss/">
+  <meta property="og:site_name" content="Bayesian Blogs">
+  <meta property="og:title" content="XSS via Code Injection in NiceGUI">
+  <meta property="og:description" content="NiceGUI is a Python framework that lets you build web-based UIs directly in Python, with no HTML/CSS/JS required. It handles both the frontend and backend, making it easy to create interactive dashboards, tools, and apps with a clean, declarative API. To be able to do this, NiceGUI has functions that construct Javascript code from input received through Python code. One of these functions, run_method(), was vulnerable to quote injection that allowed providing input in ways that led to XSS.">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2026-02-13T19:47:59-08:00">
+    <meta property="article:modified_time" content="2026-02-13T19:47:59-08:00">
+    <meta property="article:tag" content="Python">
+    <meta property="article:tag" content="Cve-Analysis">
+    <meta property="article:tag" content="Development">
+    <meta property="og:image" content="http://localhost:1313/">
+
+
+
+
+
+
+<meta property="article:published_time" content="2026-02-13 19:47:59 -0800 PST" />
+
+
+
+
+
+
+
+
+
+
+    </head>
+
+    
+        <body>
+    
+    
+        <div class="container">
+            <header class="header">
+    <span class="header__inner">
+        <a href="/" style="text-decoration: none;">
+    <div class="logo">
+        
+            <span class="logo__mark">&gt;</span>
+            <span class="logo__text ">
+                cd /home</span>
+            <span class="logo__cursor" style=
+                  "
+                   
+                   ">
+            </span>
+        
+    </div>
+</a>
+
+
+        <span class="header__right">
+                <nav class="menu">
+    <ul class="menu__inner"><li><a href="/about">About</a></li><li><a href="/posts">Blog</a></li><li><a href="/cocktails">Cocktails</a></li><li><a href="/pgp">PGP</a></li>
+    </ul>
+</nav>
+
+                <span class="menu-trigger">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M0 0h24v24H0z" fill="none"/>
+                        <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+                    </svg>
+                </span>
+                <span class="theme-toggle not-selectable"><svg class="theme-toggler" width="24" height="24" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+   <path d="M22 41C32.4934 41 41 32.4934 41 22C41 11.5066 32.4934 3 22
+   3C11.5066 3 3 11.5066 3 22C3 32.4934 11.5066 41 22 41ZM7 22C7
+   13.7157 13.7157 7 22 7V37C13.7157 37 7 30.2843 7 22Z"/>
+ </svg></span>
+        </span>
+    </span>
+</header>
+
+
+            <div class="content">
+                
+<main class="post">
+
+  <div class="post-info">
+    <p>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+        class="feather feather-clock">
+        <circle cx="12" cy="12" r="10"></circle>
+        <polyline points="12 6 12 12 16 14"></polyline>
+      </svg>
+      8 minutes
+
+      
+    </p>
+  </div>
+
+  <article>
+    <h1 class="post-title">
+      <a href="http://localhost:1313/posts/nicegui-xss/">XSS via Code Injection in NiceGUI</a>
+    </h1>
+
+    
+
+    
+
+    
+
+    <div class="post-content">
+        <p>NiceGUI is a Python framework that lets you build web-based UIs directly in Python, with no HTML/CSS/JS required. It handles both the frontend and backend, making it easy to create interactive dashboards, tools, and apps with a clean, declarative API. To be able to do this, NiceGUI has functions that construct Javascript code from input received through Python code. One of these functions, <code>run_method()</code>, was vulnerable to quote injection that allowed providing input in ways that led to XSS.</p>
+<p>This vulnerability has been assigned <a href="https://github.com/zauberzeug/nicegui/security/advisories/GHSA-78qv-3mpx-9cqq">CVE-2026-27156 / GHSA-78qv-3mpx-9cqq</a></p>
+<p>The PoCs were tested on NiceGUI 3.7.1 installed from pypi. This issue is fixed in NiceGUI 3.8.0.</p>
+<p>Side Note: At the end I also talk about <a href="https://github.com/anuraagbaishya/paladin">Paladin</a>, a Semgrep runner and result manager. It&rsquo;s what I use for many aspects of my research - and it&rsquo;s open source!</p>
+<h2 id="semgrep-result-evaluation-or-lack-thereof">Semgrep result evaluation (or lack thereof)</h2>
+<p>When you do something a lot of times over a long period of time, you generally develop methodologies to make yourself more efficient at it. It is no different for me when I review Semgrep results. The results I am usually looking at have close to a hundred (and sometimes multiple hundreds) of findings - most of them are just noise. For me (and my friend Mr. Claude) to be able to effectively analyze the scan result within a reasonable timeframe (and without burning millions of tokens), I have developed a systematic way to prune the number of findings:</p>
+<ol>
+<li>Sort by severity - error, warning, note.</li>
+<li>Sort by confidence - high, medium, low. (This is the confidence noted in the Semgrep rule and subsequently in all findings for that rule)</li>
+<li>Remove any findings which seem noisy - use of sha1, use of innerHTML, etc</li>
+</ol>
+<p>The third bullet is a mental bias - rules that I <em>think</em> are noisy, from looking at a lot of findings with these rules that did not materialize into anything interesting. The thing is how you interpret a finding depends on what your end goal is. At work I look at results from a defensive point of view - finding unsafe code patterns and recommending secure coding practices to resolve such risks. When I look at results for personal research, I am looking for exploitable vulnerabilities. Therefore, the rules I care about also differ by setting.</p>
+<h2 id="context-confusion">Context confusion</h2>
+<p>The few days leading upto me finding this vulnerability were something like this - help teams reduce their risk of security issues by providing guidance sourced from reviewing Semgrep results during the day, and then try to find exploitable vulnerabilities in open source software by reviewing Semgrep results in the evening. If you guessed I used my &ldquo;work filters&rdquo; to review NiceGUI, you would be right. One of the rules I generally don&rsquo;t care about for personal research is <code>javascript.lang.security.audit.unsafe-dynamic-method </code> (from Semgrep community rules). However, by muscle memory, I found myself looking into findings for this rule.</p>
+<h2 id="using-non-static-data-to-retrieve-and-run-functions">Using non-static data to retrieve and run functions</h2>
+<p>(Yes, I copied the first few words from the rule&rsquo;s message.) The function reported by Semgrep is</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">runMethod</span>(<span style="color:#a6e22e">target</span>, <span style="color:#a6e22e">method_name</span>, <span style="color:#a6e22e">args</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">target</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#34;object&#34;</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">method_name</span> <span style="color:#66d9ef">in</span> <span style="color:#a6e22e">target</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">target</span>[<span style="color:#a6e22e">method_name</span>](...<span style="color:#a6e22e">args</span>);
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> eval(<span style="color:#a6e22e">method_name</span>)(<span style="color:#a6e22e">target</span>, ...<span style="color:#a6e22e">args</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">element</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">getElement</span>(<span style="color:#a6e22e">target</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">element</span> <span style="color:#f92672">===</span> <span style="color:#66d9ef">null</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">element</span> <span style="color:#f92672">===</span> <span style="color:#66d9ef">undefined</span>) <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">method_name</span> <span style="color:#66d9ef">in</span> <span style="color:#a6e22e">element</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">element</span>[<span style="color:#a6e22e">method_name</span>](...<span style="color:#a6e22e">args</span>);
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">method_name</span> <span style="color:#66d9ef">in</span> (<span style="color:#a6e22e">element</span>.<span style="color:#a6e22e">$refs</span>.<span style="color:#a6e22e">qRef</span> <span style="color:#f92672">||</span> [])) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">element</span>.<span style="color:#a6e22e">$refs</span>.<span style="color:#a6e22e">qRef</span>[<span style="color:#a6e22e">method_name</span>](...<span style="color:#a6e22e">args</span>);
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> eval(<span style="color:#a6e22e">method_name</span>)(<span style="color:#a6e22e">element</span>, ...<span style="color:#a6e22e">args</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>from <code>nicegui/static/nicegui.js</code></p>
+<p>The <code>eval()</code> lines immediately caught my eye. If there was a way to get user input into this function, it would <code>eval</code> the input. Grepping for <code>runMethod</code> I found</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">run_method</span>(self, name: str, <span style="color:#f92672">*</span>args: Any, timeout: float <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>) <span style="color:#f92672">-&gt;</span> AwaitableResponse:
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> core<span style="color:#f92672">.</span>loop:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> NullResponse()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> self<span style="color:#f92672">.</span>client<span style="color:#f92672">.</span>run_javascript(
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">f</span><span style="color:#e6db74">&#39;return runMethod(</span><span style="color:#e6db74">{</span>self<span style="color:#f92672">.</span>id<span style="color:#e6db74">}</span><span style="color:#e6db74">, &#34;</span><span style="color:#e6db74">{</span>name<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;, </span><span style="color:#e6db74">{</span>json<span style="color:#f92672">.</span>dumps(args)<span style="color:#e6db74">}</span><span style="color:#e6db74">)&#39;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">#                              </span>
+</span></span><span style="display:flex;"><span>        timeout<span style="color:#f92672">=</span>timeout
+</span></span><span style="display:flex;"><span>    )
+</span></span></code></pre></div><p>in <code>nicegui/element.py</code>. The <code>name</code> parameter in this function uses string interpolation (<code>&quot;{name}&quot;</code>) without escaping. This allows for code injection.</p>
+<h3 id="attack-flow">Attack Flow</h3>
+<pre tabindex="0"><code>Input: &#39;x&#34;, alert(document.cookie), &#34;y&#39;
+  ↓
+Python generates:
+  f&#39;return runMethod(123, &#34;{name}&#34;, [])&#39;
+  → &#39;return runMethod(123, &#34;x&#34;, alert(document.cookie), &#34;y&#34;, [])&#39;
+  ↓
+Client-side eval() executes:
+  runMethod receives three arguments
+  alert(document.cookie) executes during parsing
+  ↓
+XSS achieved
+</code></pre><h3 id="proof-of-concept">Proof of Concept</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">from</span> nicegui <span style="color:#f92672">import</span> ui
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">@ui.page</span>(<span style="color:#e6db74">&#39;/&#39;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">page</span>(method: str <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;focus&#39;</span>):
+</span></span><span style="display:flex;"><span>    input_field <span style="color:#f92672">=</span> ui<span style="color:#f92672">.</span>input(<span style="color:#e6db74">&#39;Test&#39;</span>)
+</span></span><span style="display:flex;"><span>    ui<span style="color:#f92672">.</span>button(<span style="color:#e6db74">&#39;Execute&#39;</span>, on_click<span style="color:#f92672">=</span><span style="color:#66d9ef">lambda</span>: input_field<span style="color:#f92672">.</span>run_method(method))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>ui<span style="color:#f92672">.</span>run()
+</span></span></code></pre></div><p><strong>Test:</strong> Visit <code>/?method=x&quot;, alert(1), &quot;y</code> and click &ldquo;Execute&rdquo;
+<strong>Result:</strong> Alert executes</p>
+<h2 id="code-flow-analysis">Code Flow Analysis</h2>
+<pre tabindex="0"><code>┌─────────────────────────────────────────────────────────┐
+│ 1. HTTP Request                                         │
+│    /?method=x&#34;, alert(1), &#34;y                            │
+└────────────────────┬────────────────────────────────────┘
+                     ↓
+┌─────────────────────────────────────────────────────────┐
+│ 2. Parameter Injection                          │
+│    def page(method: str = &#39;x&#34;, alert(1), &#34;y&#39;)           │
+└────────────────────┬────────────────────────────────────┘
+                     ↓
+┌─────────────────────────────────────────────────────────┐
+│ 3. element.py                                           │
+│    f&#39;return runMethod(123, &#34;{name}&#34;, [])&#39;               │
+│    → &#39;return runMethod(123, &#34;x&#34;, alert(1), &#34;y&#34;, [])&#39;    │
+└────────────────────┬────────────────────────────────────┘
+                     ↓
+┌─────────────────────────────────────────────────────────┐
+│ 4. WebSocket Message                                    │
+│    {&#34;code&#34;: &#34;return runMethod(123, \&#34;x\&#34;, alert(1)...&#34;}│
+└────────────────────┬────────────────────────────────────┘
+                     ↓
+┌─────────────────────────────────────────────────────────┐
+│ 5. nicegui.js                                           │
+│    eval(&#39;return runMethod(123, &#34;x&#34;, alert(1), &#34;y&#34;, [])&#39; │
+└────────────────────┬────────────────────────────────────┘
+                     ↓
+┌─────────────────────────────────────────────────────────┐
+│ 6. XSS Execution                                        │
+│    alert(1) runs in user&#39;s browser context              │
+└─────────────────────────────────────────────────────────┘
+</code></pre><p>There you have it. By a bit of luck, I did not ignore a rule I would otherwise have, and found some XSS.</p>
+<h2 id="additonal-findings">Additonal findings</h2>
+<p>Based on this report, the maintainers did their own due diligence and discovered many other functions that were similarly vulnerable. This is complete list as noted in the advisory:</p>
+<ul>
+<li><code>Element.run_method()</code></li>
+<li><code>Element.get_computed_prop()</code></li>
+<li><code>AgGrid.run_grid_method()</code></li>
+<li><code>AgGrid.run_row_method()</code></li>
+<li><code>EChart.run_chart_method()</code></li>
+<li><code>JsonEditor.run_editor_method()</code></li>
+<li><code>Xterm.run_terminal_method()</code></li>
+<li><code>Leaflet.run_map_method()</code></li>
+<li><code>Leaflet.run_layer_method()</code></li>
+<li><code>LeafletLayer.run_method()</code></li>
+</ul>
+<hr>
+<h2 id="introducing-paladin">Introducing Paladin</h2>
+<p><a href="https://github.com/anuraagbaishya/paladin">Paladin</a> is a Semgrep runner and result manager. It has the following features:</p>
+<h3 id="scanning">Scanning</h3>
+<ul>
+<li>You can scan a repo it Github URL or from Github Security Advisories (GHSAs).</li>
+<li>A custom results viewer shows findings grouped by rules.</li>
+<li>A configurable SARIF cleaner cleans SARIF files based on configured rule paths and individual rules. This cleaner runs automatically after a scan so you never see results from rules you don&rsquo;t care about.</li>
+</ul>
+<h3 id="scan-result-viewer">Scan Result Viewer</h3>
+<p>The Scan Result Viewer provides these functionalities for each finding:</p>
+<ul>
+<li>Opening the source file in an embedded code viewer.</li>
+<li>Suppressing individual findings. Suppressed findings will not be shown in future views.</li>
+<li>Reviewing the finding using Claude Code.</li>
+</ul>
+<p>The result viewer also allows configuring rules and files you want to suppress findings for at a repo level instead of globally.</p>
+<h3 id="ai-review">AI Review</h3>
+<ul>
+<li>AI Review uses Claude Code (via a bridge server that runs on the host machine (outside Docker) if Paladin is used via the Docker container).</li>
+<li>The bridge server sends the finding details and repository path to Claude Code, which analyzes the code in context and returns a structured verdict (true positive / false positive with reasoning).</li>
+</ul>
+<h3 id="ghsas-viewer">GHSAs Viewer</h3>
+<ul>
+<li>You can optionally fetch and review latest GHSAs.</li>
+<li>You can then scan repos where Paladin was able to find the repo from the advisory.</li>
+</ul>
+<h2 id="how-i-use-paladin-and-claude-code-for-my-research">How I use Paladin and Claude code for my research</h2>
+<p>My go-to way of using Paladin is to go through the GHSAs and then scan repos that have interesting GHSAs. This drastically reduces combing through thousands of repos on Github to find a research target. I found NiceGUI because there were a few GHSAs for it.</p>
+<p>Next I run a scan and then quickly skim through the result using the methodology I mentioned earlier. From this I determine rules and file paths I am not interested in for the repo. I analyze the remaining findings by viewing the file and deciding if it needs a complete in-depth review. The few shortlisted findings go through a Claude code review. I have a Claude code skill that performs complete data flow analysis and provides an assessment of whether the finding is a true positive or false positive. More often than not, I usually pay much more attention to the data flow analysis than the verdict.</p>
+<p>After performing all these steps, I am usually left with a handful of findings (or none!) that I pursue for exploitability. I use a combination of manually reviewing the data flow, asking Claude code to review additional code paths, and testing payloads to confirm whether the finding can be exploited. (Usually the answer is no&hellip;).</p>
+<p>You may ask why not just have Claude code review the repo instead of this multi-step process of first running Semgrep, then using heuristics and filters to reduce the number of findings, and finally selectively asking Claude code to review a few findings. This is valid question, given <a href="https://red.anthropic.com/2026/zero-days/">Claude Opus 4.6 can find vulnerabilities without specialized tools</a>. The truth is, I don&rsquo;t want to spend $100-$200 a month on a Claude subscription. I currently have a $20 subscription - that I am evaluating on whether I use it enough to justify the cost. Currently, the answer is a resounding yes!</p>
+<p>Anyway, that&rsquo;s all folks. See you in the next one - once Claude finds me more vulnerabilities&hellip;</p>
+<h2 id="timeline">Timeline</h2>
+<ul>
+<li>February 11, 2026: Reported issue to NiceGUI maintainers through Github security advisories. (I submitted 2 reports. We agreed that the other one was not a vulnerability.)</li>
+<li>February 13, 2026: Received a through assessment of the report from NiceGUI maintainers -  including fix plans.</li>
+<li>February 24, 2026: Issue patched in NiceGUI 3.8.0. Shoutout to the maintainers for addressing this issue prompty. This is by far the quickest patch for a report I have submitted.</li>
+<li>February 25, 2026: Blog published.</li>
+</ul>
+
+    </div>
+
+    
+  </div>
+
+  
+    <div class="pagination">
+        
+
+        <div class="pagination__buttons">
+            
+
+            
+            <span class="button next">
+                <a href="http://localhost:1313/posts/free-app-dev-deploy/">
+                    <span class="button__text">Using Free Resources to Build and Deploy Apps</span>
+                    <span class="button__icon">→</span>
+                </a>
+            </span>
+            
+        </div>
+    </div>
+
+
+  
+
+  
+
+</main>
+
+            </div>
+
+            
+                <footer class="footer">
+    
+    <div class="footer__inner">
+        <div class="footer__content">
+            <span>&copy; 2025</span>
+            
+            
+            
+            <span>Anuraag Baishya</span>
+        </div>
+    </div>
+    
+    
+    <div class="footer__inner">
+        <div class="footer__content">
+            <span>Powered by <a href="http://gohugo.io">Hugo</a> & <a href="https://github.com/rhazdon/hugo-theme-hello-friend-ng">Hello Friend NG</a> theme</span>
+        </div>
+    </div>
+    
+</footer>
+
+            
+        </div>
+
+        
+
+
+<script type="text/javascript" src="/bundle.min.4037dc94fd1565c4fd3354e2b4a2d1ff11842c906242435350b4d2d8d6e8b7890da46c0a865173f543a6161c1f4d1c94147f1b907db36489fc2bf5e20d4af75c.js" integrity="sha512-QDfclP0VZcT9M1TitKLR/xGELJBiQkNTULTS2Nbot4kNpGwKhlFz9UOmFhwfTRyUFH8bkH2zZIn8K/XiDUr3XA=="></script>
+
+
+
+
+    </body>
+</html>
