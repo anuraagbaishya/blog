@@ -1,7 +1,7 @@
 ---
 title: "XSS via Code Injection in NiceGUI"
 date: 2026-02-13T19:47:59-08:00
-draft: true
+draft: false
 toc: false
 images:
 tags:
