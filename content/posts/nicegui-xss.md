@@ -1,5 +1,5 @@
 ---
-title: "XSS via Code Injection in NiceGUI"
+title: "CVE-2026-27156 - XSS via Code Injection in NiceGUI (+ some words regarding Paladin)"
 date: 2026-02-13T19:47:59-08:00
 draft: false
 toc: false
