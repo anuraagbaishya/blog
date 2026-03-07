@@ -26,7 +26,7 @@ pagination.pagerSize     = 10
     name = "Anuraag Baishya"
 
   [params.footer]
-    trademark = 2025
+    trademark = 2026
 
     topText = ["Anuraag Baishya"]
     bottomText = [

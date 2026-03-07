@@ -6,8 +6,15 @@
     <description>Recent content in Php on Bayesian Blogs</description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Wed, 19 Mar 2025 19:37:34 -0700</lastBuildDate>
+    <lastBuildDate>Fri, 06 Mar 2026 19:28:44 -0800</lastBuildDate>
     <atom:link href="http://localhost:1313/tags/php/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Clauding My Way Into CVEs in Idno</title>
+      <link>http://localhost:1313/posts/idno-cves/</link>
+      <pubDate>Fri, 06 Mar 2026 19:28:44 -0800</pubDate>
+      <guid>http://localhost:1313/posts/idno-cves/</guid>
+      <description>&lt;p&gt;Idno is a PHP social publishing platform - the kind of thing you self-host when you want to own your content. I found three vulnerabilities in it. Two chain into remote code execution: a web application admin can get the server to write an attacker-controlled PHP file to the server&amp;rsquo;s temp directory during WordPress import processing, and then any authenticated user can include that file via an unsanitized template name parameter. The third is a standalone unauthenticated SSRF caused by a logic error in the API authentication flow that allows bypassing CSRF protection with a pair of crafted header values.&lt;/p&gt;</description>
+    </item>
     <item>
       <title>I Ran Free SAST Tools on OpenEMR and Found a CVE</title>
       <link>http://localhost:1313/posts/cve-2025-30161/</link>
