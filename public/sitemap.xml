@@ -3,21 +3,27 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>http://localhost:1313/</loc>
-    <lastmod>2026-03-06T19:28:44-08:00</lastmod>
+    <lastmod>2026-04-25T18:09:29-07:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/posts/pi-hole-cve-and-losing-dns/</loc>
+    <lastmod>2026-04-25T18:09:29-07:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/tags/cve-analysis/</loc>
+    <lastmod>2026-04-25T18:09:29-07:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/posts/</loc>
+    <lastmod>2026-04-25T18:09:29-07:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/tags/story-time/</loc>
+    <lastmod>2026-04-25T18:09:29-07:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/tags/</loc>
+    <lastmod>2026-04-25T18:09:29-07:00</lastmod>
   </url><url>
     <loc>http://localhost:1313/posts/idno-cves/</loc>
     <lastmod>2026-03-06T19:28:44-08:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/tags/cve-analysis/</loc>
-    <lastmod>2026-03-06T19:28:44-08:00</lastmod>
-  </url><url>
     <loc>http://localhost:1313/tags/php/</loc>
-    <lastmod>2026-03-06T19:28:44-08:00</lastmod>
-  </url><url>
-    <loc>http://localhost:1313/posts/</loc>
-    <lastmod>2026-03-06T19:28:44-08:00</lastmod>
-  </url><url>
-    <loc>http://localhost:1313/tags/</loc>
     <lastmod>2026-03-06T19:28:44-08:00</lastmod>
   </url><url>
     <loc>http://localhost:1313/posts/nicegui-xss/</loc>

