@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Reverse-Engineering on Bayesian Blogs</title>
+    <link>http://localhost:1313/tags/reverse-engineering/</link>
+    <description>Recent content in Reverse-Engineering on Bayesian Blogs</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 15 Sep 2026 19:30:00 -0700</lastBuildDate>
+    <atom:link href="http://localhost:1313/tags/reverse-engineering/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Understanding the Auto-Update Mechanisms of 8 Common macOS Apps</title>
+      <link>http://localhost:1313/posts/macos-autoupdate-survey/</link>
+      <pubDate>Tue, 15 Sep 2026 19:30:00 -0700</pubDate>
+      <guid>http://localhost:1313/posts/macos-autoupdate-survey/</guid>
+      <description>&lt;p&gt;Given that many large enterprises now have well funded teams building agentic harnesses for vulnerability research, I, with my makeshift harness and 20$ Claude Pro subscription, am not able to find issues that are niche enough to not have been already found by the enterprise harnesses. This has been evidenced by the fact the last ~10 reports I submitted to programs of various sizes have all been closed as duplicate. Therefore, I decided to look at other things I can write about here.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>
