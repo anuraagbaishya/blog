@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+        <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="author"
+    content="">
+<meta name="description"
+    content="Have you ever wondered if an LLM can solve a maze? Probably not. It is likely a not a good use of water or usage credits. However, in the odd event that you might have, I have the results for you! But why, you may ask? Well, for science! (And also because I recently received my half-yearly bonus and decided to burn some of it.)
+All mazes, results, and charts for this benchmark are in this github repo.
+" />
+<meta name="keywords"
+    content="homepage, blog, ai-research" />
+<meta name="robots" content="noodp" />
+<meta name="theme-color" content="" />
+<link rel="canonical" href="http://localhost:1313/posts/mazebench/" />
+
+
+<title>
+    
+    Mazebench: A Completely Unnecessary Benchmark That Tests a Model&#39;s Maze Solving Capabilties :: Bayesian Blogs 
+    
+</title>
+
+
+
+
+
+  <link rel="stylesheet" href="/main.min.fdc47f2ea14102755136c9244f7fedfda5afa7ad0acc3947a50e795b188c7e74.css" integrity="sha256-/cR/LqFBAnVRNskkT3/t/aWvp60KzDlHpQ55WxiMfnQ=" crossorigin="anonymous">
+
+
+
+
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="">
+    <link rel="shortcut icon" href="/favicon.ico">
+    <meta name="msapplication-TileColor" content="">
+
+
+
+  <meta itemprop="name" content="Mazebench: A Completely Unnecessary Benchmark That Tests a Model&#39;s Maze Solving Capabilties">
+  <meta itemprop="description" content="Have you ever wondered if an LLM can solve a maze? Probably not. It is likely a not a good use of water or usage credits. However, in the odd event that you might have, I have the results for you! But why, you may ask? Well, for science! (And also because I recently received my half-yearly bonus and decided to burn some of it.)
+All mazes, results, and charts for this benchmark are in this github repo.">
+  <meta itemprop="datePublished" content="2026-10-20T19:25:22-07:00">
+  <meta itemprop="dateModified" content="2026-10-20T19:25:22-07:00">
+  <meta itemprop="wordCount" content="1547">
+  <meta itemprop="image" content="http://localhost:1313/">
+  <meta itemprop="keywords" content="Ai-Research">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="http://localhost:1313/">
+  <meta name="twitter:title" content="Mazebench: A Completely Unnecessary Benchmark That Tests a Model&#39;s Maze Solving Capabilties">
+  <meta name="twitter:description" content="Have you ever wondered if an LLM can solve a maze? Probably not. It is likely a not a good use of water or usage credits. However, in the odd event that you might have, I have the results for you! But why, you may ask? Well, for science! (And also because I recently received my half-yearly bonus and decided to burn some of it.)
+All mazes, results, and charts for this benchmark are in this github repo.">
+
+
+
+<meta property="og:url" content="http://localhost:1313/posts/mazebench/">
+  <meta property="og:site_name" content="Bayesian Blogs">
+  <meta property="og:title" content="Mazebench: A Completely Unnecessary Benchmark That Tests a Model&#39;s Maze Solving Capabilties">
+  <meta property="og:description" content="Have you ever wondered if an LLM can solve a maze? Probably not. It is likely a not a good use of water or usage credits. However, in the odd event that you might have, I have the results for you! But why, you may ask? Well, for science! (And also because I recently received my half-yearly bonus and decided to burn some of it.)
+All mazes, results, and charts for this benchmark are in this github repo.">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2026-10-20T19:25:22-07:00">
+    <meta property="article:modified_time" content="2026-10-20T19:25:22-07:00">
+    <meta property="article:tag" content="Ai-Research">
+    <meta property="og:image" content="http://localhost:1313/">
+
+
+
+
+
+
+<meta property="article:published_time" content="2026-10-20 19:25:22 -0700 PDT" />
+
+
+
+
+
+
+
+
+
+
+    </head>
+
+    
+        <body>
+    
+    
+        <div class="container">
+            <header class="header">
+    <span class="header__inner">
+        <a href="/" style="text-decoration: none;">
+    <div class="logo">
+        
+            <span class="logo__mark">&gt;</span>
+            <span class="logo__text ">
+                cd /home</span>
+            <span class="logo__cursor" style=
+                  "
+                   
+                   ">
+            </span>
+        
+    </div>
+</a>
+
+
+        <span class="header__right">
+                <nav class="menu">
+    <ul class="menu__inner"><li><a href="/about">About</a></li><li><a href="/posts">Blog</a></li><li><a href="/cocktails">Cocktails</a></li><li><a href="/pgp">PGP</a></li>
+    </ul>
+</nav>
+
+                <span class="menu-trigger">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M0 0h24v24H0z" fill="none"/>
+                        <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+                    </svg>
+                </span>
+                <span class="theme-toggle not-selectable"><svg class="theme-toggler" width="24" height="24" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+   <path d="M22 41C32.4934 41 41 32.4934 41 22C41 11.5066 32.4934 3 22
+   3C11.5066 3 3 11.5066 3 22C3 32.4934 11.5066 41 22 41ZM7 22C7
+   13.7157 13.7157 7 22 7V37C13.7157 37 7 30.2843 7 22Z"/>
+ </svg></span>
+        </span>
+    </span>
+</header>
+
+
+            <div class="content">
+                
+<main class="post">
+
+  <div class="post-info">
+    <p>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+        class="feather feather-clock">
+        <circle cx="12" cy="12" r="10"></circle>
+        <polyline points="12 6 12 12 16 14"></polyline>
+      </svg>
+      8 minutes
+
+      
+    </p>
+  </div>
+
+  <article>
+    <h1 class="post-title">
+      <a href="http://localhost:1313/posts/mazebench/">Mazebench: A Completely Unnecessary Benchmark That Tests a Model&rsquo;s Maze Solving Capabilties</a>
+    </h1>
+
+    
+
+    
+
+    
+
+    <div class="post-content">
+        <p>Have you ever wondered if an LLM can solve a maze? Probably not. It is likely a not a good use of water or usage credits. However, in the odd event that you might have, I have the results for you! But why, you may ask? Well, for science! (And also because I recently received my half-yearly bonus and decided to burn some of it.)</p>
+<p>All mazes, results, and charts for this benchmark are in this <a href="https://github.com/anuraagbaishya/mazebench">github repo</a>.</p>
+<h2 id="generating-the-mazes">Generating the Mazes</h2>
+<p>The benchmark is a 100 mazes, generated programatically:</p>
+<ul>
+<li>Each maze has exactly one shortest route from start to goal. 85 of the 100 also contain loops, so longer alternative routes exist and a model can solve a maze without finding the shortest route. 15 are perfect mazes with a single route.</li>
+<li>The entry is a gap in the outer wall, with 25 mazes entered from each side. The goal is a random cell anywhere in the grid, including corners, edges and the centre.</li>
+</ul>
+<p>This is an illustration to show how the first maze was generated. Every maze was generated using the same procedure.</p>
+<p><img src="/generation_steps.png" alt=""></p>
+<h2 id="model-selection">Model Selection</h2>
+<p>I selected 15 models available on OpenRouter released in the last 6 months as of 10/17/2026. The metric I used to select the model is an incredibly novel technique I discovered called HIHOTM™ (Have I Heard of This Model). I tried to have 1 model per provider but I made 2 exceptions for Claude and Gemini (because I wanted to land at a nice number like 15 and using HIHOTM I was only at 13 unique providers). Because I wanted to also do some more useful things with my bonus, I decided to pick the cheapest model from providers that have multiple models (again, except for Claude and Gemini). In no particular order here is the list of models:</p>
+<table>
+  <thead>
+      <tr>
+          <th></th>
+          <th></th>
+          <th></th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>anthropic/claude-haiku-5.5</code></td>
+          <td><code>openai/gpt-6-luna</code></td>
+          <td><code>nvidia/nemotron-3.5-super-vl</code></td>
+      </tr>
+      <tr>
+          <td><code>z-ai/glm-5.3-flash</code></td>
+          <td><code>deepseek/deepseek-v4.1-flash</code></td>
+          <td><code>xiaomi/mimo-v2.6-pro</code></td>
+      </tr>
+      <tr>
+          <td><code>google/gemini-3.8-flash</code></td>
+          <td><code>mistralai/mistral-large-4-0</code></td>
+          <td><code>meta/muse-spark-1.3</code></td>
+      </tr>
+      <tr>
+          <td><code>qwen/qwen3.8-max-0902</code></td>
+          <td><code>x-ai/grok-4.7</code></td>
+          <td><code>anthropic/claude-sonnet-5.5</code></td>
+      </tr>
+      <tr>
+          <td><code>google/gemini-4-argon</code></td>
+          <td><code>moonshotai/kimi-k3</code></td>
+          <td><code>minimax/minimax-m3.1-flash</code></td>
+      </tr>
+  </tbody>
+</table>
+<h2 id="describing-mazes">Describing Mazes</h2>
+<p>I initially started by asking the model to provide a solution to the maze. But after the first few runs using <code>glm-5.3-flash</code> I found that all the answers were really off. I began to suspect that the model is not able to understand the maze itself, let alone solve it. So the &ldquo;official&rdquo; first experiment was to have the model describe the maze.</p>
+<p>The model reports the start cell, the goal cell, and for every pair of neighbouring cells whether a wall separates them. Walls are reported as two grids of 0/1 characters: <code>right_walls</code> (10 rows of 9, the wall between a cell and its right neighbour) and <code>down_walls</code> (9 rows of 10, the wall between a cell and the cell below). That covers all 180 gaps in the grid. The outer border is not reported. The answer is one JSON object. Walls are described like this in the output:</p>
+<pre tabindex="0"><code>   &#34;right_walls&#34;: [
+    &#34;100000000&#34;,
+    &#34;010100010&#34;,
+    ...
+   ],
+   &#34;down_walls&#34;: [
+    &#34;0010101010&#34;,
+    &#34;0001110000&#34;,
+    ...
+   ]
+</code></pre><p>A 0 indicated no wall and a 1 indicates a wall. Each string represents a row. The verticals walls in the row are noted in <code>right_walls</code> and the horizontal walls are noted in <code>down_walls</code>.</p>
+<p>The above output is for this maze:
+<img src="/maze_001.png" alt=""></p>
+<p>Based on the JSON, I do some math:</p>
+<table>
+  <thead>
+      <tr>
+          <th>Measure</th>
+          <th>Definition</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>start / goal correct</td>
+          <td>the reported cell is exactly right</td>
+      </tr>
+      <tr>
+          <td>wall edge accuracy</td>
+          <td>share of the 180 gaps reported correctly</td>
+      </tr>
+      <tr>
+          <td>wall recall</td>
+          <td>share of real walls that were reported</td>
+      </tr>
+      <tr>
+          <td>wall precision</td>
+          <td>share of reported walls that are real</td>
+      </tr>
+      <tr>
+          <td>exact</td>
+          <td>all 180 gaps correct</td>
+      </tr>
+  </tbody>
+</table>
+<p>Missing or malformed parts of an answer count as wrong. Only about 36% of the gaps contain walls, so a model that reports no walls at all scores about 63% edge accuracy. That is the baseline for edge accuracy, and recall and precision must be read alongside it, since a high edge accuracy can come from reporting too few walls.</p>
+<p>(Effort note: Every model is run with the default effort other than <code>glm-5.3-flash</code> which runs with effort <code>low</code> because the runs without an explicit effort reasoned until the model ran out of context and did not return any output.)</p>
+<p>(I also dropped <code>kimi-k3</code> and <code>grok-4.7</code> after a trial run of 3 mazes. <code>kimi-k3</code> was too expensive and from the small sample, it was evident that it was not going to get further evaluation. Same for <code>grok-4.7</code> but also <code>grok-4.7</code> was exceptionally slow - requiring 10+ minutes to describe a maze. Therefore these are not represented in the charts.)</p>
+<p>I first ran the models on the first 20 mazes to find the top 5 models for further evaluation. Here are some pretty charts:</p>
+<p><img src="/start_goal_accuracy.png" alt=""></p>
+<p><img src="/precision_recall_stddev.png" alt=""></p>
+<p><img src="/accuracy_vs_time.png" alt=""></p>
+<p><img src="/accuracy_vs_cost.png" alt=""></p>
+<p>Based on this data, we can divide the models into 3 tiers:</p>
+<ul>
+<li>
+<p>Tier 1 (F1 &gt; 95%): <code>gemini-4-argon</code> 99.8%, <code>claude-sonnet-5.5</code> 98.2%, <code>gpt-6-luna</code> 97.5%, <code>claude-haiku-5.5</code> 96.5%, <code>qwen3.8-max-0902</code> 95.3%</p>
+</li>
+<li>
+<p>Tier 2 (F1 85–95%): <code>gemini-3.8-flash</code> 92.1%, <code>minimax-m3.1-flash</code> 85.9%</p>
+</li>
+<li>
+<p>Tier 3 (F1 &lt; 85%): <code>muse-spark-1.3</code> 73.2%, <code>glm-5.3-flash (low effort)</code> 56.7%, <code>mistral-large-4-0</code> 52.0%, <code>nemotron-3.5-super-vl</code> 45.4%, <code>mimo-v2.6-pro</code> 45.2%, <code>deepseek-v4.1-flash</code> 32.9%</p>
+</li>
+</ul>
+<p>Conveniently tier 1 has exactly 5 models and the F1 bar is also a nice 95% (I love multiples of 5&hellip;). The next part involves running these models on the remaining 80 mazes.</p>
+<h2 id="describing-all-100-mazes">Describing all 100 mazes</h2>
+<p>The 5 highest-ranked models from step 2 repeat the description task on all 100 mazes. 20 mazes is enough to separate strong from weak readers but gives noisy estimates for models that are close, so the larger sample settles the ordering among the best models and shows how accuracy varies with entry side and goal position.</p>
+<p>Here are some more pretty graphs:</p>
+<p><img src="/start_goal_accuracy_100.png" alt=""></p>
+<p><img src="/precision_recall_stddev_100.png" alt=""></p>
+<p><img src="/accuracy_vs_time_100.png" alt=""></p>
+<p><img src="/accuracy_vs_cost_100.png" alt=""></p>
+<p>From this, it can be concluded that the results for 20 mazes are more or less the same as for 100 mazes.</p>
+<h2 id="solving-the-mazes">Solving the mazes</h2>
+<p>I decided to only test the solving capability of only 4 models - leaving out <code>qwen3.8-max-0902</code> because of cost. <code>qwen3.8-max-0902</code> was the most expensive model while running the describe task (<code>gemini-4-argon</code> had a 50% discount at the time I ran this experiment). The task is to return a string of moves, one letter per move, <code>U</code>, <code>D</code>, <code>L</code> or <code>R</code>, from the start cell to the goal. Each move goes to the adjacent cell and is only allowed if no wall lies between the two cells. The solution string is then walked through the maze using a python script. To recap: 15 mazes have exactly one solution and the remaining 85 have more than one solution. Upon reviewing the first few solves, I found that sometimes the solution ignored walls and got to the right goal, and at other times, the solution would go out of the maze. I classified the former as a &ldquo;partial failure&rdquo; and the later as a &ldquo;complete failure&rdquo;. Given that, the measurements I performed are:</p>
+<ul>
+<li>Was the solution a success, a partial failure or a complete failure</li>
+<li>If it was a success, was it the optimal solution</li>
+<li>If it was a partial success, how many walls did the solution cross.</li>
+</ul>
+<p>Each model was run twice over the set of all 100 graphs. I did not intend to run them twice, but somehow <code>claude-haiku-5.5</code> came out better than <code>claude-sonnet-5.5</code> on the first run so I wanted to ensure that was consistent. Surprisingly, <code>claude-haiku-5.5</code> beat <code>claude-sonnet-5.5</code> on both runs (although marginally).</p>
+<p>Here are even more pretty graphs:</p>
+<p><img src="/solve_outcomes.png" alt=""></p>
+<p><img src="/solve_accuracy_vs_cost.png" alt=""></p>
+<p><img src="/solve_accuracy_vs_time.png" alt=""></p>
+<p><img src="/solve_walls_crossed.png" alt=""></p>
+<p>Overall <code>gemini-4-argon</code> performed the best. <code>gpt-6-luna</code> was the cheapest but performed the worst in terms of solving the maze and was also the slowest. As before, the cost and times are based on using OpenRouter.</p>
+<h2 id="describing-vs-solving">Describing vs Solving</h2>
+<p>So, if a model can describe a maze well, can it solve it too? <code>gemini-4-argon</code> did the best on both tasks. <code>claude-sonnet-5.5</code> described the mazes better but did worse when solving compared to <code>claude-haiku-5.5</code> (again, the difference is marginal).</p>
+<p><img src="/describe_vs_solve.png" alt=""></p>
+<h2 id="total-costs">Total costs</h2>
+<p>The complete cost for running all the experiments is an even $35 (there&rsquo;s just something so satisfying about multiples of 5&hellip;). Here is the breakdown:<br>
+(<code>minimax/minimax-m3.1-flash</code> was free for an introductory period and luckily I ran my experiments during that time.)</p>
+<table>
+  <thead>
+      <tr>
+          <th>Model</th>
+          <th style="text-align: right">Describe: first 20 mazes</th>
+          <th style="text-align: right">Describe: other 80 mazes</th>
+          <th style="text-align: right">Solve</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>anthropic/claude-sonnet-5.5</code></td>
+          <td style="text-align: right">$0.40</td>
+          <td style="text-align: right">$1.67</td>
+          <td style="text-align: right">$5.48</td>
+      </tr>
+      <tr>
+          <td><code>qwen/qwen3.8-max-0902</code></td>
+          <td style="text-align: right">$1.60</td>
+          <td style="text-align: right">$5.54</td>
+          <td style="text-align: right"></td>
+      </tr>
+      <tr>
+          <td><code>google/gemini-4-argon</code></td>
+          <td style="text-align: right">$0.23</td>
+          <td style="text-align: right">$0.82</td>
+          <td style="text-align: right">$5.83</td>
+      </tr>
+      <tr>
+          <td><code>meta/muse-spark-1.3</code></td>
+          <td style="text-align: right">$2.65</td>
+          <td style="text-align: right"></td>
+          <td style="text-align: right"></td>
+      </tr>
+      <tr>
+          <td><code>google/gemini-3.8-flash</code></td>
+          <td style="text-align: right">$2.26</td>
+          <td style="text-align: right"></td>
+          <td style="text-align: right"></td>
+      </tr>
+      <tr>
+          <td><code>moonshotai/kimi-k3</code></td>
+          <td style="text-align: right">$1.58</td>
+          <td style="text-align: right"></td>
+          <td style="text-align: right"></td>
+      </tr>
+      <tr>
+          <td><code>mistralai/mistral-large-4-0</code></td>
+          <td style="text-align: right">$1.33</td>
+          <td style="text-align: right"></td>
+          <td style="text-align: right"></td>
+      </tr>
+      <tr>
+          <td><code>x-ai/grok-4.7</code></td>
+          <td style="text-align: right">$1.31</td>
+          <td style="text-align: right"></td>
+          <td style="text-align: right"></td>
+      </tr>
+      <tr>
+          <td><code>deepseek/deepseek-v4.1-flash</code></td>
+          <td style="text-align: right">$1.17</td>
+          <td style="text-align: right"></td>
+          <td style="text-align: right"></td>
+      </tr>
+      <tr>
+          <td><code>openai/gpt-6-luna</code></td>
+          <td style="text-align: right">$0.04</td>
+          <td style="text-align: right">$0.18</td>
+          <td style="text-align: right">$0.90</td>
+      </tr>
+      <tr>
+          <td><code>anthropic/claude-haiku-5.5</code></td>
+          <td style="text-align: right">$0.04</td>
+          <td style="text-align: right">$0.17</td>
+          <td style="text-align: right">$0.54</td>
+      </tr>
+      <tr>
+          <td><code>minimax/minimax-m3</code></td>
+          <td style="text-align: right">$0.63</td>
+          <td style="text-align: right"></td>
+          <td style="text-align: right"></td>
+      </tr>
+      <tr>
+          <td><code>xiaomi/mimo-v2.6-pro</code></td>
+          <td style="text-align: right">$0.18</td>
+          <td style="text-align: right"></td>
+          <td style="text-align: right"></td>
+      </tr>
+      <tr>
+          <td><code>nvidia/nemotron-3.5-super-vl</code></td>
+          <td style="text-align: right">$0.16</td>
+          <td style="text-align: right"></td>
+          <td style="text-align: right"></td>
+      </tr>
+      <tr>
+          <td><code>z-ai/glm-5.3-flash</code></td>
+          <td style="text-align: right">$0.14</td>
+          <td style="text-align: right"></td>
+          <td style="text-align: right"></td>
+      </tr>
+      <tr>
+          <td><code>typesafe/jev-router</code></td>
+          <td style="text-align: right">$0.11</td>
+          <td style="text-align: right"></td>
+          <td style="text-align: right"></td>
+      </tr>
+      <tr>
+          <td><code>z-ai/glm-5v-turbo</code></td>
+          <td style="text-align: right">$0.03</td>
+          <td style="text-align: right"></td>
+          <td style="text-align: right"></td>
+      </tr>
+      <tr>
+          <td><code>amazon/nova-pro-v1</code></td>
+          <td style="text-align: right">&lt;$0.01</td>
+          <td style="text-align: right"></td>
+          <td style="text-align: right"></td>
+      </tr>
+      <tr>
+          <td><code>meta-llama/llama-4-maverick</code></td>
+          <td style="text-align: right">&lt;$0.01</td>
+          <td style="text-align: right"></td>
+          <td style="text-align: right"></td>
+      </tr>
+      <tr>
+          <td><code>minimax/minimax-m3.1-flash</code></td>
+          <td style="text-align: right">$0.00</td>
+          <td style="text-align: right"></td>
+          <td style="text-align: right"></td>
+      </tr>
+      <tr>
+          <td><strong>Total</strong></td>
+          <td style="text-align: right"><strong>$13.86</strong></td>
+          <td style="text-align: right"><strong>$8.39</strong></td>
+          <td style="text-align: right"><strong>$12.75</strong></td>
+      </tr>
+  </tbody>
+</table>
+<h2 id="deferred-experiments">Deferred experiments</h2>
+<p>Before I understood the gravity of the cost, I intended to run even more experiments:</p>
+<ul>
+<li>
+<p><strong>Text maze versus image maze</strong>: Whether the image is the limiting factor. The same maze is given as text, which removes the need to read pixels.</p>
+</li>
+<li>
+<p><strong>Navigation tool</strong>: Whether letting a model move through the maze step by step, with feedback, helps it solve a maze it cannot solve in one attempt.</p>
+</li>
+</ul>
+<p>However, I decided to not waste more of my bonus, so these experiments are left as an exercise for the readers.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>So what did I conclude? Not much really. It was an interesting experiment, I made a bunch of pretty graphs and said some pseudo-scientific things. So, overall it was a success(?). If you are rich enough, I would love to see the results for <code>claude-opus-5.5</code>, <code>claude-fable-5.1</code>,<code>gpt-6-astra</code>, <code>gpt-6.1-terra</code>, and any other models I did not include here which are considered &ldquo;frontier models&rdquo;. As always, thanks for wasting your time on reading my ramblings. Until next time!</p>
+
+    </div>
+
+    
+  </div>
+
+  
+    <div class="pagination">
+        
+
+        <div class="pagination__buttons">
+            
+
+            
+            <span class="button next">
+                <a href="http://localhost:1313/posts/macos-autoupdate-survey/">
+                    <span class="button__text">Understanding the Auto-Update Mechanisms of 8 Common macOS Apps</span>
+                    <span class="button__icon">→</span>
+                </a>
+            </span>
+            
+        </div>
+    </div>
+
+
+  
+
+  
+
+</main>
+
+            </div>
+
+            
+                <footer class="footer">
+    
+    <div class="footer__inner">
+        <div class="footer__content">
+            <span>&copy; 2026</span>
+            
+            
+            
+            <span>Anuraag Baishya</span>
+        </div>
+    </div>
+    
+    
+    <div class="footer__inner">
+        <div class="footer__content">
+            <span>Powered by <a href="http://gohugo.io">Hugo</a> & <a href="https://github.com/rhazdon/hugo-theme-hello-friend-ng">Hello Friend NG</a> theme</span>
+        </div>
+    </div>
+    
+</footer>
+
+            
+        </div>
+
+        
+
+
+<script type="text/javascript" src="/bundle.min.4037dc94fd1565c4fd3354e2b4a2d1ff11842c906242435350b4d2d8d6e8b7890da46c0a865173f543a6161c1f4d1c94147f1b907db36489fc2bf5e20d4af75c.js" integrity="sha512-QDfclP0VZcT9M1TitKLR/xGELJBiQkNTULTS2Nbot4kNpGwKhlFz9UOmFhwfTRyUFH8bkH2zZIn8K/XiDUr3XA=="></script>
+
+
+
+
+    </body>
+</html>

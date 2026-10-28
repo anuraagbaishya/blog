@@ -6,8 +6,15 @@
     <description>Recent content on Bayesian Blogs</description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Tue, 15 Sep 2026 19:30:00 -0700</lastBuildDate>
+    <lastBuildDate>Tue, 20 Oct 2026 19:25:22 -0700</lastBuildDate>
     <atom:link href="http://localhost:1313/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Mazebench: A Completely Unnecessary Benchmark That Tests a Model&#39;s Maze Solving Capabilties</title>
+      <link>http://localhost:1313/posts/mazebench/</link>
+      <pubDate>Tue, 20 Oct 2026 19:25:22 -0700</pubDate>
+      <guid>http://localhost:1313/posts/mazebench/</guid>
+      <description>&lt;p&gt;Have you ever wondered if an LLM can solve a maze? Probably not. It is likely a not a good use of water or usage credits. However, in the odd event that you might have, I have the results for you! But why, you may ask? Well, for science! (And also because I recently received my half-yearly bonus and decided to burn some of it.)&lt;/p&gt;&#xA;&lt;p&gt;All mazes, results, and charts for this benchmark are in this &lt;a href=&#34;https://github.com/anuraagbaishya/mazebench&#34;&gt;github repo&lt;/a&gt;.&lt;/p&gt;</description>
+    </item>
     <item>
       <title>Understanding the Auto-Update Mechanisms of 8 Common macOS Apps</title>
       <link>http://localhost:1313/posts/macos-autoupdate-survey/</link>
