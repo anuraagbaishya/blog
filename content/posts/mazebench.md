@@ -11,8 +11,10 @@ tags:
 Have you ever wondered if an LLM can solve a maze? Probably not. It is likely a not a good use of water or usage credits. However, in the odd event that you might have, I have the results for you! But why, you may ask? Well, for science! (And also because I recently received my half-yearly bonus and decided to burn some of it.)
 
 Note: There are already other similar benchmarks which are much more scientific and well researched. If you are looking for a real answer, I would recommend you use these instead:
-- https://github.com/alrod97/LLMs_mazes
-- https://mazebench.com/ (and accompanying [paper](https://arxiv.org/abs/2603.26839))
+- https://github.com/alrod97/LLMs_mazes (and the accompanying [paper](https://arxiv.org/abs/2603.26839))
+- https://mazebench.com/ 
+
+(I could not confirm reliably if both the above are the same.)
 
 All mazes, results, and charts for this benchmark are in this [github repo](https://github.com/anuraagbaishya/mazebench).
 
